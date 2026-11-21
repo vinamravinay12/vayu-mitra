@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "noEmit": false,
+    "outDir": "../node_modules/.cache/tests-tsc",
+    "rootDir": "."
+  },
+  "include": ["**/*.ts"]
+}
