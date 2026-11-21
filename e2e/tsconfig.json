@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "lib": ["ES2022", "DOM"],
+    "noEmit": false,
+    "outDir": "../node_modules/.cache/e2e-tsc",
+    "rootDir": ".."
+  },
+  "include": ["**/*.ts", "../playwright.config.ts"]
+}
