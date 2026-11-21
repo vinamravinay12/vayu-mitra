@@ -21,8 +21,12 @@ real extraction schema on 21 November 2026:
 | `gemini-3.6-flash`         | 503 "high demand", then a 30 s timeout                   |
 | `gemini-3.8-flash`         | Rejects `thinkingLevel: MINIMAL`; 30 s timeouts at `LOW` |
 
-Live calls through the server with a real key logged extraction in **2.0 s**, the judge in **0.9 s**,
+Live calls logged extraction in **2.0–3.2 s**, the judge in **0.9 s**,
 the coach in **1.7–5.1 s** and answers in **1.0–1.2 s**; when 3.5 Flash-Lite returned 503 the
+
+On the deployed Cloud Run service (asia-south1), the first live calls logged in Cloud Logging
+were all answered by `gemini-3.5-flash-lite`: judge 1 570 ms, extraction 3 159 ms (cold start),
+coach 1 730 ms, answer 862 ms.
 client fell through to Flash-Lite-latest and the family saw a normal answer.
 
 ## Every call

@@ -1,5 +1,7 @@
 # Deployment
 
+**Live:** https://vayu-mitra-982453010059.asia-south1.run.app (Cloud Run, `asia-south1`).
+
 One container ([`Dockerfile`](../Dockerfile)) serves the API and the built client from the same
 origin on **Google Cloud Run**, so the browser needs no CORS and the strict same-origin CSP holds.
 The image is a two-stage `node:24-alpine` build that runs as the unprivileged `node` user with
