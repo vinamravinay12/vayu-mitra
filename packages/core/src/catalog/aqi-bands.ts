@@ -82,3 +82,65 @@ export const WHO_PM25_24H_GUIDELINE = 15;
  * numbers relatable, never as a medical claim.
  */
 export const PM25_PER_CIGARETTE = 22;
+
+/**
+ * The other NAQI pollutants, as CPCB's real-time feed reports them. Units are
+ * µg/m³ except CO, which CPCB reports in mg/m³. The open top band of each uses
+ * the upper concentration CPCB's calculator caps at.
+ */
+export const NO2_BREAKPOINTS: readonly Breakpoint[] = toBreakpoints([
+  ['good', 0, 40, 0, 50],
+  ['satisfactory', 40, 80, 50, 100],
+  ['moderate', 80, 180, 100, 200],
+  ['poor', 180, 280, 200, 300],
+  ['very-poor', 280, 400, 300, 400],
+  ['severe', 400, 800, 400, 500],
+]);
+
+/** Ozone, 8-hour mean. */
+export const O3_BREAKPOINTS: readonly Breakpoint[] = toBreakpoints([
+  ['good', 0, 50, 0, 50],
+  ['satisfactory', 50, 100, 50, 100],
+  ['moderate', 100, 168, 100, 200],
+  ['poor', 168, 208, 200, 300],
+  ['very-poor', 208, 748, 300, 400],
+  ['severe', 748, 1000, 400, 500],
+]);
+
+export const SO2_BREAKPOINTS: readonly Breakpoint[] = toBreakpoints([
+  ['good', 0, 40, 0, 50],
+  ['satisfactory', 40, 80, 50, 100],
+  ['moderate', 80, 380, 100, 200],
+  ['poor', 380, 800, 200, 300],
+  ['very-poor', 800, 1600, 300, 400],
+  ['severe', 1600, 2400, 400, 500],
+]);
+
+/** Carbon monoxide, 8-hour mean, mg/m³. */
+export const CO_BREAKPOINTS: readonly Breakpoint[] = toBreakpoints([
+  ['good', 0, 1, 0, 50],
+  ['satisfactory', 1, 2, 50, 100],
+  ['moderate', 2, 10, 100, 200],
+  ['poor', 10, 17, 200, 300],
+  ['very-poor', 17, 34, 300, 400],
+  ['severe', 34, 50, 400, 500],
+]);
+
+export const NH3_BREAKPOINTS: readonly Breakpoint[] = toBreakpoints([
+  ['good', 0, 200, 0, 50],
+  ['satisfactory', 200, 400, 50, 100],
+  ['moderate', 400, 800, 100, 200],
+  ['poor', 800, 1200, 200, 300],
+  ['very-poor', 1200, 1800, 300, 400],
+  ['severe', 1800, 2400, 400, 500],
+]);
+
+/** Short labels for each category, as people say them. */
+export const CATEGORY_LABELS: Readonly<Record<AqiCategory, string>> = {
+  good: 'Good',
+  satisfactory: 'Satisfactory',
+  moderate: 'Moderate',
+  poor: 'Poor',
+  'very-poor': 'Very poor',
+  severe: 'Severe',
+};

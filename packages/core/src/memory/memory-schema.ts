@@ -1,0 +1,89 @@
+import { z } from 'zod';
+import { ACTIVITIES, AGE_GROUPS, HEALTH_CONDITIONS, HOME_FEATURES } from '../catalog/vocabulary.js';
+import { TIME_OF_DAY_PATTERN } from '../time/local-clock.js';
+
+/**
+ * What Vayu Mitra remembers about a household. It is built up from the
+ * conversation, shown back as chips the family can edit or forget, and kept
+ * deliberately small: no names are needed, only how someone is referred to
+ * ("Dadi", "my son"), their life stage and conditions that change the advice.
+ */
+
+export const MEMORY_LIMITS = {
+  people: 8,
+  routines: 12,
+  labelLength: 40,
+  minutes: 240,
+} as const;
+
+const label = z.string().trim().min(1).max(MEMORY_LIMITS.labelLength);
+
+export const personFactSchema = z.object({
+  kind: z.literal('person'),
+  id: z.string().min(1).max(80),
+  /** How the family refers to them. */
+  label,
+  ageGroup: z.enum(AGE_GROUPS),
+  conditions: z.array(z.enum(HEALTH_CONDITIONS)).max(HEALTH_CONDITIONS.length),
+});
+
+export const routineFactSchema = z.object({
+  kind: z.literal('routine'),
+  id: z.string().min(1).max(80),
+  activity: z.enum(ACTIVITIES),
+  /** The id of the person it is for, or null for the whole family. */
+  personId: z.string().min(1).max(80).nullable(),
+  /** Usual start, `HH:MM`, or null when it varies. */
+  time: z.string().regex(TIME_OF_DAY_PATTERN).nullable(),
+  minutes: z.number().int().min(5).max(MEMORY_LIMITS.minutes),
+});
+
+export const homeFactSchema = z.object({
+  kind: z.literal('home'),
+  id: z.string().min(1).max(80),
+  feature: z.enum(HOME_FEATURES),
+});
+
+export const memoryFactSchema = z.discriminatedUnion('kind', [
+  personFactSchema,
+  routineFactSchema,
+  homeFactSchema,
+]);
+
+export const memorySchema = z.object({
+  people: z.array(personFactSchema).max(MEMORY_LIMITS.people),
+  routines: z.array(routineFactSchema).max(MEMORY_LIMITS.routines),
+  home: z.array(homeFactSchema).max(HOME_FEATURES.length),
+});
+
+/**
+ * A change the conversation asks for. The AI proposes these; the engine
+ * applies them, so the AI can never write arbitrary data into memory.
+ */
+export const memoryChangeSchema = z.discriminatedUnion('op', [
+  z.object({
+    op: z.literal('remember-person'),
+    label,
+    ageGroup: z.enum(AGE_GROUPS),
+    conditions: z.array(z.enum(HEALTH_CONDITIONS)).max(HEALTH_CONDITIONS.length),
+  }),
+  z.object({
+    op: z.literal('remember-routine'),
+    activity: z.enum(ACTIVITIES),
+    /** The person's label as the family said it, or null for everyone. */
+    person: label.nullable(),
+    time: z.string().regex(TIME_OF_DAY_PATTERN).nullable(),
+    minutes: z.number().int().min(5).max(MEMORY_LIMITS.minutes).nullable(),
+  }),
+  z.object({ op: z.literal('remember-home'), feature: z.enum(HOME_FEATURES) }),
+  z.object({ op: z.literal('forget'), id: z.string().min(1).max(80) }),
+]);
+
+export type PersonFact = z.infer<typeof personFactSchema>;
+export type RoutineFact = z.infer<typeof routineFactSchema>;
+export type HomeFact = z.infer<typeof homeFactSchema>;
+export type MemoryFact = z.infer<typeof memoryFactSchema>;
+export type Memory = z.infer<typeof memorySchema>;
+export type MemoryChange = z.infer<typeof memoryChangeSchema>;
+
+export const EMPTY_MEMORY: Memory = { people: [], routines: [], home: [] };
