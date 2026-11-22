@@ -25,6 +25,7 @@ export function sensitivePeople(people: readonly PersonFact[]): string[] {
     .map((person) => person.label);
 }
 
+/** The parts of an outlook hour that advice reports. */
 const toAdviceHour = (hour: ReportHour): AdviceHour => ({
   time: hour.time,
   aqi: hour.aqi,

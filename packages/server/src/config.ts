@@ -116,6 +116,7 @@ export function loadConfig(env: Env): ServerConfig {
   };
 }
 
+/** The trimmed value, or null when it is missing or blank. */
 const orNull = (value: string | undefined): string | null => present(value) ?? null;
 
 /** What production must have. */

@@ -19,6 +19,7 @@ export const slug = (text: string): string =>
     .replace(/^-+|-+$/g, '')
     .slice(0, 60) || 'someone';
 
+/** The stable id of the person a label names. */
 export const personId = (label: string): string => `person:${slug(label)}`;
 
 /** Replaces the entry with the same id, or appends; drops the oldest past the limit. */
@@ -59,6 +60,7 @@ export function forgetFact(memory: Memory, id: string): Memory {
   };
 }
 
+/** How long an activity usually takes, when the family has not said. */
 const defaultMinutes = (activity: Activity): number => ACTIVITY_PROFILES[activity].defaultMinutes;
 
 /** The id of the remembered person a label refers to, or null. */
@@ -113,7 +115,7 @@ export function applyChange(memory: Memory, change: MemoryChange): Memory {
  */
 export function applyChanges(memory: Memory, changes: readonly MemoryChange[]): Memory {
   const rank = (change: MemoryChange): number => (change.op === 'remember-person' ? 0 : 1);
-  return [...changes].sort((a, b) => rank(a) - rank(b)).reduce(applyChange, memory);
+  return [...changes].sort((first, second) => rank(first) - rank(second)).reduce(applyChange, memory);
 }
 
 /** True when nothing is remembered yet. */

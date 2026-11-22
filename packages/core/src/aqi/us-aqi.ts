@@ -21,6 +21,7 @@ interface EpaBand {
 /** Rows of [index low, index high, concentration low, concentration high]. */
 type EpaRow = readonly [number, number, number, number];
 
+/** Turns compact table rows into bands. */
 const toBands = (rows: readonly EpaRow[]): EpaBand[] =>
   rows.map(([indexLow, indexHigh, concentrationLow, concentrationHigh]) => ({
     indexLow,

@@ -18,8 +18,10 @@ export function formatTime(time: string): string {
   return minute === 0 ? hour : hour.replace(' ', `:${String(minute).padStart(2, '0')} `);
 }
 
+/** The text with its first letter upper-cased. */
 const capitalise = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
 
+/** "Dadi · older adult, asthma". */
 export function describePerson(person: PersonFact): string {
   const details = [
     AGE_LABELS[person.ageGroup],
@@ -28,6 +30,7 @@ export function describePerson(person: PersonFact): string {
   return `${person.label} · ${details.join(', ')}`;
 }
 
+/** "Walk · 6:30 am · Dadi". */
 export function describeRoutine(routine: RoutineFact, people: readonly PersonFact[]): string {
   const who = people.find((person) => person.id === routine.personId)?.label;
   const parts = [

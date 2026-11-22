@@ -39,6 +39,18 @@ const REQUIRED_WEB_KEYS = [
   'FIREBASE_MESSAGING_SENDER_ID',
 ] as const;
 
+/** Every key's value, or an error naming the missing ones. */
+function requireAll<K extends string>(env: Env, keys: readonly K[]): Record<K, string> {
+  const missing = keys.filter((key) => present(env[key]) === undefined);
+  if (missing.length > 0) {
+    throw new Error(`FIREBASE_PROJECT_ID is set but ${missing.join(', ')} is missing`);
+  }
+  return Object.fromEntries(keys.map((key) => [key, String(present(env[key]))])) as Record<
+    K,
+    string
+  >;
+}
+
 /**
  * Firebase is on when FIREBASE_PROJECT_ID is set. A half-configured project is
  * an error at startup, not a sign-in button that fails in the family's hands.
@@ -48,18 +60,15 @@ export function loadFirebase(env: Env): FirebaseSettings | null {
   if (projectId === undefined) {
     return null;
   }
-  const missing = REQUIRED_WEB_KEYS.filter((key) => present(env[key]) === undefined);
-  if (missing.length > 0) {
-    throw new Error(`FIREBASE_PROJECT_ID is set but ${missing.join(', ')} is missing`);
-  }
+  const web = requireAll(env, REQUIRED_WEB_KEYS);
   return {
     projectId,
     web: {
-      apiKey: present(env.FIREBASE_WEB_API_KEY) ?? '',
+      apiKey: web.FIREBASE_WEB_API_KEY,
       authDomain: present(env.FIREBASE_AUTH_DOMAIN) ?? `${projectId}.firebaseapp.com`,
       projectId,
-      appId: present(env.FIREBASE_APP_ID) ?? '',
-      messagingSenderId: present(env.FIREBASE_MESSAGING_SENDER_ID) ?? '',
+      appId: web.FIREBASE_APP_ID,
+      messagingSenderId: web.FIREBASE_MESSAGING_SENDER_ID,
     },
     vapidKey: present(env.FIREBASE_VAPID_KEY) ?? null,
   };

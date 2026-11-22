@@ -16,6 +16,7 @@ import { createMemoryCollection, createUserStore } from './store/user-store.js';
  * port. Everything it wires up is built and tested in its own module.
  */
 const config = loadConfig(process.env);
+/** The wall clock; every module takes time from here, so tests can fix it. */
 const now = (): Date => new Date();
 const llm =
   config.geminiApiKey === null

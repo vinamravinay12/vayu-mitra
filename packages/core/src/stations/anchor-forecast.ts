@@ -28,9 +28,11 @@ export const OUTLOOK_HOURS = 36;
 /** A station can disagree with the model, but not by more than this factor either way. */
 const MAX_CORRECTION = 3;
 
+/** The value kept within [low, high]. */
 const clamp = (value: number, low: number, high: number): number =>
   Math.min(high, Math.max(low, value));
 
+/** Rounded to one decimal place. */
 const round1 = (value: number): number => Math.round(value * 10) / 10;
 
 /**

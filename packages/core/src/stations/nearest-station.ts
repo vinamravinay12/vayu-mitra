@@ -13,6 +13,7 @@ export const MAX_READING_AGE_MS = 3 * 60 * 60_000;
 /** Prefer CPCB, the official monitor, when two stations are about as close. */
 const SOURCE_PREFERENCE_KM = 2;
 
+/** Degrees to radians. */
 const toRadians = (degrees: number): number => (degrees * Math.PI) / 180;
 
 /** Great-circle distance in km. */
