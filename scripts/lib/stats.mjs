@@ -1,7 +1,7 @@
 import { performance } from 'node:perf_hooks';
 
-/** The instant every profile plans for (10:00 IST on 21 November 2026), so runs are comparable. */
-export const PLANNED_AT = new Date('2026-11-21T04:30:00Z');
+/** The instant every profile runs at (10:00 IST on 22 November 2026), so runs are comparable. */
+export const PLANNED_AT = new Date('2026-11-22T04:30:00Z');
 
 /** The value at a percentile (0–100) of an ascending list of samples. */
 export const percentile = (sorted, rank) =>
