@@ -1,11 +1,11 @@
-import { suggestQuestions, type ChatResponse, type Place } from '@vayu/core';
+import { nowHour, suggestQuestions, type ChatResponse, type Place } from '@vayu/core';
 import type { FirebaseApp } from 'firebase/app';
 import { useCallback, useMemo } from 'react';
-import { createApi, type Api, type ClientConfig } from '../api/api.js';
+import { createApi, type Api, type ClientConfig, type Household } from '../api/api.js';
 import type { AuthClient } from '../auth/auth.js';
 import { useAir, type AirState } from '../state/use-air.js';
 import { useChat } from '../state/use-chat.js';
-import { useHousehold } from '../state/use-household.js';
+import { useHousehold, type HouseholdState } from '../state/use-household.js';
 import { usePush } from '../state/use-push.js';
 import { AirCard } from './air/AirCard.js';
 import { ChatPanel } from './chat/ChatPanel.js';
@@ -25,7 +25,7 @@ interface HomeProps {
 
 /** The outlook's first local date, once the air has loaded. */
 const firstDate = (air: AirState): string =>
-  air.status === 'ready' ? (air.report.hours[0]?.time.slice(0, 10) ?? '') : '';
+  air.status === 'ready' ? nowHour(air.report).time.slice(0, 10) : '';
 
 interface PlaceColumnProps {
   readonly api: Api;
@@ -42,35 +42,32 @@ function PlaceColumn({ api, air, place, onPick }: PlaceColumnProps): React.JSX.E
       <details className="card">
         <summary className="cursor-pointer font-semibold">Change place</summary>
         <div className="mt-3">
-          <PlacePicker api={api} onPick={onPick} />
+          <PlacePicker api={api} onPick={onPick} embedded />
         </div>
       </details>
     </>
   );
 }
 
-/** The signed-in app: the air, the conversation, and what is remembered. */
-export function Home({ config, auth, app, onDeleted }: HomeProps): React.JSX.Element {
-  const api = useMemo(() => createApi(() => auth.token()), [auth]);
-  const state = useHousehold(api);
-  const { household, replace } = state;
-  const place = household?.place ?? null;
+interface LoadedProps extends Omit<HomeProps, 'auth'> {
+  readonly api: Api;
+  readonly state: HouseholdState;
+  readonly household: Household;
+}
+
+/** The app once the household has loaded: the air, the conversation, what is remembered. */
+function Loaded({ api, state, household, config, app, onDeleted }: LoadedProps): React.JSX.Element {
+  const { replace } = state;
+  const place = household.place;
   const air = useAir(api, place);
   const onReply = useCallback(
     (reply: ChatResponse) => {
-      if (household !== null) replace({ ...household, memory: reply.memory });
+      replace({ ...household, memory: reply.memory });
     },
     [household, replace],
   );
   const chat = useChat(api, place, onReply);
   const push = usePush(app, config.vapidKey, api, replace);
-  if (household === null) {
-    return state.error === null ? (
-      <Alert kind="status">Loading your household…</Alert>
-    ) : (
-      <Alert>{state.error}</Alert>
-    );
-  }
   const remove = (): void => {
     api.deleteEverything().then(onDeleted, () => undefined);
   };
@@ -103,4 +100,18 @@ export function Home({ config, auth, app, onDeleted }: HomeProps): React.JSX.Ele
       </div>
     </div>
   );
+}
+
+/** The signed-in app, once the family's record has loaded. */
+export function Home({ auth, ...props }: HomeProps): React.JSX.Element {
+  const api = useMemo(() => createApi(() => auth.token()), [auth]);
+  const state = useHousehold(api);
+  if (state.household === null) {
+    return state.error === null ? (
+      <Alert kind="status">Loading your household…</Alert>
+    ) : (
+      <Alert>{state.error}</Alert>
+    );
+  }
+  return <Loaded {...props} api={api} state={state} household={state.household} />;
 }

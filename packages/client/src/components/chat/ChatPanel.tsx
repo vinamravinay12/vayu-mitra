@@ -16,22 +16,24 @@ function MessageLog({
   readonly today: string;
 }): React.JSX.Element {
   return (
-    <ol className="space-y-3" role="log" aria-live="polite" aria-label="Conversation">
-      {messages.map((message) => (
-        <li
-          key={message.id}
-          className={message.role === 'user' ? 'ml-8 rounded-lg bg-brand-soft p-3' : 'mr-4'}
-        >
-          <span className="sr-only">
-            {message.role === 'user' ? 'You said:' : 'Vayu Mitra said:'}
-          </span>
-          <p className="whitespace-pre-line">{message.text}</p>
-          {message.advice !== undefined && message.advice !== null && (
-            <AdviceCard advice={message.advice} today={today} />
-          )}
-        </li>
-      ))}
-    </ol>
+    <div role="log" aria-live="polite" aria-label="Conversation">
+      <ol className="space-y-3">
+        {messages.map((message) => (
+          <li
+            key={message.id}
+            className={message.role === 'user' ? 'ml-8 rounded-lg bg-brand-soft p-3' : 'mr-4'}
+          >
+            <span className="sr-only">
+              {message.role === 'user' ? 'You said:' : 'Vayu Mitra said:'}
+            </span>
+            <p className="whitespace-pre-line">{message.text}</p>
+            {message.advice !== undefined && message.advice !== null && (
+              <AdviceCard advice={message.advice} today={today} />
+            )}
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
 

@@ -3,7 +3,6 @@ import {
   AGE_LABELS,
   CONDITION_LABELS,
   HEALTH_CONDITIONS,
-  type MemoryFact,
   type PersonFact,
   type RoutineFact,
 } from '@vayu/core';
@@ -97,7 +96,7 @@ function RoutineEditor({ fact, onSave, onCancel }: EditorProps<RoutineFact>): Re
     onSave({
       ...fact,
       time: time === '' ? null : time,
-      minutes: Math.min(240, Math.max(5, Number(minutes) || fact.minutes)),
+      minutes: Number(minutes) || fact.minutes,
     });
   };
   return (
@@ -137,15 +136,18 @@ function RoutineEditor({ fact, onSave, onCancel }: EditorProps<RoutineFact>): Re
   );
 }
 
-/** The editor for a fact; home features have nothing to edit, only forget. */
+/** A fact that can be edited; home features can only be forgotten. */
+export type EditableFact = PersonFact | RoutineFact;
+
+/** The editor for a person or a routine. */
 export function FactEditor({
   fact,
   onSave,
   onCancel,
-}: EditorProps<MemoryFact>): React.JSX.Element | null {
-  if (fact.kind === 'person')
-    return <PersonEditor fact={fact} onSave={onSave} onCancel={onCancel} />;
-  if (fact.kind === 'routine')
-    return <RoutineEditor fact={fact} onSave={onSave} onCancel={onCancel} />;
-  return null;
+}: EditorProps<EditableFact>): React.JSX.Element {
+  return fact.kind === 'person' ? (
+    <PersonEditor fact={fact} onSave={onSave} onCancel={onCancel} />
+  ) : (
+    <RoutineEditor fact={fact} onSave={onSave} onCancel={onCancel} />
+  );
 }

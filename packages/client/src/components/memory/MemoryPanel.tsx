@@ -18,7 +18,7 @@ function Chip({ chip, editing, onEdit, onForget, onSave }: ChipProps): React.JSX
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="font-medium">{chip.label}</span>
         <span className="flex gap-1">
-          {chip.kind !== 'home' && (
+          {chip.fact.kind !== 'home' && (
             <button
               type="button"
               className={small}
@@ -40,7 +40,7 @@ function Chip({ chip, editing, onEdit, onForget, onSave }: ChipProps): React.JSX
           </button>
         </span>
       </div>
-      {editing && (
+      {editing && chip.fact.kind !== 'home' && (
         <div className="mt-2">
           <FactEditor
             fact={chip.fact}
