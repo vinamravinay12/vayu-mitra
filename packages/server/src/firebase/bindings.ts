@@ -48,14 +48,14 @@ const STALE_ID_CODES = new Set([
 export function fcmMessenger(messaging: Pick<Messaging, 'sendEachForMulticast'>): Messenger {
   return {
     async send(ids, message) {
-      const result = await messaging.sendEachForMulticast({
+      const batch = await messaging.sendEachForMulticast({
         fids: [...ids],
         data: { title: message.title, body: message.body, url: '/' },
         webpush: { headers: { Urgency: 'high', TTL: String(6 * 60 * 60) } },
       });
-      const staleIds = result.responses.flatMap((response, index) =>
+      const staleIds = batch.responses.flatMap((response, index) =>
         !response.success && STALE_ID_CODES.has(response.error?.code ?? '')
-          ? [ids[index] ?? '']
+          ? ids.slice(index, index + 1)
           : [],
       );
       return { staleIds };

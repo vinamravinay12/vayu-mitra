@@ -66,16 +66,16 @@ export async function checkAlerts(deps: AlertJobDependencies): Promise<AlertRunS
   const summary: AlertRunSummary = { checked: subscribers.length, sent: 0, skipped: 0, failed: 0 };
   for (let start = 0; start < subscribers.length; start += BATCH_SIZE) {
     const batch = subscribers.slice(start, start + BATCH_SIZE);
-    const results = await Promise.allSettled(
+    const outcomes = await Promise.allSettled(
       batch.map(({ uid, record }) => checkOne(deps, uid, record)),
     );
-    for (const result of results) {
-      if (result.status === 'rejected') {
+    for (const outcome of outcomes) {
+      if (outcome.status === 'rejected') {
         summary.failed += 1;
         logEvent('WARNING', 'alert check failed for one family', {
-          cause: describeCause(result.reason),
+          cause: describeCause(outcome.reason),
         });
-      } else if (result.value) {
+      } else if (outcome.value) {
         summary.sent += 1;
       } else {
         summary.skipped += 1;

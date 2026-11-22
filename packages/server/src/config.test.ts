@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_MODELS, DEFAULT_PORT, loadConfig, parseModels } from './config.js';
+import { loadFirebase, loadScheduler } from './firebase-config.js';
+
+const FIREBASE = {
+  FIREBASE_PROJECT_ID: 'vayu-test',
+  FIREBASE_WEB_API_KEY: 'web-key',
+  FIREBASE_APP_ID: '1:2:web:3',
+  FIREBASE_MESSAGING_SENDER_ID: '2',
+};
+
+const PRODUCTION = { NODE_ENV: 'production', GEMINI_API_KEY: 'key', ...FIREBASE };
 
 describe('loadConfig', () => {
   it('runs offline in development without a key', () => {
@@ -11,6 +21,11 @@ describe('loadConfig', () => {
       trustProxyHops: 1,
       staticDir: null,
       airDataMode: 'live',
+      dataGovInApiKey: null,
+      waqiToken: null,
+      firebase: null,
+      authMode: 'none',
+      scheduler: null,
       aiRequestsPerMinute: 10,
     });
   });
@@ -22,17 +37,19 @@ describe('loadConfig', () => {
 
   it('allows fixture air data only outside production', () => {
     expect(loadConfig({ AIR_DATA_MODE: 'fixture' }).airDataMode).toBe('fixture');
-    expect(() =>
-      loadConfig({ NODE_ENV: 'production', GEMINI_API_KEY: 'key', AIR_DATA_MODE: 'fixture' }),
-    ).toThrow('not allowed in production');
+    expect(() => loadConfig({ ...PRODUCTION, AIR_DATA_MODE: 'fixture' })).toThrow(
+      'not allowed in production',
+    );
   });
 
   it('reads every setting from the environment', () => {
     expect(
       loadConfig({
-        NODE_ENV: 'production',
+        ...PRODUCTION,
         GEMINI_API_KEY: ' key ',
         PORT: '9000',
+        DATA_GOV_IN_API_KEY: ' cpcb ',
+        WAQI_TOKEN: 'waqi',
         ALLOWED_ORIGIN: 'https://example.test',
         TRUST_PROXY_HOPS: '2',
         STATIC_DIR: '/srv/client',
@@ -43,7 +60,16 @@ describe('loadConfig', () => {
       allowedOrigin: 'https://example.test',
       trustProxyHops: 2,
       staticDir: '/srv/client',
+      dataGovInApiKey: 'cpcb',
+      waqiToken: 'waqi',
+      authMode: 'firebase',
     });
+  });
+
+  it('refuses production without sign-in', () => {
+    expect(() => loadConfig({ NODE_ENV: 'production', GEMINI_API_KEY: 'key' })).toThrow(
+      'FIREBASE_PROJECT_ID is required',
+    );
   });
 
   it('reads the AI rate limit, never below one request a minute', () => {
@@ -78,5 +104,44 @@ describe('parseModels', () => {
     ]);
     expect(parseModels({ GEMINI_MODELS: ' a, ,b ' })).toEqual(['a', 'b']);
     expect(parseModels({ GEMINI_MODELS: ' , ' })).toEqual(DEFAULT_MODELS);
+  });
+});
+
+describe('loadFirebase', () => {
+  it('is off without a project and complete with one', () => {
+    expect(loadFirebase({})).toBeNull();
+    expect(loadFirebase({ ...FIREBASE, FIREBASE_VAPID_KEY: 'vapid' })).toEqual({
+      projectId: 'vayu-test',
+      web: {
+        apiKey: 'web-key',
+        authDomain: 'vayu-test.firebaseapp.com',
+        projectId: 'vayu-test',
+        appId: '1:2:web:3',
+        messagingSenderId: '2',
+      },
+      vapidKey: 'vapid',
+    });
+    expect(loadFirebase({ ...FIREBASE, FIREBASE_AUTH_DOMAIN: 'login.example.test' })).toMatchObject(
+      {
+        web: { authDomain: 'login.example.test' },
+        vapidKey: null,
+      },
+    );
+  });
+
+  it('refuses a half-configured project', () => {
+    expect(() => loadFirebase({ FIREBASE_PROJECT_ID: 'p', FIREBASE_APP_ID: 'a' })).toThrow(
+      'FIREBASE_WEB_API_KEY, FIREBASE_MESSAGING_SENDER_ID is missing',
+    );
+  });
+});
+
+describe('loadScheduler', () => {
+  it('needs both values or neither', () => {
+    expect(loadScheduler({})).toBeNull();
+    expect(
+      loadScheduler({ SCHEDULER_AUDIENCE: 'https://vayu.test', SCHEDULER_SERVICE_ACCOUNT: 'sa@x' }),
+    ).toEqual({ audience: 'https://vayu.test', serviceAccountEmail: 'sa@x' });
+    expect(() => loadScheduler({ SCHEDULER_AUDIENCE: 'https://vayu.test' })).toThrow('both');
   });
 });

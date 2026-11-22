@@ -41,7 +41,9 @@ export function createUserStore(collection: DocumentCollection): UserStore {
     async get(uid) {
       return validate(uid, await collection.get(uid));
     },
-    put: (uid, record) => collection.set(uid, userRecordSchema.parse(record)),
+    async put(uid, record) {
+      await collection.set(uid, userRecordSchema.parse(record));
+    },
     delete: (uid) => collection.delete(uid),
     async alertSubscribers() {
       const documents = await collection.whereEquals('alerts.enabled', true);

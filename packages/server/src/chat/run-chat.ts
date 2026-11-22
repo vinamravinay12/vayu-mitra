@@ -30,6 +30,7 @@ export interface ChatDependencies {
 export const REFUSAL =
   'I can help with the air where you live and your family’s plans around it, but not with that.';
 
+/** The refusal turn: no advice, memory unchanged. */
 const refusal = (memory: Memory): ChatResponse => ({
   reply: REFUSAL,
   advice: null,

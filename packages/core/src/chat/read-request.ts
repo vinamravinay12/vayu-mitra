@@ -2,6 +2,7 @@ import { ACTIVITY_PROFILES } from '../catalog/activities.js';
 import { ACTIVITIES, type Activity } from '../catalog/vocabulary.js';
 import type { Memory, PersonFact, RoutineFact } from '../memory/memory-schema.js';
 
+/** Escapes regular-expression metacharacters so a phrase matches literally. */
 const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** True when the phrase appears as whole words, allowing a plural ("windows", "walks"). */
@@ -28,6 +29,7 @@ export function detectActivity(message: string): Activity | null {
 const TWELVE_HOUR = /\b(\d{1,2})(?::([0-5]\d))?\s*(am|pm)\b/i;
 const TWENTY_FOUR_HOUR = /\b([01]?\d|2[0-3]):([0-5]\d)\b/;
 
+/** Two-digit zero padding for clock fields. */
 const pad = (value: number): string => String(value).padStart(2, '0');
 
 /** A clock time in the message, "6 am", "6:30pm", "17:45", as `HH:MM`; null if none. */

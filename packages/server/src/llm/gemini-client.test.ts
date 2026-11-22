@@ -29,7 +29,7 @@ describe('createGeminiClient', () => {
       config: {
         systemInstruction: 'Extract.',
         temperature: 0,
-        maxOutputTokens: 1500,
+        maxOutputTokens: 900,
         thinkingConfig: { thinkingLevel: 'MINIMAL' },
         responseMimeType: 'application/json',
         responseJsonSchema: { type: 'object' },
