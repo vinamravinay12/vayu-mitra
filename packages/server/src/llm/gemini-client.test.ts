@@ -3,7 +3,7 @@ import { createGeminiClient, sleep, type GenerateContent } from './gemini-client
 import { LlmQuotaExceededError, LlmUnavailableError, type LlmRequest } from './llm-client.js';
 
 const request: LlmRequest = {
-  purpose: 'extract',
+  purpose: 'understand',
   systemInstruction: 'Extract.',
   prompt: 'Family of four in Delhi',
   schema: { type: 'object' },

@@ -20,7 +20,9 @@ export {
   categoryRank,
   computeAqi,
   computeNaqi,
+  concentrationFor,
   particulateAqi,
+  subIndex,
 } from './aqi/compute-aqi.js';
 export type { AqiReading } from './aqi/compute-aqi.js';
 export { EPA_PM10_BANDS, EPA_PM25_BANDS, epaIndexToConcentration } from './aqi/us-aqi.js';

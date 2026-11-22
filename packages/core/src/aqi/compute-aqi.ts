@@ -96,3 +96,19 @@ export function particulateAqi(
   }
   return null;
 }
+
+/**
+ * The concentration a NAQI sub-index stands for: the inverse of `subIndex`,
+ * rounded to 0.1. CPCB's real-time feed publishes sub-indices per pollutant,
+ * so this recovers the concentration the anchoring compares with the model.
+ */
+export function concentrationFor(index: number, breakpoints: readonly Breakpoint[]): number {
+  const clamped = Math.min(AQI_MAX, Math.max(0, index));
+  const band = breakpoints.reduce((chosen, candidate) =>
+    clamped >= candidate.indexLow ? candidate : chosen,
+  );
+  const position = (clamped - band.indexLow) / (band.indexHigh - band.indexLow);
+  const concentration =
+    band.concentrationLow + position * (band.concentrationHigh - band.concentrationLow);
+  return Math.round(concentration * 10) / 10;
+}

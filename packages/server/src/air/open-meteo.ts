@@ -1,4 +1,4 @@
-import { MAX_CONCENTRATION, type AirHour, type AirSnapshot, type Place } from '@vayu/core';
+import { MAX_CONCENTRATION, type Forecast, type ForecastHour, type Place } from '@vayu/core';
 import { z } from 'zod';
 import { UpstreamError, type FetchJson } from './fetch-json.js';
 
@@ -11,8 +11,8 @@ import { UpstreamError, type FetchJson } from './fetch-json.js';
 const AIR_QUALITY_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 const GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 
-/** Days of forecast to fetch: today and tomorrow. */
-const FORECAST_DAYS = 2;
+/** Days of forecast to fetch: today and tomorrow, so the outlook always covers 36 hours. */
+const FORECAST_DAYS = 3;
 
 /** Places returned for one search. */
 export const MAX_PLACES = 5;
@@ -45,7 +45,7 @@ const clampConcentration = (value: number): number =>
   Math.min(MAX_CONCENTRATION, Math.max(0, Math.round(value * 10) / 10));
 
 /** Builds the hourly series, dropping hours with no PM2.5 and estimating missing PM10. */
-function toHours(hourly: z.infer<typeof airResponseSchema>['hourly']): AirHour[] {
+function toHours(hourly: z.infer<typeof airResponseSchema>['hourly']): ForecastHour[] {
   return hourly.time.flatMap((time, index) => {
     const pm25 = hourly.pm2_5[index];
     if (pm25 === null || pm25 === undefined) {
@@ -62,13 +62,12 @@ function toHours(hourly: z.infer<typeof airResponseSchema>['hourly']): AirHour[]
 /** Coordinates rounded to ~1 km: enough for a city forecast, and the precise location is never sent. */
 export const roundCoordinate = (value: number): number => Math.round(value * 100) / 100;
 
-/** Fetches and normalises the hourly PM2.5/PM10 forecast for a point. */
+/** Fetches and normalises the hourly PM2.5/PM10 model forecast (CAMS) for a point. */
 export async function fetchAirForecast(
   fetchJson: FetchJson,
   latitude: number,
   longitude: number,
-  now: Date,
-): Promise<AirSnapshot> {
+): Promise<Forecast> {
   const query = new URLSearchParams({
     latitude: String(roundCoordinate(latitude)),
     longitude: String(roundCoordinate(longitude)),
@@ -91,7 +90,6 @@ export async function fetchAirForecast(
     utcOffsetSeconds: parsed.data.utc_offset_seconds,
     hours,
     source: 'open-meteo',
-    fetchedAt: now.toISOString(),
   };
 }
 
