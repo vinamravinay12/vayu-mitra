@@ -8,8 +8,9 @@ cp .env.example packages/server/.env
 npm run dev
 ```
 
-Node 22 or later (CI uses 24). Without `GEMINI_API_KEY` the server uses the offline client, so
-every flow works locally without a key. Add `AIR_DATA_MODE=fixture` to work without network.
+Node 22 or later (CI uses 24). With no keys every flow still works locally: no sign-in (one local
+household), replies from the engine's own sentences, forecast-only air. Add `AIR_DATA_MODE=fixture`
+to work without network.
 
 ## Before you open a pull request
 
@@ -24,14 +25,14 @@ that the client bundle carries no credentials.
 
 ## Where code goes
 
-| Change                                                | Place                                                                                            |
-| :---------------------------------------------------- | :----------------------------------------------------------------------------------------------- |
-| An action, alert, AQI band, factor or threshold       | `packages/core/src/catalog/` (data, one list per file), with its source in `docs/ASSUMPTIONS.md` |
-| Logic that computes a number, date or decision        | `packages/core/src/` (pure, clock passed in)                                                     |
-| A schema shared by client and server                  | `packages/core/src/schemas/` (types via `z.infer`)                                               |
-| An HTTP route, Gemini call, guard or upstream adapter | `packages/server/src/`                                                                           |
-| A screen or component                                 | `packages/client/src/`                                                                           |
-| A repository-wide standard                            | `tests/quality/hygiene.test.ts`                                                                  |
+| Change                                                                  | Place                                                                                            |
+| :---------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------- |
+| A vocabulary, activity, AQI band or threshold                           | `packages/core/src/catalog/` (data, one list per file), with its source in `docs/ASSUMPTIONS.md` |
+| Logic that computes a number, date or decision                          | `packages/core/src/` (pure, clock passed in)                                                     |
+| A schema shared by client and server                                    | `packages/core/src/schemas/` (types via `z.infer`)                                               |
+| An HTTP route, Gemini call, guard, upstream adapter or Firebase binding | `packages/server/src/`                                                                           |
+| A screen or component                                                   | `packages/client/src/`                                                                           |
+| A repository-wide standard                                              | `tests/quality/hygiene.test.ts`                                                                  |
 
 ## Standards
 

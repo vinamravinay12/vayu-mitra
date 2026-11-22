@@ -5,11 +5,13 @@ const E2E_PORT = 4173;
 
 /**
  * Real-browser checks against the production build, served with the production security
- * headers (CSP included) and the offline LLM client, so no key is needed in CI.
+ * headers (CSP included) and no Gemini key, so CI needs no secrets. Sign-in is off, so all
+ * tests share one local household: they run one at a time.
  */
 export default defineConfig({
   testDir: './e2e',
-  fullyParallel: true,
+  fullyParallel: false,
+  workers: 1,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
@@ -23,7 +25,7 @@ export default defineConfig({
   ],
   webServer: {
     // Builds everything, then serves the production client with the production
-    // security headers, the offline AI client (no key) and fixture air data.
+    // security headers, no Gemini key (the engine answers) and fixture air data.
     command: 'npm run start:e2e',
     url: `http://localhost:${String(E2E_PORT)}/api/health`,
     reuseExistingServer: !process.env.CI,

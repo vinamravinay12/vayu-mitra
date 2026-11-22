@@ -22,28 +22,32 @@ good intentions.
 
 - **Three packages, one direction of dependency:** `client → core ← server`. `core` imports
   nothing but Zod.
-- **Knowledge is data.** Every factor, band, action, alert and community drive is a typed
-  constant in `core/src/catalog/`, one list per file, evaluated by one condition evaluator.
-- **One schema, many uses.** The Zod profile schema validates the form, the server boundary and
-  the saved session; TypeScript types are `z.infer`-ed from it, so they cannot drift.
-- **Shared limits defined once** (`PROFILE_LIMITS`, `TEXT_LIMITS`, `RANKING`) and read by schema,
-  prompt and UI.
-- **Effects are a discriminated union** handled exhaustively by `applyEffect`, so adding an
-  effect kind without handling it is a compile error.
-- **Dependencies are injected:** the model client, the air source, `fetch`, the clock and the
-  rate-limit clock are parameters, which is what makes 100% coverage possible without network.
+- **Vocabularies are data.** Ages, conditions, activities, home features, pollutants and NAQI
+  bands are typed constants listed once in `core/src/catalog/`; schemas, prompts, labels and the
+  JSON Schema Gemini decodes against all read from them.
+- **One schema, many uses.** Zod schemas for the air report, memory, advice and chat validate the
+  server's answers, the browser's copy and the stored record; types are `z.infer`-ed from them.
+- **The model proposes, the engine disposes.** Memory changes are a discriminated union applied
+  by `applyChange`; the model's flat answer is mapped onto it and anything that does not fit is
+  dropped.
+- **Dependencies are injected:** the model, the air sources, the store, the messenger, both
+  token verifiers, `fetch` and the clock are parameters, which is what makes 100% coverage
+  possible without network. Firebase bindings are one call each, tested against fakes.
+- **Cannot-happen branches are removed, not tested around.** Where coverage found a branch that
+  could never run, the types were tightened instead (a non-empty station group, an editor that
+  only accepts editable facts, a household that is always loaded where the chat lives).
 
 ## Conventions
 
-- Every function — exported or internal — has a one-line `/** purpose */` comment.
-- Names say what a value is for: `cleanestFreeHour`, `weightedReductionPercent`,
-  `pm25GramsSeasonSaved`, `outputViolations`.
-- Exports only what another module imports; components stay small by splitting into named parts
-  (`Identity`, `Daytime`, `Exercise` in `MemberFields`).
-- Conventional commits (`feat(core):`, `test:`, `a11y:`, `perf:`, `docs:`).
+- Every top-level function has a one-line `/** purpose */` comment.
+- Names say what a value is for: `nearestStation`, `correctionRatio`, `cleanestWindow`,
+  `staleIds`, `outputViolations`.
+- Components stay small by splitting into named parts (`MessageLog`, `Composer`, `Chip`,
+  `AlertOptions`, `PlaceColumn`).
+- Conventional commits (`feat(core):`, `test(server):`, `docs:`).
 
 ## Documentation
 
 `docs/` holds the [architecture](ARCHITECTURE.md), [decision records with costs](decisions.md),
-[model assumptions and sources](ASSUMPTIONS.md), and one document per evaluation area with
-measured evidence. Root [CONTRIBUTING.md](../CONTRIBUTING.md) says where each kind of code goes.
+[assumptions and sources](ASSUMPTIONS.md), and one document per evaluation area with measured
+evidence. Root [CONTRIBUTING.md](../CONTRIBUTING.md) says where each kind of code goes.
