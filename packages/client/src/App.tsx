@@ -1,92 +1,73 @@
-import { lazy, Suspense, type Dispatch } from 'react';
-import { ProfileForm } from './components/profile/ProfileForm.js';
-import { StartScreen } from './components/start/StartScreen.js';
+import { lazy, Suspense, useState } from 'react';
+import { SignInScreen } from './components/start/SignInScreen.js';
 import { Alert } from './components/ui/Alert.js';
 import { Footer } from './components/ui/Footer.js';
 import { Header } from './components/ui/Header.js';
 import { SkipLink } from './components/ui/SkipLink.js';
-import type { SessionAction, SessionState } from './state/session.js';
-import { usePageFocus } from './state/use-page-focus.js';
-import { useSession } from './state/use-session.js';
+import { useStartup, type Startup } from './state/use-startup.js';
 import { useTheme } from './state/use-theme.js';
 
-/** The plan view and the engine it runs are loaded only once a family reaches it. */
-const PlanView = lazy(() => import('./components/plan/PlanView.js'));
+/** The signed-in screen, with the engine and schemas it needs, loads after the first paint. */
+const Home = lazy(() =>
+  import('./components/Home.js').then((module) => ({ default: module.Home })),
+);
 
-interface StageProps {
-  readonly session: SessionState;
-  readonly dispatch: Dispatch<SessionAction>;
-}
-
-/** The screen for the current stage of the session. */
-function CurrentStage({ session, dispatch }: StageProps): React.JSX.Element | null {
-  if (session.stage === 'review' && session.editing !== null) {
-    return (
-      <div className="space-y-5">
-        <div>
-          <h1 className="text-2xl font-bold sm:text-3xl">Check your household</h1>
-          <p className="text-ink-soft">
-            Anything marked “Guessed” was not in your description — correct it if it is wrong.
-          </p>
-        </div>
-        <ProfileForm
-          initial={session.editing}
-          onConfirm={(profile) => {
-            dispatch({ type: 'confirm', profile });
-          }}
-        />
-      </div>
-    );
+/** The screen for where start-up is: loading, an error, sign-in, or the app. */
+function Screen({ startup }: { readonly startup: Startup }): React.JSX.Element {
+  const [signInError, setSignInError] = useState<string | null>(null);
+  // A new key after deleting data remounts Home, so it starts from a fresh record.
+  const [generation, setGeneration] = useState(0);
+  if (startup.status === 'loading') return <Alert kind="status">Starting Vayu Mitra…</Alert>;
+  if (startup.status === 'error') return <Alert>{startup.message}</Alert>;
+  const { auth } = startup;
+  if (startup.user === null) {
+    const signIn = (): void => {
+      setSignInError(null);
+      auth.signIn().catch(() => {
+        setSignInError('Sign-in did not finish. Please try again.');
+      });
+    };
+    return <SignInScreen onSignIn={signIn} error={signInError} />;
   }
-  if (session.stage === 'plan' && session.profile !== null) {
-    return (
-      <Suspense fallback={<Alert kind="status">Preparing your plan…</Alert>}>
-        <PlanView
-          profile={session.profile}
-          chosenIds={session.chosenIds}
-          language={session.language}
-          onChoose={(chosenIds) => {
-            dispatch({ type: 'choose', chosenIds });
-          }}
-          onLanguage={(language) => {
-            dispatch({ type: 'language', language });
-          }}
-          onEdit={() => {
-            dispatch({ type: 'edit' });
-          }}
-        />
-      </Suspense>
-    );
-  }
+  const onDeleted = (): void => {
+    setGeneration((value) => value + 1);
+    void auth.signOut();
+  };
   return (
-    <StartScreen
-      onExtracted={(extracted) => {
-        dispatch({ type: 'extracted', extracted });
-      }}
-      onFillManually={() => {
-        dispatch({ type: 'fill-manually' });
-      }}
-    />
+    <Suspense fallback={<Alert kind="status">Loading your household…</Alert>}>
+      <Home
+        key={`${startup.user.uid}-${String(generation)}`}
+        config={startup.config}
+        auth={auth}
+        app={startup.app}
+        onDeleted={onDeleted}
+      />
+    </Suspense>
   );
 }
 
-/** The whole app: three stages, one session saved across reloads. */
+/** The whole app. */
 export function App(): React.JSX.Element {
-  const [session, dispatch] = useSession();
   const theme = useTheme();
-  const main = usePageFocus(session.stage);
+  const startup = useStartup();
+  const signedIn =
+    startup.status === 'ready' && startup.user !== null && startup.config.auth === 'firebase';
   return (
     <>
       <SkipLink />
       <Header
         theme={theme.preference}
         onThemeChange={theme.setPreference}
-        onStartOver={() => {
-          dispatch({ type: 'start-over' });
-        }}
+        onSignOut={
+          signedIn
+            ? () => {
+                void startup.auth.signOut();
+              }
+            : null
+        }
       />
-      <main id="main" ref={main} tabIndex={-1} className="mx-auto max-w-5xl px-4 py-8 outline-none">
-        <CurrentStage session={session} dispatch={dispatch} />
+      <main id="main" tabIndex={-1} className="mx-auto max-w-6xl px-4 py-6 outline-none">
+        <Screen startup={startup} />
       </main>
       <Footer />
     </>

@@ -8,6 +8,8 @@ export interface MemoryChip {
   readonly id: string;
   readonly kind: MemoryFact['kind'];
   readonly label: string;
+  /** The fact itself, for editing. */
+  readonly fact: MemoryFact;
 }
 
 /** "6:30 am", or "7 am" on the hour. */
@@ -48,16 +50,19 @@ export function memoryChips(memory: Memory): MemoryChip[] {
       id: person.id,
       kind: person.kind,
       label: describePerson(person),
+      fact: person,
     })),
     ...memory.routines.map((routine) => ({
       id: routine.id,
       kind: routine.kind,
       label: describeRoutine(routine, memory.people),
+      fact: routine,
     })),
     ...memory.home.map((fact) => ({
       id: fact.id,
       kind: fact.kind,
       label: HOME_FEATURE_LABELS[fact.feature],
+      fact,
     })),
   ];
 }
