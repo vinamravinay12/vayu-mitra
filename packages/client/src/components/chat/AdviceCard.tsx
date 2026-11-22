@@ -9,6 +9,7 @@ const VERDICTS: Readonly<Record<Verdict, { label: string; tone: string }>> = {
   skip: { label: 'Skip it today', tone: 'bg-danger-bg text-danger-fg' },
 };
 
+/** The text with its first letter upper-cased. */
 const capitalise = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
 
 /**

@@ -9,9 +9,9 @@
 /** The notification fields from an FCM data message, or null when it is not one of ours. */
 function readAlert(event) {
   try {
-    const payload = event.data?.json();
-    const data = payload?.data;
-    return typeof data?.title === 'string' && typeof data?.body === 'string' ? data : null;
+    const message = event.data?.json();
+    const fields = message?.data;
+    return typeof fields?.title === 'string' && typeof fields?.body === 'string' ? fields : null;
   } catch {
     return null;
   }

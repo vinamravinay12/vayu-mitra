@@ -62,7 +62,7 @@ export type AirReport = z.infer<typeof airReportSchema>;
 export type ForecastSource = (typeof FORECAST_SOURCES)[number];
 
 /** The hour the report starts at: now. The schema guarantees there is one. */
-export function nowHour(report: Pick<AirReport, 'hours'>): ReportHour {
+export function nowHour(report: { readonly hours: readonly ReportHour[] }): ReportHour {
   const [first] = report.hours;
   if (first === undefined) {
     throw new Error('An air report always has at least one hour');

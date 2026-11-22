@@ -1,4 +1,4 @@
-import { CATEGORY_LABELS, type ReportHour } from '@vayu/core';
+import { CATEGORY_LABELS, nowHour, type ReportHour } from '@vayu/core';
 import { when } from './format.js';
 
 /** Hours shown ahead. */
@@ -10,7 +10,7 @@ export const STRIP_HOURS = 12;
  */
 export function HourStrip({ hours }: { readonly hours: readonly ReportHour[] }): React.JSX.Element {
   const shown = hours.slice(0, STRIP_HOURS);
-  const today = shown[0]?.time.slice(0, 10) ?? '';
+  const today = nowHour({ hours }).time.slice(0, 10);
   const highest = Math.max(...shown.map((hour) => hour.aqi), 1);
   return (
     <div>

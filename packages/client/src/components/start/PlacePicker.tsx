@@ -1,5 +1,5 @@
 import type { Place } from '@vayu/core';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import type { Api } from '../../api/api.js';
 import { messageOf } from '../../state/use-startup.js';
 import { Alert } from '../ui/Alert.js';
@@ -30,6 +30,28 @@ export function currentPlace(geolocation: Geolocation | undefined): Promise<Plac
   });
 }
 
+/** Searching by name and locating, with whatever went wrong. */
+function usePlaceSearch(api: Api, onPick: (place: Place) => void) {
+  const [results, setResults] = useState<readonly Place[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  return {
+    results,
+    error,
+    search: (query: string): void => {
+      setError(null);
+      api.searchPlaces(query).then(setResults, (cause: unknown) => {
+        setError(messageOf(cause));
+      });
+    },
+    locate: (): void => {
+      setError(null);
+      currentPlace(navigator.geolocation).then(onPick, () => {
+        setError('We could not get your location. Search for your area instead.');
+      });
+    },
+  };
+}
+
 /** The places a search found, each a button. */
 function Results({
   results,
@@ -58,41 +80,37 @@ function Results({
   );
 }
 
+interface PlacePickerProps {
+  readonly api: Api;
+  readonly onPick: (place: Place) => void;
+  /** Inside "Change place": no card and no heading of its own. */
+  readonly embedded?: boolean;
+}
+
 /** Search by name, or use the device's location. */
 export function PlacePicker({
   api,
   onPick,
-}: {
-  readonly api: Api;
-  readonly onPick: (place: Place) => void;
-}): React.JSX.Element {
+  embedded = false,
+}: PlacePickerProps): React.JSX.Element {
+  const id = useId();
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<readonly Place[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const search = (event: React.SubmitEvent): void => {
-    event.preventDefault();
-    setError(null);
-    api.searchPlaces(query).then(setResults, (cause: unknown) => {
-      setError(messageOf(cause));
-    });
-  };
-  const locate = (): void => {
-    setError(null);
-    currentPlace(navigator.geolocation).then(onPick, () => {
-      setError('We could not get your location. Search for your area instead.');
-    });
-  };
-  return (
-    <section className="card space-y-3" aria-labelledby="place-heading">
-      <h2 id="place-heading" className="text-lg font-bold">
-        Where are you?
-      </h2>
-      <form className="flex flex-wrap gap-2" onSubmit={search} role="search">
-        <label htmlFor="place-query" className="sr-only">
+  const { results, error, search, locate } = usePlaceSearch(api, onPick);
+  const body = (
+    <>
+      <form
+        className="flex flex-wrap gap-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          search(query);
+        }}
+        role="search"
+      >
+        <label htmlFor={`${id}-query`} className="sr-only">
           Area or city
         </label>
         <input
-          id="place-query"
+          id={`${id}-query`}
           className="field min-w-0 flex-1"
           value={query}
           placeholder="Area or city, e.g. Lajpat Nagar"
@@ -112,6 +130,15 @@ export function PlacePicker({
       </button>
       {error !== null && <Alert>{error}</Alert>}
       {results !== null && <Results results={results} onPick={onPick} />}
+    </>
+  );
+  if (embedded) return <div className="space-y-3">{body}</div>;
+  return (
+    <section className="card space-y-3" aria-labelledby={`${id}-heading`}>
+      <h2 id={`${id}-heading`} className="text-lg font-bold">
+        Where are you?
+      </h2>
+      {body}
     </section>
   );
 }
