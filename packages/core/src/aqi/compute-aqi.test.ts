@@ -6,6 +6,7 @@ import {
   categoryRank,
   computeAqi,
   computeNaqi,
+  concentrationFor,
   particulateAqi,
   subIndex,
 } from './compute-aqi.js';
@@ -91,5 +92,21 @@ describe('epaIndexToConcentration', () => {
     // An EPA 180 is ~110 µg/m³: "poor" in NAQI terms, not "moderate".
     const pm25 = epaIndexToConcentration(180, EPA_PM25_BANDS);
     expect(particulateAqi(pm25, undefined)?.category).toBe('poor');
+  });
+});
+
+describe('concentrationFor', () => {
+  it('inverts the NAQI sub-index', () => {
+    expect(concentrationFor(150, PM25_BREAKPOINTS)).toBe(75);
+    expect(concentrationFor(400, PM25_BREAKPOINTS)).toBe(250);
+    expect(concentrationFor(100, PM10_BREAKPOINTS)).toBe(100);
+    for (const value of [0, 37, 180, 333, 499]) {
+      expect(subIndex(concentrationFor(value, PM25_BREAKPOINTS), PM25_BREAKPOINTS)).toBe(value);
+    }
+  });
+
+  it('clamps to the scale', () => {
+    expect(concentrationFor(-10, PM25_BREAKPOINTS)).toBe(0);
+    expect(concentrationFor(900, PM25_BREAKPOINTS)).toBe(380);
   });
 });

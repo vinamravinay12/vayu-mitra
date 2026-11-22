@@ -43,6 +43,15 @@ export function detectTime(message: string): string | null {
   return twentyFour === null ? null : `${pad(Number(twentyFour[1]))}:${String(twentyFour[2])}`;
 }
 
+/** What the AI understood from the message, which takes precedence over keywords. */
+export interface IntentHints {
+  readonly activity: Activity | null;
+  readonly person: string | null;
+  readonly time: string | null;
+}
+
+const NO_HINTS: IntentHints = { activity: null, person: null, time: null };
+
 /** What a message asks about, resolved against memory. */
 export interface ChatIntent {
   readonly activity: Activity;
@@ -55,23 +64,35 @@ export interface ChatIntent {
 /**
  * Reads the question: which activity, for whom, when. A person named in the
  * message narrows it to them; otherwise a remembered routine's person, or the
- * whole household. A time in the message beats the routine's usual time.
+ * whole household. A time in the message beats the routine's usual time. The
+ * AI's reading, when there is one, beats the keyword reading: it understands
+ * a question written in Devanagari, where the keywords may not.
  */
-export function readIntent(message: string, memory: Memory): ChatIntent | null {
-  const activity = detectActivity(message);
+export function readIntent(
+  message: string,
+  memory: Memory,
+  hints: IntentHints = NO_HINTS,
+): ChatIntent | null {
+  const activity = hints.activity ?? detectActivity(message);
   if (activity === null) {
     return null;
   }
-  const text = message.toLowerCase();
+  const text = `${message} ${hints.person ?? ''}`.toLowerCase();
   const named = memory.people.filter((person) => mentions(text, person.label));
   const routine = findRoutine(memory.routines, activity, named);
   const owner = memory.people.filter((person) => person.id === routine?.personId);
   const people = [named, owner, memory.people].find((group) => group.length > 0) ?? [];
+  return { activity, people, routine, ...timing(message, hints, routine) };
+}
+
+/** When, and for how long: the AI's time, a time in the message, or the routine's. */
+function timing(
+  message: string,
+  hints: IntentHints,
+  routine: RoutineFact | null,
+): Pick<ChatIntent, 'time' | 'minutes'> {
   return {
-    activity,
-    people,
-    routine,
-    time: detectTime(message) ?? routine?.time ?? null,
+    time: hints.time ?? detectTime(message) ?? routine?.time ?? null,
     minutes: routine?.minutes ?? null,
   };
 }

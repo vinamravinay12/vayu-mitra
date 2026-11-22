@@ -89,6 +89,20 @@ describe('readIntent', () => {
   });
 });
 
+describe('readIntent with hints', () => {
+  it('lets the AI reading override keywords', () => {
+    const intent = readIntent('क्या माँ टहल सकती हैं?', memory, {
+      activity: 'walk',
+      person: 'Papa',
+      time: '08:00',
+    });
+    expect(intent?.activity).toBe('walk');
+    expect(intent?.people).toEqual([PAPA]);
+    expect(intent?.time).toBe('08:00');
+    expect(readIntent('क्या माँ टहल सकती हैं?', memory)).toBeNull();
+  });
+});
+
 describe('describe', () => {
   const report = makeReport([340, 320, 300, 250, 190, 200, 260]);
 

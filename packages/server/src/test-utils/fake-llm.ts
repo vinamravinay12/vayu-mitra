@@ -1,4 +1,3 @@
-import type { HouseholdProfile } from '@vayu/core';
 import type { LlmClient, LlmPurpose, LlmRequest } from '../llm/llm-client.js';
 
 type Responder = string | Error | ((request: LlmRequest) => string);
@@ -33,99 +32,46 @@ export const UNSAFE_VERDICT = JSON.stringify({
   reason: 'Asks for hidden rules.',
 });
 
-/** What Gemini returned for a real Lajpat Nagar description during probing. */
-export const FAMILY_EXTRACTION = JSON.stringify({
-  placeQuery: 'Lajpat Nagar, Delhi',
-  members: [
-    {
-      name: 'Father',
-      ageGroup: 'senior',
-      conditions: ['asthma'],
-      daytime: 'home',
-      commuteMode: null,
-      commuteKm: null,
-      outdoorExercise: 'light',
-      exerciseHour: 6,
-    },
-    {
-      name: 'You',
-      ageGroup: 'adult',
-      conditions: [],
-      daytime: 'office',
-      commuteMode: 'car-petrol',
-      commuteKm: 14,
-      outdoorExercise: null,
-      exerciseHour: null,
-    },
-  ],
-  home: {
-    tightness: null,
-    ventilation: null,
-    hasPurifier: false,
-    cookingFuel: 'lpg',
-    hasKitchenExhaust: null,
-    heating: 'coal-or-wood',
-    indoorSources: ['incense'],
-  },
-  lifestyle: {
-    workDaysPerWeek: null,
-    departHour: null,
-    burnsWaste: true,
-    generatorHoursPerWeek: null,
-    transitNearby: true,
-    communityHouseholds: 120,
-  },
+/** An understand answer with nothing to remember and no activity. */
+export const NOTHING_UNDERSTOOD = JSON.stringify({
+  memoryChanges: [],
+  activity: null,
+  person: null,
+  time: null,
+  onTopic: true,
 });
 
-/** A valid household profile in New Delhi. */
-export const PROFILE: HouseholdProfile = {
-  place: {
-    name: 'New Delhi',
-    region: 'Delhi',
-    country: 'India',
-    latitude: 28.61,
-    longitude: 77.21,
-  },
-  members: [
-    {
-      name: 'Dadaji',
+/** A flat memory change with every field null but the op, for building answers. */
+export const flatChange = (fields: Record<string, unknown>) => ({
+  op: 'remember-home',
+  label: null,
+  ageGroup: null,
+  conditions: null,
+  activity: null,
+  person: null,
+  time: null,
+  minutes: null,
+  feature: null,
+  id: null,
+  ...fields,
+});
+
+/** What the understand call returned for "Dadi has asthma and walks at 6:30 every morning, is it ok today?" in probing. */
+export const DADI_UNDERSTOOD = JSON.stringify({
+  memoryChanges: [
+    flatChange({
+      op: 'remember-person',
+      label: 'Dadi',
       ageGroup: 'senior',
       conditions: ['asthma'],
-      daytime: 'home',
-      commuteMode: 'bus',
-      commuteKm: 0,
-      outdoorExercise: 'light',
-      exerciseHour: 6,
-    },
-    {
-      name: 'Asha',
-      ageGroup: 'adult',
-      conditions: [],
-      daytime: 'office',
-      commuteMode: 'car-petrol',
-      commuteKm: 14,
-      outdoorExercise: 'none',
-      exerciseHour: 7,
-    },
+    }),
+    flatChange({ op: 'remember-routine', activity: 'walk', person: 'Dadi', time: '06:30' }),
   ],
-  home: {
-    tightness: 'leaky',
-    ventilation: 'morning',
-    hasPurifier: false,
-    cookingFuel: 'lpg',
-    hasKitchenExhaust: false,
-    heating: 'coal-or-wood',
-    indoorSources: ['incense'],
-  },
-  lifestyle: {
-    workDaysPerWeek: 5,
-    departHour: 8,
-    burnsWaste: true,
-    generatorHoursPerWeek: 0,
-    transitNearby: true,
-    communityHouseholds: 120,
-  },
-};
+  activity: 'walk',
+  person: 'Dadi',
+  time: null,
+  onTopic: true,
+});
 
-/** 10:00 IST on 21 November 2026. */
-export const NOW = (): Date => new Date('2026-11-21T04:30:00Z');
+/** 10:00 IST on 22 November 2026. */
+export const NOW = (): Date => new Date('2026-11-22T04:30:00Z');
