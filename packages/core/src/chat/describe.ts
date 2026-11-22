@@ -12,12 +12,15 @@ import { formatHour } from '../time/local-clock.js';
  * when the AI is unavailable, and the facts the AI is told to stay within.
  */
 
-/** "7 am", or "tomorrow 7 am" when the hour is not on the outlook's first day. */
+/** "at 7 am", or "tomorrow at 7 am" when the hour is not on the outlook's first day. */
 export function describeTime(time: string, report: AirReport): string {
   const today = report.hours[0]?.time.slice(0, 10);
-  const hour = formatHour(Number(time.slice(11, 13)));
+  const hour = `at ${formatHour(Number(time.slice(11, 13)))}`;
   return time.slice(0, 10) === today ? hour : `tomorrow ${hour}`;
 }
+
+/** The text with its first letter upper-cased. */
+const capitalise = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
 
 /** "Very poor (AQI 342)". */
 export const describeLevel = (hour: Pick<AdviceHour, 'aqi' | 'category'>): string =>
@@ -37,19 +40,19 @@ export function describeAir(report: AirReport): string {
   const outlook =
     best === null || best.aqi >= report.current.aqi
       ? 'It is not expected to get cleaner in daylight hours soon.'
-      : `The cleanest daylight hours ahead start around ${describeTime(best.time, report)}, at ${describeLevel(best)}.`;
+      : `The cleanest daylight hours ahead start ${describeTime(best.time, report)}: ${describeLevel(best)}.`;
   return `Right now the air is ${now}, ${describeSource(report)}. ${outlook}`;
 }
 
 /** The verdict in words, with the precautions. */
 export function describeAdvice(advice: ActivityAdvice, report: AirReport): string {
   const name = ACTIVITY_PROFILES[advice.activity].label;
-  const at = `At ${describeTime(advice.planned.time, report)} it is ${describeLevel(advice.planned)}`;
+  const at = `${capitalise(describeTime(advice.planned.time, report))} it is ${describeLevel(advice.planned)}`;
   const best = advice.bestWindow;
   const shifted =
     best === null
       ? ''
-      : `${describeTime(best.time, report)} looks better, at ${describeLevel(best)}`;
+      : `It looks better ${describeTime(best.time, report)}: ${describeLevel(best)}`;
   const verdicts = {
     go: `${at}, which is fine for the ${name}.`,
     shift: `${at}. ${shifted}, so move the ${name} to then.`,

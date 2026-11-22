@@ -114,40 +114,4 @@
   .aqi-severe {
     background-color: var(--color-aqi-severe);
   }
-  .fill-aqi-good {
-    fill: var(--color-aqi-good);
-  }
-  .fill-aqi-satisfactory {
-    fill: var(--color-aqi-satisfactory);
-  }
-  .fill-aqi-moderate {
-    fill: var(--color-aqi-moderate);
-  }
-  .fill-aqi-poor {
-    fill: var(--color-aqi-poor);
-  }
-  .fill-aqi-very-poor {
-    fill: var(--color-aqi-very-poor);
-  }
-  .fill-aqi-severe {
-    fill: var(--color-aqi-severe);
-  }
-}
-
-/* The printed plan is what a family sticks on the fridge. */
-@media print {
-  .no-print {
-    display: none !important;
-  }
-  body {
-    background: white;
-    color: black;
-  }
-  .card {
-    box-shadow: none;
-    break-inside: avoid;
-  }
-  [role='tabpanel'][hidden] {
-    display: block !important;
-  }
 }

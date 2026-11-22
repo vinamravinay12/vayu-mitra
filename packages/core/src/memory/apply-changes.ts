@@ -115,7 +115,9 @@ export function applyChange(memory: Memory, change: MemoryChange): Memory {
  */
 export function applyChanges(memory: Memory, changes: readonly MemoryChange[]): Memory {
   const rank = (change: MemoryChange): number => (change.op === 'remember-person' ? 0 : 1);
-  return [...changes].sort((first, second) => rank(first) - rank(second)).reduce(applyChange, memory);
+  return [...changes]
+    .sort((first, second) => rank(first) - rank(second))
+    .reduce(applyChange, memory);
 }
 
 /** True when nothing is remembered yet. */

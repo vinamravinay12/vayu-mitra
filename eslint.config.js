@@ -67,6 +67,14 @@ export default defineConfig([
     rules: { 'no-console': 'off', 'max-lines-per-function': 'off', complexity: 'off' },
   },
   {
+    // The push service worker is served as is, outside the bundle: plain JavaScript in a worker.
+    files: ['packages/client/public/**/*.js'],
+    extends: [tseslint.configs.disableTypeChecked],
+    languageOptions: {
+      globals: { self: 'readonly', URL: 'readonly' },
+    },
+  },
+  {
     files: ['**/*.test.ts', '**/*.test.tsx'],
     rules: {
       'max-lines': 'off',

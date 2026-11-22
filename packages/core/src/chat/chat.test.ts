@@ -107,12 +107,12 @@ describe('describe', () => {
   const report = makeReport([340, 320, 300, 250, 190, 200, 260]);
 
   it('describes times, sources and the air', () => {
-    expect(describeTime('2026-11-22T14:00', report)).toBe('2 pm');
-    expect(describeTime('2026-11-23T06:00', report)).toBe('tomorrow 6 am');
+    expect(describeTime('2026-11-22T14:00', report)).toBe('at 2 pm');
+    expect(describeTime('2026-11-23T06:00', report)).toBe('tomorrow at 6 am');
     expect(describeSource(report)).toBe('measured at ITO, Delhi - CPCB, 2.1 km away (CPCB)');
     expect(describeSource({ ...report, station: null })).toMatch(/^from the forecast model/);
     expect(describeAir(report)).toBe(
-      'Right now the air is Very poor (AQI 340), measured at ITO, Delhi - CPCB, 2.1 km away (CPCB). The cleanest daylight hours ahead start around 2 pm, at Moderate (AQI 190).',
+      'Right now the air is Very poor (AQI 340), measured at ITO, Delhi - CPCB, 2.1 km away (CPCB). The cleanest daylight hours ahead start at 2 pm: Moderate (AQI 190).',
     );
     expect(describeAir(makeReport([100, 200, 300]))).toMatch(/not expected to get cleaner/);
     expect(describeAir(makeReport([100]))).toMatch(/not expected to get cleaner/);
@@ -134,7 +134,7 @@ describe('describe', () => {
       );
     expect(at([150])).toMatch(/^At 10 am it is Moderate \(AQI 150\), which is fine for the walk\./);
     expect(at([250, 180])).toMatch(
-      /11 am looks better, at Moderate \(AQI 180\), so move the walk to then\./,
+      /It looks better at 11 am: Moderate \(AQI 180\), so move the walk to then\./,
     );
     expect(at([250])).toMatch(/OK if you keep it short/);
     expect(at([380])).toMatch(/Skip the walk; try a brisk walk indoors/);
