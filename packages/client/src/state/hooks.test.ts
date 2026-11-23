@@ -8,7 +8,7 @@ import { useChat } from './use-chat.js';
 import { useHousehold } from './use-household.js';
 import { messageOf, useStartup } from './use-startup.js';
 
-const api = createApi(() => Promise.resolve(null));
+const api = createApi();
 
 describe('useAir', () => {
   it('waits for a place, then refreshes on a timer until unmounted', async () => {
@@ -80,12 +80,29 @@ describe('useChat', () => {
 });
 
 describe('useStartup', () => {
-  it('stops listening when unmounted before it finished', async () => {
-    installFakeServer();
+  it('ignores answers that arrive after unmount', async () => {
+    const server = installFakeServer();
     const { result, unmount } = renderHook(() => useStartup());
     unmount();
     await new Promise((resolve) => setTimeout(resolve, 10));
-    expect(result.current.status).toBe('loading');
+    expect(result.current.startup.status).toBe('loading');
+    server.failures.set('GET /api/config', 500);
+    const failing = renderHook(() => useStartup());
+    failing.unmount();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(failing.result.current.startup.status).toBe('loading');
+  });
+
+  it('records signing in only once ready', async () => {
+    installFakeServer();
+    const { result } = renderHook(() => useStartup());
+    act(() => {
+      result.current.setSignedIn('early@b.test', true);
+    });
+    expect(result.current.startup.status).toBe('loading');
+    await vi.waitFor(() => {
+      expect(result.current.startup.status).toBe('ready');
+    });
   });
 
   it('words unknown failures generically', () => {

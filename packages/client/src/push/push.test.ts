@@ -1,66 +1,83 @@
-import type { FirebaseApp } from 'firebase/app';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { disablePush, enablePush, SERVICE_WORKER_URL } from './push.js';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { disablePush, enablePush, keyBytes, SERVICE_WORKER_URL } from './push.js';
 
-const messaging = vi.hoisted(() => ({
-  isSupported: vi.fn(() => Promise.resolve(true)),
-  getMessaging: vi.fn(() => ({ messaging: true })),
-  onRegistered: vi.fn(),
-  onUnregistered: vi.fn(),
-  register: vi.fn(() => Promise.resolve()),
-  unregister: vi.fn(() => Promise.resolve()),
-}));
+const JSON_SUBSCRIPTION = {
+  endpoint: 'https://fcm.googleapis.com/fcm/send/x',
+  keys: { p256dh: 'p', auth: 'a' },
+};
 
-vi.mock('firebase/messaging', () => messaging);
-
-const app = {} as FirebaseApp;
-const callbacks = { onRegistered: vi.fn(), onUnregistered: vi.fn() };
-const registration = { scope: '/' };
-const registerWorker = vi.fn(() => Promise.resolve(registration));
-
-/** Stubs notification permission and the service worker container. */
-function browser(permission: NotificationPermission, withWorker = true): void {
+/** A browser with service workers, Push and the given permission answer. */
+function browser(
+  permission: NotificationPermission,
+  subscriptionJson: unknown = JSON_SUBSCRIPTION,
+) {
+  const unsubscribe = vi.fn(() => Promise.resolve(true));
+  const subscription = {
+    endpoint: JSON_SUBSCRIPTION.endpoint,
+    toJSON: () => subscriptionJson,
+    unsubscribe,
+  };
+  const pushManager = {
+    subscribe: vi.fn(() => Promise.resolve(subscription)),
+    getSubscription: vi.fn(() => Promise.resolve(subscription)),
+  };
+  const register = vi.fn(() => Promise.resolve({ pushManager }));
+  const getRegistration = vi.fn(() => Promise.resolve({ pushManager }));
   vi.stubGlobal('Notification', { requestPermission: () => Promise.resolve(permission) });
-  if (withWorker) {
-    vi.stubGlobal('navigator', { serviceWorker: { register: registerWorker } });
-  } else {
-    vi.stubGlobal('navigator', {});
-  }
+  vi.stubGlobal('PushManager', Object);
+  vi.stubGlobal('navigator', { serviceWorker: { register, getRegistration } });
+  return { register, pushManager, unsubscribe, getRegistration };
 }
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe('keyBytes', () => {
+  it('decodes base64url without padding', () => {
+    expect([...keyBytes('AQID')]).toEqual([1, 2, 3]);
+    expect([...keyBytes('-_8')]).toEqual([251, 255]);
+  });
+});
+
 describe('enablePush', () => {
-  beforeEach(() => {
-    messaging.isSupported.mockResolvedValue(true);
+  it('asks permission, registers the worker, subscribes with the VAPID key and saves it', async () => {
+    const { register, pushManager } = browser('granted');
+    const save = vi.fn(() => Promise.resolve());
+    expect(await enablePush('AQID', save)).toBe('enabled');
+    expect(register).toHaveBeenCalledWith(SERVICE_WORKER_URL);
+    expect(pushManager.subscribe).toHaveBeenCalledWith({
+      userVisibleOnly: true,
+      applicationServerKey: keyBytes('AQID'),
+    });
+    expect(save).toHaveBeenCalledWith(JSON_SUBSCRIPTION);
   });
 
-  it('asks permission, registers the worker and the FID callbacks', async () => {
-    browser('granted');
-    expect(await enablePush(app, 'vapid', callbacks)).toBe('enabled');
-    expect(registerWorker).toHaveBeenCalledWith(SERVICE_WORKER_URL);
-    expect(messaging.onRegistered).toHaveBeenCalledWith(
-      { messaging: true },
-      callbacks.onRegistered,
-    );
-    expect(messaging.register).toHaveBeenCalledWith(
-      { messaging: true },
-      { vapidKey: 'vapid', serviceWorkerRegistration: registration },
-    );
-  });
-
-  it('reports a refusal or an unsupported browser', async () => {
+  it('reports a refusal, a browser without push, or an incomplete subscription', async () => {
+    const save = vi.fn(() => Promise.resolve());
     browser('denied');
-    expect(await enablePush(app, 'vapid', callbacks)).toBe('denied');
-    browser('granted', false);
-    expect(await enablePush(app, 'vapid', callbacks)).toBe('unsupported');
-    messaging.isSupported.mockResolvedValue(false);
-    browser('granted');
-    expect(await enablePush(app, 'vapid', callbacks)).toBe('unsupported');
+    expect(await enablePush('AQID', save)).toBe('denied');
+    browser('granted', { endpoint: 'https://fcm.googleapis.com/x', keys: {} });
+    expect(await enablePush('AQID', save)).toBe('unsupported');
+    browser('granted', {});
+    expect(await enablePush('AQID', save)).toBe('unsupported');
+    vi.stubGlobal('navigator', {});
+    expect(await enablePush('AQID', save)).toBe('unsupported');
+    expect(save).not.toHaveBeenCalled();
   });
 });
 
 describe('disablePush', () => {
-  it('unregisters this installation', async () => {
-    await disablePush(app);
-    expect(messaging.unregister).toHaveBeenCalledWith({ messaging: true });
+  it('unsubscribes and tells the server, or does nothing without a subscription', async () => {
+    const { unsubscribe, pushManager, getRegistration } = browser('granted');
+    const forget = vi.fn(() => Promise.resolve());
+    await disablePush(forget);
+    expect(unsubscribe).toHaveBeenCalled();
+    expect(forget).toHaveBeenCalledWith(JSON_SUBSCRIPTION.endpoint);
+    pushManager.getSubscription.mockResolvedValueOnce(null as never);
+    await disablePush(forget);
+    getRegistration.mockResolvedValueOnce(undefined as never);
+    await disablePush(forget);
+    expect(forget).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react';
-import { fetchConfig, type ClientConfig } from '../api/config.js';
-import { localAuth, type AuthClient, type SignedInUser } from '../auth/auth.js';
-import type { FirebaseApp } from 'firebase/app';
+import { useCallback, useEffect, useState } from 'react';
+import { fetchConfig, fetchSession, type ClientConfig } from '../api/config.js';
 
 /** Where start-up has got to. */
 export type Startup =
@@ -10,50 +8,39 @@ export type Startup =
   | {
       readonly status: 'ready';
       readonly config: ClientConfig;
-      readonly auth: AuthClient;
-      /** The Firebase app, for push; null when sign-in is off. */
-      readonly app: FirebaseApp | null;
-      readonly user: SignedInUser | null;
+      /** The signed-in email; null when signed out. With sign-in off, always signed in. */
+      readonly signedIn: boolean;
+      readonly email: string | null;
     };
 
-/**
- * Loads the config, then the matching sign-in client, then follows the signed-in
- * user. Firebase is imported only when the server has it configured.
- */
-export function useStartup(): Startup {
-  const [state, setState] = useState<Startup>({ status: 'loading' });
-  useEffect(() => {
-    let unsubscribe = (): void => undefined;
-    let cancelled = false;
-    const start = async (): Promise<void> => {
-      const config = await fetchConfig();
-      const session = await sessionFor(config);
-      if (cancelled) return;
-      unsubscribe = session.auth.onChange((user) => {
-        setState({ status: 'ready', config, auth: session.auth, app: session.app, user });
-      });
-    };
-    start().catch((cause: unknown) => {
-      setState({ status: 'error', message: messageOf(cause) });
-    });
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
-  }, []);
-  return state;
+/** Start-up state, and a way to record signing in or out. */
+export interface StartupState {
+  readonly startup: Startup;
+  readonly setSignedIn: (email: string | null, signedIn: boolean) => void;
 }
 
-/** The sign-in client the config calls for; Firebase is imported only when it is on. */
-async function sessionFor(
-  config: ClientConfig,
-): Promise<{ readonly app: FirebaseApp | null; readonly auth: AuthClient }> {
-  const { firebase } = config;
-  if (firebase === null) {
-    return { app: null, auth: localAuth };
-  }
-  const { loadFirebaseAuth } = await import('../auth/firebase-auth.js');
-  return loadFirebaseAuth(firebase);
+/** Loads the config and who is signed in, in parallel. */
+export function useStartup(): StartupState {
+  const [startup, setStartup] = useState<Startup>({ status: 'loading' });
+  useEffect(() => {
+    let current = true;
+    Promise.all([fetchConfig(), fetchSession()]).then(
+      ([config, session]) => {
+        if (current)
+          setStartup({ status: 'ready', config, signedIn: session.signedIn, email: session.email });
+      },
+      (cause: unknown) => {
+        if (current) setStartup({ status: 'error', message: messageOf(cause) });
+      },
+    );
+    return () => {
+      current = false;
+    };
+  }, []);
+  const setSignedIn = useCallback((email: string | null, signedIn: boolean) => {
+    setStartup((state) => (state.status === 'ready' ? { ...state, email, signedIn } : state));
+  }, []);
+  return { startup, setSignedIn };
 }
 
 /** A failure as people should read it. */

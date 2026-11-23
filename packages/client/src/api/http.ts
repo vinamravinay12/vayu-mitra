@@ -9,9 +9,6 @@ export class ApiError extends Error {
   }
 }
 
-/** The signed-in user's ID token, or null when sign-in is off. */
-export type TokenSource = () => Promise<string | null>;
-
 const FALLBACK = 'Something went wrong. Please try again.';
 
 /** The server's error text is written for people; anything else gets a safe generic line. */
@@ -31,24 +28,22 @@ export interface JsonRequest {
 }
 
 /**
- * Sends a request with the user's token and returns the parsed body (null for
- * an empty answer), turning any failure into an ApiError.
+ * Sends a request and returns the parsed body (null for an empty answer),
+ * turning any failure into an ApiError. The session travels in its HttpOnly
+ * cookie, which the browser sends to our own origin by itself.
  */
 export async function requestJson(
   path: string,
-  token: TokenSource,
   { method = 'GET', body }: JsonRequest = {},
 ): Promise<unknown> {
-  const idToken = await token();
-  const headers: Record<string, string> = {};
-  if (idToken !== null) headers.Authorization = `Bearer ${idToken}`;
-  if (body !== undefined) headers['Content-Type'] = 'application/json';
   let response: Response;
   try {
     response = await fetch(path, {
       method,
-      headers,
-      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      credentials: 'same-origin',
+      ...(body === undefined
+        ? {}
+        : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
     });
   } catch {
     throw new ApiError('We could not reach Vayu Mitra. Check your connection and try again.');

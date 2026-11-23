@@ -1,8 +1,7 @@
 import { nowHour, suggestQuestions, type ChatResponse, type Place } from '@vayu/core';
-import type { FirebaseApp } from 'firebase/app';
 import { useCallback, useMemo } from 'react';
-import { createApi, type Api, type ClientConfig, type Household } from '../api/api.js';
-import type { AuthClient } from '../auth/auth.js';
+import { createApi, type Api, type Household } from '../api/api.js';
+import type { ClientConfig } from '../api/config.js';
 import { useAir, type AirState } from '../state/use-air.js';
 import { useChat } from '../state/use-chat.js';
 import { useHousehold, type HouseholdState } from '../state/use-household.js';
@@ -17,8 +16,6 @@ import { Alert } from './ui/Alert.js';
 
 interface HomeProps {
   readonly config: ClientConfig;
-  readonly auth: AuthClient;
-  readonly app: FirebaseApp | null;
   /** After the family deletes their data. */
   readonly onDeleted: () => void;
 }
@@ -49,14 +46,14 @@ function PlaceColumn({ api, air, place, onPick }: PlaceColumnProps): React.JSX.E
   );
 }
 
-interface LoadedProps extends Omit<HomeProps, 'auth'> {
+interface LoadedProps extends HomeProps {
   readonly api: Api;
   readonly state: HouseholdState;
   readonly household: Household;
 }
 
 /** The app once the household has loaded: the air, the conversation, what is remembered. */
-function Loaded({ api, state, household, config, app, onDeleted }: LoadedProps): React.JSX.Element {
+function Loaded({ api, state, household, config, onDeleted }: LoadedProps): React.JSX.Element {
   const { replace } = state;
   const place = household.place;
   const air = useAir(api, place);
@@ -67,7 +64,7 @@ function Loaded({ api, state, household, config, app, onDeleted }: LoadedProps):
     [household, replace],
   );
   const chat = useChat(api, place, onReply);
-  const push = usePush(app, config.vapidKey, api, replace);
+  const push = usePush(config.vapidKey, api, replace);
   const remove = (): void => {
     api.deleteEverything().then(onDeleted, () => undefined);
   };
@@ -103,8 +100,8 @@ function Loaded({ api, state, household, config, app, onDeleted }: LoadedProps):
 }
 
 /** The signed-in app, once the family's record has loaded. */
-export function Home({ auth, ...props }: HomeProps): React.JSX.Element {
-  const api = useMemo(() => createApi(() => auth.token()), [auth]);
+export function Home(props: HomeProps): React.JSX.Element {
+  const api = useMemo(() => createApi(), []);
   const state = useHousehold(api);
   if (state.household === null) {
     return state.error === null ? (
