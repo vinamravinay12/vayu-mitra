@@ -32,7 +32,7 @@ good intentions.
   dropped.
 - **Dependencies are injected:** the model, the air sources, the store, the messenger, both
   token verifiers, `fetch` and the clock are parameters, which is what makes 100% coverage
-  possible without network. Firebase bindings are one call each, tested against fakes.
+  possible without network. Google Cloud and Web Push bindings are one call each, tested against fakes.
 - **Cannot-happen branches are removed, not tested around.** Where coverage found a branch that
   could never run, the types were tightened instead (a non-empty station group, an editor that
   only accepts editable facts, a household that is always loaded where the chat lives).
