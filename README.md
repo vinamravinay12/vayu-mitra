@@ -6,8 +6,8 @@ nearest official air station, answers for your family, remembers who is at home,
 you when the air turns bad.**
 
 📦 **Repository:** https://github.com/vinamravinay12/vayu-mitra
-🌐 **Live app:** https://vayu-mitra-982453010059.asia-south1.run.app (deploy the current
-version with one script: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md))
+🌐 **Live app:** https://vayu-mitra-632738328636.asia-south1.run.app (Cloud Run, `asia-south1`;
+deployed with one script: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md))
 
 ---
 
