@@ -1,4 +1,5 @@
 import { logEvent } from '../logging/log.js';
+import type { PushSubscriptionJson } from '../validation/request-schemas.js';
 
 /** A notification for the family's devices. */
 export interface PushMessage {
@@ -7,22 +8,25 @@ export interface PushMessage {
 }
 
 /**
- * Sends notifications to a family's devices, by Firebase Installation ID;
- * reports which ids are no longer registered, so they can be dropped.
+ * Sends notifications to a family's devices by their Web Push subscriptions;
+ * reports which endpoints are gone, so they can be dropped.
  */
 export interface Messenger {
-  send(ids: readonly string[], message: PushMessage): Promise<{ readonly staleIds: string[] }>;
+  send(
+    subscriptions: readonly PushSubscriptionJson[],
+    message: PushMessage,
+  ): Promise<{ readonly staleEndpoints: string[] }>;
 }
 
 /** Development stand-in: logs what would be sent. */
 export function createLogMessenger(): Messenger {
   return {
-    send(ids, message) {
-      logEvent('INFO', 'push (not sent: Firebase not configured)', {
-        devices: ids.length,
+    send(subscriptions, message) {
+      logEvent('INFO', 'push (not sent: Web Push not configured)', {
+        devices: subscriptions.length,
         title: message.title,
       });
-      return Promise.resolve({ staleIds: [] });
+      return Promise.resolve({ staleEndpoints: [] });
     },
   };
 }

@@ -8,21 +8,22 @@ import {
   placeSchema,
 } from '@vayu/core';
 import { z } from 'zod';
+import { pushSubscriptionSchema } from '../validation/request-schemas.js';
 
 /** Devices registered for push per family: a phone, a laptop and a couple of spares. */
-export const MAX_PUSH_IDS = 5;
+export const MAX_PUSH_SUBSCRIPTIONS = 5;
 
 /**
  * Everything stored about one signed-in family. No name, e-mail or chat
  * transcript: the memory chips, the chosen place, alert settings and the
- * installation ids of the devices to notify. Deleting the account deletes this one document.
+ * push subscriptions of the devices to notify. Deleting the account deletes this one document.
  */
 export const userRecordSchema = z.object({
   memory: memorySchema,
   place: placeSchema.nullable(),
   alerts: alertSettingsSchema,
   alertState: alertStateSchema,
-  pushIds: z.array(z.string().min(1).max(256)).max(MAX_PUSH_IDS),
+  pushSubscriptions: z.array(pushSubscriptionSchema).max(MAX_PUSH_SUBSCRIPTIONS),
   updatedAt: z.iso.datetime(),
 });
 
@@ -34,12 +35,12 @@ export const newUserRecord = (now: Date): UserRecord => ({
   place: null,
   alerts: DEFAULT_ALERT_SETTINGS,
   alertState: INITIAL_ALERT_STATE,
-  pushIds: [],
+  pushSubscriptions: [],
   updatedAt: now.toISOString(),
 });
 
-/** What the browser is shown: everything but the device ids. */
-export const publicView = ({ pushIds, ...rest }: UserRecord) => ({
+/** What the browser is shown: everything but the devices' push addresses. */
+export const publicView = ({ pushSubscriptions, ...rest }: UserRecord) => ({
   ...rest,
-  pushEnabled: pushIds.length > 0,
+  pushEnabled: pushSubscriptions.length > 0,
 });

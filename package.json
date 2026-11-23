@@ -44,6 +44,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@types/supertest": "^7.2.1",
+    "@types/web-push": "3.6.4",
     "@vitejs/plugin-react": "^6.1.2",
     "@vitest/coverage-v8": "^5.0.5",
     "cross-env": "^10.1.0",
@@ -59,11 +60,5 @@
     "vite": "^8.3.5",
     "vitest": "^5.0.5",
     "vitest-axe": "^0.1.0"
-  },
-  "overrides": {
-    "@firebase/firestore": {
-      "@grpc/grpc-js": "1.14.7",
-      "@grpc/proto-loader": "0.8.1"
-    }
   }
 }
