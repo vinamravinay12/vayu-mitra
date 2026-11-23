@@ -17,7 +17,7 @@ export type AirDataMode = 'live' | 'fixture';
 export type AuthMode = 'password' | 'none';
 
 /** Where families' records live: Firestore in production, process memory in development. */
-export type StoreMode = 'firestore' | 'memory';
+type StoreMode = 'firestore' | 'memory';
 
 export interface ServerConfig {
   readonly port: number;
@@ -50,10 +50,10 @@ export interface ServerConfig {
 }
 
 /** AI requests per client per minute unless configured: enough for a family, not for a script. */
-export const DEFAULT_AI_REQUESTS_PER_MINUTE = 10;
+const DEFAULT_AI_REQUESTS_PER_MINUTE = 10;
 
 /** Sign-in attempts per client per minute unless configured. */
-export const DEFAULT_AUTH_REQUESTS_PER_MINUTE = 10;
+const DEFAULT_AUTH_REQUESTS_PER_MINUTE = 10;
 
 /**
  * Gemini 3.8 Flash first, then 3.6 Flash, then 3.5 Flash-Lite. The Flash

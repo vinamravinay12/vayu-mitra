@@ -10,7 +10,7 @@ export const CHAT_LIMITS = {
   suggestions: 4,
 } as const;
 
-export const chatTurnSchema = z.object({
+const chatTurnSchema = z.object({
   role: z.enum(['user', 'assistant']),
   text: z.string().max(CHAT_LIMITS.reply),
 });

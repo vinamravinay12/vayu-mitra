@@ -1,6 +1,6 @@
 import { ACTIVITY_PROFILES } from '../catalog/activities.js';
 import { AGE_LABELS, CONDITION_LABELS, HOME_FEATURE_LABELS } from '../catalog/vocabulary.js';
-import { formatHour, minutesOfDay } from '../time/local-clock.js';
+import { capitalise, formatHour, minutesOfDay } from '../time/local-clock.js';
 import type { Memory, MemoryFact, PersonFact, RoutineFact } from './memory-schema.js';
 
 /** One remembered fact as the family sees it. */
@@ -20,11 +20,8 @@ export function formatTime(time: string): string {
   return minute === 0 ? hour : hour.replace(' ', `:${String(minute).padStart(2, '0')} `);
 }
 
-/** The text with its first letter upper-cased. */
-const capitalise = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
-
 /** "Dadi · older adult, asthma". */
-export function describePerson(person: PersonFact): string {
+function describePerson(person: PersonFact): string {
   const details = [
     AGE_LABELS[person.ageGroup],
     ...person.conditions.map((c) => CONDITION_LABELS[c]),
@@ -33,7 +30,7 @@ export function describePerson(person: PersonFact): string {
 }
 
 /** "Walk · 6:30 am · Dadi". */
-export function describeRoutine(routine: RoutineFact, people: readonly PersonFact[]): string {
+function describeRoutine(routine: RoutineFact, people: readonly PersonFact[]): string {
   const who = people.find((person) => person.id === routine.personId)?.label;
   const parts = [
     capitalise(ACTIVITY_PROFILES[routine.activity].label),

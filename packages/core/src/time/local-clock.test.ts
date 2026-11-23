@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { formatHour, hourKey, isWithinWindow, localClock, minutesOfDay } from './local-clock.js';
+import {
+  capitalise,
+  formatHour,
+  hourKey,
+  hourOfTime,
+  isWithinWindow,
+  labelHour,
+  localClock,
+  minutesOfDay,
+} from './local-clock.js';
 
 describe('local clock helpers', () => {
   it('reads local time at an offset', () => {
@@ -30,5 +39,16 @@ describe('local clock helpers', () => {
       '12 am',
       '11 pm',
     ]);
+  });
+});
+
+describe('labelHour and capitalise', () => {
+  it('labels outlook hours relative to today, with or without "at"', () => {
+    expect(labelHour('2026-11-22T07:00', '2026-11-22')).toBe('7 am');
+    expect(labelHour('2026-11-23T14:00', '2026-11-22')).toBe('tomorrow 2 pm');
+    expect(labelHour('2026-11-22T19:00', '2026-11-22', true)).toBe('at 7 pm');
+    expect(labelHour('2026-11-23T06:00', '2026-11-22', true)).toBe('tomorrow at 6 am');
+    expect(hourOfTime('2026-11-22T10:00:00+05:30')).toBe(10);
+    expect(capitalise('walk')).toBe('Walk');
   });
 });

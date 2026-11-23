@@ -7,10 +7,10 @@ import type { PersonFact } from '../memory/memory-schema.js';
 /** 10:00 IST on 22 November 2026. */
 export const NOW = new Date('2026-11-22T04:30:00.000Z');
 
-export const IST = 19_800;
+const IST = 19_800;
 
 /** A winter PM2.5 curve: worst around 02:00, cleanest around 14:00. */
-export function winterCurve(mean: number, swing = 0.45): number[] {
+function winterCurve(mean: number, swing = 0.45): number[] {
   return Array.from(
     { length: 24 },
     (_unused, hour) =>

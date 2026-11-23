@@ -8,7 +8,7 @@ const EARTH_RADIUS_KM = 6371;
 export const MAX_STATION_DISTANCE_KM = 25;
 
 /** A reading older than this is not "now" any more. CPCB publishes hourly, often late. */
-export const MAX_READING_AGE_MS = 3 * 60 * 60_000;
+const MAX_READING_AGE_MS = 3 * 60 * 60_000;
 
 /** Prefer CPCB, the official monitor, when two stations are about as close. */
 const SOURCE_PREFERENCE_KM = 2;

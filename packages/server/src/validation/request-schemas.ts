@@ -18,7 +18,7 @@ export const airQuerySchema = z.object({
  * Windows. The server sends to a subscription's endpoint, so only these are
  * accepted; anything else could point the server at an internal address.
  */
-export const PUSH_SERVICE_HOSTS = [
+const PUSH_SERVICE_HOSTS = [
   'fcm.googleapis.com',
   'updates.push.services.mozilla.com',
   'web.push.apple.com',
@@ -27,7 +27,7 @@ export const PUSH_SERVICE_HOSTS = [
 ] as const;
 
 /** True for an https URL on a known push service. */
-export function isPushServiceUrl(value: string): boolean {
+function isPushServiceUrl(value: string): boolean {
   try {
     const url = new URL(value);
     return (

@@ -17,7 +17,7 @@ const GUARD_INSTRUCTION = [
 ].join('\n');
 
 /** JSON Schema the judge’s verdict is decoded against. */
-export const GUARD_RESPONSE_SCHEMA = toResponseSchema(guardVerdictSchema);
+const GUARD_RESPONSE_SCHEMA = toResponseSchema(guardVerdictSchema);
 
 /** The judge call for one piece of user text. */
 export function buildGuardRequest(text: string): LlmRequest {

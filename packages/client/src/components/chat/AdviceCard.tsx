@@ -1,5 +1,12 @@
-import { ACTIVITY_PROFILES, ADVICE_TIPS, type ActivityAdvice, type Verdict } from '@vayu/core';
-import { level, when } from '../air/format.js';
+import {
+  ACTIVITY_PROFILES,
+  ADVICE_TIPS,
+  capitalise,
+  describeLevel,
+  labelHour,
+  type ActivityAdvice,
+  type Verdict,
+} from '@vayu/core';
 
 /** The verdict as a short heading, and its tone. */
 const VERDICTS: Readonly<Record<Verdict, { label: string; tone: string }>> = {
@@ -8,9 +15,6 @@ const VERDICTS: Readonly<Record<Verdict, { label: string; tone: string }>> = {
   care: { label: 'OK with precautions', tone: 'bg-warn-bg text-warn-fg' },
   skip: { label: 'Skip it today', tone: 'bg-danger-bg text-danger-fg' },
 };
-
-/** The text with its first letter upper-cased. */
-const capitalise = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
 
 /**
  * The engine's decision, shown beside the reply so the family can check it
@@ -38,11 +42,11 @@ export function AdviceCard({
       </p>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
         <dt className="text-muted">Planned</dt>
-        <dd>{`${when(advice.planned.time, today)} · ${level(advice.planned.aqi, advice.planned.category)}`}</dd>
+        <dd>{`${labelHour(advice.planned.time, today)} · ${describeLevel(advice.planned)}`}</dd>
         {advice.bestWindow !== null && (
           <>
             <dt className="text-muted">Cleanest</dt>
-            <dd>{`${when(advice.bestWindow.time, today)} · ${level(advice.bestWindow.aqi, advice.bestWindow.category)}`}</dd>
+            <dd>{`${labelHour(advice.bestWindow.time, today)} · ${describeLevel(advice.bestWindow)}`}</dd>
           </>
         )}
         {advice.sensitiveFor.length > 0 && (

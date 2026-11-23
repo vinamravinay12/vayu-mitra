@@ -1,8 +1,7 @@
-import { CATEGORY_LABELS, nowHour, type ReportHour } from '@vayu/core';
-import { when } from './format.js';
+import { CATEGORY_LABELS, labelHour, nowHour, type ReportHour } from '@vayu/core';
 
 /** Hours shown ahead. */
-export const STRIP_HOURS = 12;
+const STRIP_HOURS = 12;
 
 /**
  * The next twelve hours as bars. Each bar carries its number and category as
@@ -25,9 +24,9 @@ export function HourStrip({ hours }: { readonly hours: readonly ReportHour[] }):
               style={{ height: `${String(Math.max(6, Math.round((hour.aqi / highest) * 64)))}px` }}
             />
             <span className="text-[10px] text-muted">
-              {when(hour.time, today).replace('tomorrow ', '')}
+              {labelHour(hour.time, today).replace('tomorrow ', '')}
             </span>
-            <span className="sr-only">{`${when(hour.time, today)}: ${CATEGORY_LABELS[hour.category]}`}</span>
+            <span className="sr-only">{`${labelHour(hour.time, today)}: ${CATEGORY_LABELS[hour.category]}`}</span>
           </li>
         ))}
       </ol>

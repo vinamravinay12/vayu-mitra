@@ -1,6 +1,6 @@
 import { PERIOD_HOURS, type Day, type Period } from '../catalog/vocabulary.js';
 import { nowHour, type AirReport, type ReportHour } from '../schemas/air-report.js';
-import { localClock, minutesOfDay } from '../time/local-clock.js';
+import { hourOfTime, localClock, minutesOfDay } from '../time/local-clock.js';
 
 /**
  * When a plan is for: the hour asked about, from a clock time, a day, a part
@@ -8,7 +8,7 @@ import { localClock, minutesOfDay } from '../time/local-clock.js';
  */
 
 /** Outdoor plans are only suggested in these local hours. */
-export const DAYLIGHT = { first: 6, last: 20 } as const;
+const DAYLIGHT = { first: 6, last: 20 } as const;
 
 /** The local date a day refers to, or null when no day was given. */
 export function dateFor(report: AirReport, day: Day | null, now: Date): string | null {
@@ -33,14 +33,13 @@ export function plannedHour(
   const wanted = Math.floor(minutesOfDay(time) / 60);
   const at = (on: string | null) =>
     report.hours.find(
-      (hour) =>
-        Number(hour.time.slice(11, 13)) === wanted && (on === null || hour.time.startsWith(on)),
+      (hour) => hourOfTime(hour.time) === wanted && (on === null || hour.time.startsWith(on)),
     );
   return at(date) ?? at(null) ?? nowHour(report);
 }
 
 /** The local hour of an outlook hour. */
-const hourOf = (hour: ReportHour): number => Number(hour.time.slice(11, 13));
+const hourOf = (hour: ReportHour): number => hourOfTime(hour.time);
 
 /**
  * The window of `length` hours within `bounds` (daylight unless given) with

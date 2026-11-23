@@ -15,6 +15,7 @@ good intentions.
 | Accessibility | same                                                                                             | `jsx-a11y` strict and `react-hooks` as errors                                                                                                                          |
 | Types         | [`tsconfig.base.json`](../tsconfig.base.json)                                                    | `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`, `noUnusedLocals/Parameters`; built with `tsc -b` across project references |
 | Coverage      | [`vitest.config.ts`](../vitest.config.ts)                                                        | 100% statements, branches, functions and lines with `all: true`                                                                                                        |
+| Dead code     | [`knip.json`](../knip.json)                                                                      | `knip --include-entry-exports` in `npm run verify`: no unused file, dependency or export, including the engine's public API                                            |
 | Hygiene       | [`hygiene.test.ts`](../tests/quality/hygiene.test.ts)                                            | doc comment on every top-level function, no generic names, no `any`, no unexplained lint suppressions, no TODOs, no secrets, required docs present                     |
 | CI            | [`verify.yml`](../.github/workflows/verify.yml), [`codeql.yml`](../.github/workflows/codeql.yml) | verify, profile, audit, gitleaks, bundle-secret check, container build, Playwright e2e, CodeQL                                                                         |
 
@@ -33,6 +34,9 @@ good intentions.
 - **Dependencies are injected:** the model, the air sources, the store, the messenger, both
   token verifiers, `fetch` and the clock are parameters, which is what makes 100% coverage
   possible without network. Google Cloud and Web Push bindings are one call each, tested against fakes.
+- **One source for shared wording.** Hour labels (`labelHour`), AQI levels (`describeLevel`)
+  and `capitalise` live once in the engine and are imported by the server's sentences and the
+  client's cards alike, so the chat and the advice card can never phrase the same hour differently.
 - **Cannot-happen branches are removed, not tested around.** Where coverage found a branch that
   could never run, the types were tightened instead (a non-empty station group, an editor that
   only accepts editable facts, a household that is always loaded where the chat lives).

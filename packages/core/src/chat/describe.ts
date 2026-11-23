@@ -5,7 +5,7 @@ import type { ActivityAdvice, AdviceHour } from '../advice/advice-schema.js';
 import { ADVICE_TIPS } from '../advice/tips.js';
 import type { AirReport } from '../schemas/air-report.js';
 import { STATION_SOURCE_LABELS } from '../stations/station.js';
-import { formatHour } from '../time/local-clock.js';
+import { capitalise, labelHour } from '../time/local-clock.js';
 
 /**
  * Plain-language sentences built from the engine's facts. They are the reply
@@ -13,14 +13,8 @@ import { formatHour } from '../time/local-clock.js';
  */
 
 /** "at 7 am", or "tomorrow at 7 am" when the hour is not on the outlook's first day. */
-export function describeTime(time: string, report: AirReport): string {
-  const today = report.hours[0]?.time.slice(0, 10);
-  const hour = `at ${formatHour(Number(time.slice(11, 13)))}`;
-  return time.slice(0, 10) === today ? hour : `tomorrow ${hour}`;
-}
-
-/** The text with its first letter upper-cased. */
-const capitalise = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
+export const describeTime = (time: string, report: AirReport): string =>
+  labelHour(time, report.hours[0]?.time.slice(0, 10), true);
 
 /** "Very poor (AQI 342)". */
 export const describeLevel = (hour: Pick<AdviceHour, 'aqi' | 'category'>): string =>

@@ -7,9 +7,9 @@ import { ADVICE_TIP_IDS, type AdviceTip } from './tips.js';
  * go: fine at the planned time. shift: a cleaner hour later is fine.
  * care: acceptable with precautions. skip: no good time in the outlook.
  */
-export const VERDICTS = ['go', 'shift', 'care', 'skip'] as const;
+const VERDICTS = ['go', 'shift', 'care', 'skip'] as const;
 
-export const adviceHourSchema = z.object({
+const adviceHourSchema = z.object({
   time: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:00$/),
   aqi: z.number().int().min(0).max(500),
   category: z.enum(AQI_CATEGORIES),

@@ -18,7 +18,7 @@ export const MEMORY_LIMITS = {
 
 const label = z.string().trim().min(1).max(MEMORY_LIMITS.labelLength);
 
-export const personFactSchema = z.object({
+const personFactSchema = z.object({
   kind: z.literal('person'),
   id: z.string().min(1).max(80),
   /** How the family refers to them. */
@@ -27,7 +27,7 @@ export const personFactSchema = z.object({
   conditions: z.array(z.enum(HEALTH_CONDITIONS)).max(HEALTH_CONDITIONS.length),
 });
 
-export const routineFactSchema = z.object({
+const routineFactSchema = z.object({
   kind: z.literal('routine'),
   id: z.string().min(1).max(80),
   activity: z.enum(ACTIVITIES),
@@ -38,17 +38,11 @@ export const routineFactSchema = z.object({
   minutes: z.number().int().min(5).max(MEMORY_LIMITS.minutes),
 });
 
-export const homeFactSchema = z.object({
+const homeFactSchema = z.object({
   kind: z.literal('home'),
   id: z.string().min(1).max(80),
   feature: z.enum(HOME_FEATURES),
 });
-
-export const memoryFactSchema = z.discriminatedUnion('kind', [
-  personFactSchema,
-  routineFactSchema,
-  homeFactSchema,
-]);
 
 export const memorySchema = z.object({
   people: z.array(personFactSchema).max(MEMORY_LIMITS.people),
@@ -81,8 +75,8 @@ export const memoryChangeSchema = z.discriminatedUnion('op', [
 
 export type PersonFact = z.infer<typeof personFactSchema>;
 export type RoutineFact = z.infer<typeof routineFactSchema>;
-export type HomeFact = z.infer<typeof homeFactSchema>;
-export type MemoryFact = z.infer<typeof memoryFactSchema>;
+/** Any one remembered fact. */
+export type MemoryFact = PersonFact | RoutineFact | z.infer<typeof homeFactSchema>;
 export type Memory = z.infer<typeof memorySchema>;
 export type MemoryChange = z.infer<typeof memoryChangeSchema>;
 

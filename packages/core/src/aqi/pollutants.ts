@@ -27,14 +27,3 @@ export const BREAKPOINTS: Readonly<Record<Pollutant, readonly Breakpoint[]>> = {
   co: CO_BREAKPOINTS,
   nh3: NH3_BREAKPOINTS,
 };
-
-/** Readable pollutant names. */
-export const POLLUTANT_LABELS: Readonly<Record<Pollutant, string>> = {
-  pm25: 'PM2.5',
-  pm10: 'PM10',
-  no2: 'NO₂',
-  o3: 'ozone',
-  so2: 'SO₂',
-  co: 'CO',
-  nh3: 'ammonia',
-};

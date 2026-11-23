@@ -15,7 +15,7 @@ to work without network.
 ## Before you open a pull request
 
 ```bash
-npm run verify   # format → lint → typecheck → 100% coverage → build
+npm run verify   # format → lint → typecheck → dead code (knip) → 100% coverage → build
 npm run e2e      # browser journeys, CSP, axe in light and dark
 npm run profile  # when you touch the engine or a hot path
 ```
