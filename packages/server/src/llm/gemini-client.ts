@@ -25,12 +25,11 @@ const DEFAULT_RETRY: RetryOptions = { attempts: 2, baseDelayMs: 500, delay: slee
  */
 const REQUEST_TIMEOUT_MS = 10_000;
 
-/** Ceilings sized to each schema: a guard verdict is tiny, a family of eight is not. */
+/** Ceilings sized to each schema: a guard verdict is tiny, six memory changes are not. */
 const MAX_OUTPUT_TOKENS: Readonly<Record<LlmPurpose, number>> = {
   guard: 120,
-  extract: 1500,
-  coach: 900,
-  ask: 500,
+  understand: 900,
+  reply: 600,
 };
 
 /**
@@ -40,9 +39,8 @@ const MAX_OUTPUT_TOKENS: Readonly<Record<LlmPurpose, number>> = {
  */
 const THINKING_LEVEL: Readonly<Record<LlmPurpose, ThinkingLevel>> = {
   guard: ThinkingLevel.MINIMAL,
-  extract: ThinkingLevel.MINIMAL,
-  coach: ThinkingLevel.MINIMAL,
-  ask: ThinkingLevel.MINIMAL,
+  understand: ThinkingLevel.MINIMAL,
+  reply: ThinkingLevel.MINIMAL,
 };
 
 /** The shape of the SDK call this adapter makes, so tests can substitute it. */

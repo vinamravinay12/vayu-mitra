@@ -1,9 +1,9 @@
-import { localClock, type AirSnapshot, type Place } from '@vayu/core';
+import { localClock, type Forecast, type Place, type StationReading } from '@vayu/core';
 
 /**
- * A fixed, offline stand-in for the forecast and the geocoder, for tests, CI
- * end-to-end runs and keyless demos. Production refuses to start in this mode
- * (see config.ts), so a family never sees made-up air.
+ * A fixed, offline stand-in for the forecast, the stations and the geocoder,
+ * for tests, CI end-to-end runs and keyless demos. Production refuses to start
+ * in this mode (see config.ts), so a family never sees made-up air.
  */
 
 /** India Standard Time, which every fixture place uses. */
@@ -26,25 +26,48 @@ export function searchFixturePlaces(query: string): Place[] {
 /** A winter mean that worsens towards the Indo-Gangetic plain in the north. */
 const winterMean = (latitude: number): number => Math.round(60 + Math.max(0, latitude - 18) * 9);
 
-/**
- * Two days of a winter diurnal curve: smog trapped under the night-time
- * inversion peaks around 02:00 and clears most around 14:00.
- */
-export function fixtureForecast(latitude: number, now: Date): AirSnapshot {
+/** The fixture curve: smog peaks around 02:00 under the night inversion, clears most at 14:00. */
+const pm25At = (latitude: number, hour: number): number =>
+  Math.round(winterMean(latitude) * (1 + 0.45 * Math.cos((2 * Math.PI * (hour - 2)) / 24)) * 10) /
+  10;
+
+/** Three days of the fixture curve from local midnight today. */
+export function fixtureForecast(latitude: number, now: Date): Forecast {
   const { date } = localClock(now, IST_OFFSET_SECONDS);
-  const start = new Date(`${date}T00:00:00Z`);
-  const mean = winterMean(latitude);
-  const hours = Array.from({ length: 48 }, (_unused, index) => {
-    const time = new Date(start.getTime() + index * 3_600_000).toISOString().slice(0, 16);
-    const swing = Math.cos((2 * Math.PI * ((index % 24) - 2)) / 24);
-    const pm25 = Math.round(mean * (1 + 0.45 * swing) * 10) / 10;
-    return { time, pm25, pm10: Math.round(pm25 * 1.6 * 10) / 10 };
+  const start = new Date(`${date}T00:00:00Z`).getTime();
+  const hours = Array.from({ length: 72 }, (_unused, index) => {
+    const pm25 = pm25At(latitude, index % 24);
+    return {
+      time: new Date(start + index * 3_600_000).toISOString().slice(0, 16),
+      pm25,
+      pm10: Math.round(pm25 * 1.6 * 10) / 10,
+    };
   });
   return {
     timezone: 'Asia/Kolkata',
     utcOffsetSeconds: IST_OFFSET_SECONDS,
     hours,
     source: 'fixture',
-    fetchedAt: now.toISOString(),
   };
+}
+
+/**
+ * One fixture station beside each fixture place, reading 20% above the model,
+ * so tests and demos show the anchoring at work.
+ */
+export function fixtureStations(now: Date): StationReading[] {
+  const clock = localClock(now, IST_OFFSET_SECONDS);
+  const observedAt = `${clock.date}T${String(clock.hour).padStart(2, '0')}:00:00+05:30`;
+  return FIXTURE_PLACES.map((place) => {
+    const pm25 = Math.round(pm25At(place.latitude, clock.hour) * 1.2 * 10) / 10;
+    return {
+      id: `fixture-${place.name.toLowerCase().replace(/\s+/g, '-')}`,
+      name: `${place.name} (sample station)`,
+      latitude: place.latitude + 0.01,
+      longitude: place.longitude + 0.01,
+      source: 'fixture',
+      observedAt,
+      pollutants: { pm25, pm10: Math.round(pm25 * 1.6 * 10) / 10, no2: 45, so2: 10 },
+    };
+  });
 }

@@ -1,7 +1,7 @@
 /** An Open-Meteo air-quality response, with one gap in PM2.5 and one missing PM10. */
 export function airResponse(hours = 24): unknown {
   const time = Array.from({ length: hours }, (_unused, index) => {
-    const day = 21 + Math.floor(index / 24);
+    const day = 22 + Math.floor(index / 24);
     return `2026-11-${String(day)}T${String(index % 24).padStart(2, '0')}:00`;
   });
   return {

@@ -1,32 +1,13 @@
-import type { AirSnapshot, HouseholdProfile, Member, Place } from '@vayu/core';
-import type { CoachResponse, ExtractResponse } from '../api/client.js';
-
-/** A scripted API answer. */
-export interface Route {
-  readonly status?: number;
-  readonly body: unknown;
-}
-
-/** A fetch stand-in that answers by path (query ignored) and records every call. */
-export function stubFetch(routes: Readonly<Record<string, Route>>) {
-  const calls: { path: string; body: unknown }[] = [];
-  const fetchStub = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-    const [path = url] = url.split('?');
-    calls.push({ path, body: typeof init?.body === 'string' ? JSON.parse(init.body) : undefined });
-    const route = routes[path];
-    if (route === undefined) {
-      return Promise.reject(new TypeError('Failed to fetch'));
-    }
-    return Promise.resolve(
-      new Response(JSON.stringify(route.body), {
-        status: route.status ?? 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    );
-  };
-  return Object.assign(fetchStub, { calls });
-}
+import {
+  categoryOf,
+  DEFAULT_ALERT_SETTINGS,
+  EMPTY_MEMORY,
+  type AirReport,
+  type Memory,
+  type Place,
+} from '@vayu/core';
+import type { Household } from '../api/api.js';
+import type { ClientConfig, FirebaseWebConfig } from '../api/config.js';
 
 export const DELHI: Place = {
   name: 'New Delhi',
@@ -36,105 +17,86 @@ export const DELHI: Place = {
   longitude: 77.21,
 };
 
-/** Two days of a winter curve for New Delhi, starting today (IST). */
-export function airSnapshot(mean = 150, source: AirSnapshot['source'] = 'open-meteo'): AirSnapshot {
-  const today = new Date(Date.now() + 19_800_000).toISOString().slice(0, 10);
-  const start = new Date(`${today}T00:00:00Z`).getTime();
+export const LOCAL_CONFIG: ClientConfig = { auth: 'none', firebase: null, vapidKey: null };
+
+export const FIREBASE_WEB: FirebaseWebConfig = {
+  apiKey: 'web-key',
+  authDomain: 'vayu-test.firebaseapp.com',
+  projectId: 'vayu-test',
+  appId: '1:2:web:3',
+  messagingSenderId: '2',
+};
+
+export const FIREBASE_CONFIG: ClientConfig = {
+  auth: 'firebase',
+  firebase: FIREBASE_WEB,
+  vapidKey: 'vapid',
+};
+
+/** A winter day from 10:00: clearing to the afternoon, worst overnight, easing next morning. */
+const DAY = [
+  250, 230, 200, 180, 170, 190, 240, 280, 320, 340, 360, 380, 390, 400, 395, 390, 380, 370, 360,
+  350, 340, 320, 300, 280, 260, 240, 220, 210, 200, 210,
+];
+
+/** A report from 10:00 on 22 November with these index values, measured at ITO. */
+export function makeReport(aqis: readonly number[] = DAY): AirReport {
+  const hours = aqis.map((aqi, index) => {
+    const total = 10 + index;
+    const day = total >= 24 ? '2026-11-23' : '2026-11-22';
+    return {
+      time: `${day}T${String(total % 24).padStart(2, '0')}:00`,
+      pm25: 0,
+      pm10: 0,
+      aqi,
+      category: categoryOf(aqi),
+    };
+  });
+  const first = hours[0] ?? { aqi: 0, category: 'good' as const };
   return {
     timezone: 'Asia/Kolkata',
     utcOffsetSeconds: 19_800,
-    source,
-    fetchedAt: new Date().toISOString(),
-    hours: Array.from({ length: 48 }, (_unused, index) => {
-      const pm25 =
-        Math.round(mean * (1 + 0.45 * Math.cos((2 * Math.PI * ((index % 24) - 2)) / 24)) * 10) / 10;
-      return {
-        time: new Date(start + index * 3_600_000).toISOString().slice(0, 16),
-        pm25,
-        pm10: Math.round(pm25 * 16) / 10,
-      };
-    }),
+    fetchedAt: '2026-11-22T04:30:00.000Z',
+    current: { aqi: first.aqi, category: first.category, dominant: 'pm25', basis: 'station' },
+    station: {
+      name: 'ITO, Delhi - CPCB',
+      source: 'cpcb',
+      distanceKm: 2.1,
+      observedAt: '2026-11-22T10:00:00+05:30',
+    },
+    hours,
+    forecastSource: 'open-meteo',
   };
 }
 
-/** A grandfather with asthma who stays home and walks at dawn. */
-export const GRANDFATHER: Member = {
-  name: 'Dadaji',
-  ageGroup: 'senior',
-  conditions: ['asthma'],
-  daytime: 'home',
-  commuteMode: 'bus',
-  commuteKm: 0,
-  outdoorExercise: 'light',
-  exerciseHour: 6,
+/** Dadi, who has asthma and walks at 6:30, in a home with N95 masks. */
+export const DADI_MEMORY: Memory = {
+  people: [
+    {
+      kind: 'person',
+      id: 'person:dadi',
+      label: 'Dadi',
+      ageGroup: 'senior',
+      conditions: ['asthma'],
+    },
+  ],
+  routines: [
+    {
+      kind: 'routine',
+      id: 'routine:walk:dadi',
+      activity: 'walk',
+      personId: 'person:dadi',
+      time: '06:30',
+      minutes: 30,
+    },
+  ],
+  home: [{ kind: 'home', id: 'home:n95-masks', feature: 'n95-masks' }],
 };
 
-/** An adult who drives to the office. */
-export const COMMUTER: Member = {
-  name: 'Asha',
-  ageGroup: 'adult',
-  conditions: [],
-  daytime: 'office',
-  commuteMode: 'car-petrol',
-  commuteKm: 14,
-  outdoorExercise: 'none',
-  exerciseHour: 7,
-};
-
-export const PROFILE: HouseholdProfile = {
-  place: DELHI,
-  members: [GRANDFATHER, COMMUTER],
-  home: {
-    tightness: 'leaky',
-    ventilation: 'morning',
-    hasPurifier: false,
-    cookingFuel: 'lpg',
-    hasKitchenExhaust: false,
-    heating: 'coal-or-wood',
-    indoorSources: ['incense'],
-  },
-  lifestyle: {
-    workDaysPerWeek: 5,
-    departHour: 8,
-    burnsWaste: true,
-    generatorHoursPerWeek: 0,
-    transitNearby: true,
-    communityHouseholds: 120,
-  },
-};
-
-export const EXTRACTED: ExtractResponse = {
-  members: PROFILE.members,
-  home: PROFILE.home,
-  lifestyle: PROFILE.lifestyle,
-  assumed: ['home.tightness', 'members.1.commuteKm', 'lifestyle.departHour'],
-  placeQuery: 'New Delhi, Delhi',
-};
-
-export const COACH: CoachResponse = {
-  headline: 'AQI 323 today: keep Dadaji indoors this morning',
-  summary: 'Your choices cut Dadaji’s dose sharply.',
-  priorities: [{ actionId: 'bedroom-purifier', why: 'It cleans the room he sleeps in.' }],
-  source: 'ai',
-};
-
-/** Routes for a whole happy journey. */
-export const HAPPY_ROUTES: Readonly<Record<string, Route>> = {
-  '/api/extract': { body: EXTRACTED },
-  '/api/places': {
-    body: { places: [DELHI, { ...DELHI, name: 'Delhi Cantonment', latitude: 28.59 }] },
-  },
-  '/api/air': { body: airSnapshot() },
-  '/api/coach': { body: COACH },
-  '/api/ask': {
-    body: { answer: 'Walk after 1 pm, when the air is cleanest.', onTopic: true, verified: true },
-  },
-};
-
-/** Saves a confirmed plan the way the app does. */
-export function storePlan(chosenIds: readonly string[] | null = null): void {
-  globalThis.localStorage.setItem(
-    'vayu-session-v1',
-    JSON.stringify({ profile: PROFILE, chosenIds, language: 'en' }),
-  );
-}
+export const emptyHousehold = (overrides: Partial<Household> = {}): Household => ({
+  memory: EMPTY_MEMORY,
+  place: null,
+  alerts: DEFAULT_ALERT_SETTINGS,
+  pushEnabled: false,
+  ...overrides,
+});

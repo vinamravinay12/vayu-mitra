@@ -1,120 +1,65 @@
 # Architecture
 
-Vayu Mitra is a three-package TypeScript monorepo deployed as **one container** on Cloud Run.
-The rule that shapes everything: **the AI reads and writes words; a deterministic engine owns
-every number, hour, ranking and decision.**
+Three packages in one npm workspace, one container in production.
 
 ```
-packages/
-├── core/     Pure clean-air engine. No I/O, no clock of its own, no network.
-│   ├── catalog/      knowledge as data: NAQI bands, commute and household-source factors,
-│   │                 breathing rates, 20 actions, 8 health-alert rules, 4 community drives
-│   ├── schemas/      Zod schemas for profile, air snapshot and AI draft; types via z.infer
-│   ├── air/ aqi/     local day selection, cleanest window, peak, NAQI sub-indices
-│   ├── exposure/     96-quarter-hour schedule per person → inhaled PM2.5 dose
-│   ├── emissions/    weekly PM2.5 and CO₂ the household releases, by source
-│   ├── scenario/     profile → scenario; each action effect is a pure scenario transform
-│   ├── actions/      what-if per action, ranking, alternatives, the chosen plan
-│   ├── routine/ alerts/ community/ explain/ plan/
-├── server/   Express 5 API, the trust boundary. Holds the Gemini key, fetches and caches
-│             Open-Meteo, screens and validates every model call, serves the built client.
-└── client/   React 19 + Vite + Tailwind 4. Runs the same engine in the browser, so
-              ticking an action recomputes the whole plan in ~0.26 ms with no network call.
+browser (React)                       server (Express on Cloud Run)                 outside
+───────────────                       ─────────────────────────────                 ───────
+sign-in ──── Firebase Auth popup ───────────────────────────────────────────────►  Google
+GET /api/config ─────────────────►    which auth, public web config
+GET /api/air?lat&lon ────────────►    air service ── cache per ~1 km cell ──────►  Open-Meteo (CAMS)
+                                        │  nearest fresh station ────────────────►  CPCB (data.gov.in)
+                                        │  anchored outlook                     ►  WAQI
+POST /api/chat (ID token) ───────►    verify token → chat pipeline ─────────────►  Gemini
+GET/PUT/DELETE /api/me* ─────────►    verify token → Firestore users/{uid}  ────►  Firestore
+register FID ── Firebase Messaging ─► POST /api/me/push-id
+                                      POST /api/internal/check-alerts ◄── OIDC ──  Cloud Scheduler
+push-sw.js ◄──────────────── FCM data message ◄── alert job ─────────────────────  FCM
 ```
 
-## Data flow
+## `packages/core` — the engine
 
-```
- "We are four in Lajpat Nagar. Papa has asthma and walks at 6. I drive 14 km. Angithi at night."
-   │
-   ▼  POST /api/extract
- ① pattern pre-screen ──(blatant injection: 422, no model call)
-   ├─ Gemini injection judge ─┐   run in parallel
-   └─ Gemini extraction ──────┘   enum-only JSON schema → Zod → completeProfile()
-   │                              out-of-range values become defaults, listed as "assumed"
-   ▼
- ② Review form: every guessed answer flagged; place searched (GET /api/places) and pre-chosen
-   ▼
- ③ GET /api/air?lat&lon → Open-Meteo (8 s timeout, Zod-validated, cached 30 min per ~1 km cell)
-   ▼
- ④ buildPlan(profile, forecast, now, chosenIds) — in the browser
-   │   today's AQI, cleanest window, peak hour, tomorrow's trend
-   │   baseline exposure per person + household emissions
-   │   every applicable action applied alone → impact → explanation sentences → ranking
-   │   chosen actions applied together → combined impact, routine, alerts, community totals
-   ▼
- ⑤ Tick an action → toggleChoice() → buildPlan() again → every number updates at once
-   ▼
- ⑥ POST /api/coach | /api/ask — the server REBUILDS the plan from the profile and its own
-     forecast, gives Gemini only the plan's facts, and shows the answer only if every number
-     in it appears in those facts (else the engine's own summary / "could not verify").
-```
+Pure functions over plain data: no network, no storage, no clock of its own. The server runs it
+for every answer and alert; the browser runs parts of it for labels and suggestions, so both agree.
 
-## The engine
+| Module                  | Does                                                                                                                                                                                                 |
+| :---------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `aqi/`                  | NAQI sub-indices for PM2.5, PM10, NO₂, O₃, SO₂, CO, NH₃ (CPCB 2014 bands); full NAQI with CPCB's three-pollutant rule; the inverse, sub-index → concentration; US EPA index → concentration for WAQI |
+| `stations/`             | Station reading schema; great-circle distance; nearest fresh station (≤ 25 km, ≤ 3 h old, CPCB preferred within 2 km); anchoring the forecast to it                                                  |
+| `schemas/air-report.ts` | The report the browser shows: now, its source, 36 hours ahead                                                                                                                                        |
+| `memory/`               | What is remembered (people, routines, home features), changes the AI may propose, chip labels                                                                                                        |
+| `advice/`               | Verdict, cleanest window, precautions, from intensity and who is involved                                                                                                                            |
+| `alerts/`               | Settings, state, and the decision: threshold, quiet hours, six-hour cooldown unless worse                                                                                                            |
+| `chat/`                 | Request and response contracts, intent reading (keywords, times, people, AI hints), engine sentences, suggested questions                                                                            |
 
-### Exposure
+## `packages/server`
 
-[`build-schedule.ts`](../packages/core/src/exposure/build-schedule.ts) paints a person's typical
-weekday onto 96 quarter-hours: asleep 22:00–06:00, the commute legs (distance ÷ mode speed,
-rounded to the quarter), six hours at school, nine at the office or eight outdoors, and an
-exercise hour that may only replace time at home.
-[`indoor-air.ts`](../packages/core/src/exposure/indoor-air.ts) computes each hour's indoor
-PM2.5 as a single-zone balance: outdoor × infiltration (or ~all of it with windows open) + the
-sources burning that hour, minus what a running purifier removes.
-[`model-exposure.ts`](../packages/core/src/exposure/model-exposure.ts) then sums concentration ×
-breathing rate × time, split into home, commute, away and exercise — which is why the app can say
-"62% of Dadaji's dose is breathed at home".
+- `air/` — Open-Meteo forecast and geocoder, CPCB and WAQI adapters, fixtures, and the service
+  that combines them with per-cell caching and shared in-flight requests. A failing station feed
+  degrades to a forecast-only report; a missing forecast is a 502.
+- `chat/` — `understand` (Gemini → memory changes and hints), `write-reply` (Gemini → words,
+  grounded), `run-chat` (the turn), `check-grounding`.
+- `guard/`, `prompts/`, `llm/`, `validation/` — injection screening, prompt builders with fencing,
+  the Gemini adapter with retries and model fallback, and every schema at the boundaries.
+- `auth/`, `firebase/`, `store/`, `push/` — token checks, thin Firebase Admin bindings, the
+  validated user store (Firestore, or in memory for development), and the messenger.
+- `alerts/check-alerts.ts` — the background run, batched, one family's failure never stops others.
+- `routes/`, `app.ts`, `security/` — HTTP, middleware order, headers, rate limits.
 
-### Actions as data
+## `packages/client`
 
-Each of the 20 actions in [`catalog/actions/`](../packages/core/src/catalog/actions/) has a
-declarative `when` condition (evaluated by one tested function,
-[`evaluate-condition.ts`](../packages/core/src/conditions/evaluate-condition.ts)) and a list of
-typed `effects` such as `{ kind: 'add-purifier', reduction: 0.6 }` or
-`{ kind: 'switch-commute', from: [...cars], to: 'metro', maxKm: 40 }`.
-[`apply-effect.ts`](../packages/core/src/scenario/apply-effect.ts) turns each effect into a new
-scenario; the same models then run on it. **No impact number is written into the catalogue** —
-every one is the difference between two model runs, so changing an assumption changes every
-explanation consistently.
+- `App.tsx` starts with `/api/config` (validated by hand, so no schema library delays the first
+  paint), then the matching sign-in client. Firebase is imported only when the server has it on.
+- `components/Home.tsx` (lazy) holds the signed-in app: air card, chat, chips, alerts, privacy.
+- `state/` hooks own the household record, the air report (refreshed every 10 minutes), the chat
+  (kept only in the tab) and push registration.
+- `public/push-sw.js` shows FCM data messages as notifications; it needs no Firebase code.
 
-### Ranking and the starting plan
+## Why the shape
 
-[`assess-actions.ts`](../packages/core/src/actions/assess-actions.ts) measures each applicable
-action on its own, drops changes too small to matter (or that leave the family breathing more
-without cutting smog), scores health first (vulnerability-weighted), then smog, then CO₂, discounted
-for effort and cost, and pre-selects the best routine, indoor and sustainable action.
-[`choose-actions.ts`](../packages/core/src/actions/choose-actions.ts) keeps alternatives exclusive
-(a HEPA purifier _or_ a DIY filter; metro _or_ carpool).
-
-### Explanations
-
-[`describe-impact.ts`](../packages/core/src/explain/describe-impact.ts) turns an impact into
-sentences — the most-protected person, the family-wide cut, grams of PM2.5 kept out of the
-neighbourhood, CO₂ saved — and states trade-offs openly: _"Watch out: Asha's dose rises 1.4%"_,
-_"it adds about 18 kg of CO₂ a week through the power grid"_.
-
-## The server
-
-Middleware order in [`app.ts`](../packages/server/src/app.ts): security headers → compression →
-16 KB JSON body cap → rate limits (AI routes 10/min, data routes 60/min, per proxy-resolved IP) →
-routes → static client → sanitised error handler.
-
-| Route                    | Purpose                                                                  |
-| :----------------------- | :----------------------------------------------------------------------- |
-| `GET /api/health`        | Liveness, model mode, air-data mode                                      |
-| `GET /api/places?q=`     | Open-Meteo geocoding, cached 24 h                                        |
-| `GET /api/air?lat=&lon=` | Hourly forecast, cached 30 min per rounded cell, shared in-flight        |
-| `POST /api/extract`      | Pattern screen → judge ∥ extraction → reviewed profile                   |
-| `POST /api/coach`        | Plan rebuilt on the server → grounded explanation, or the engine summary |
-| `POST /api/ask`          | Pattern screen → judge ∥ answer → grounded answer, or "could not verify" |
-
-## The client
-
-Three stages in one reducer ([`session.ts`](../packages/client/src/state/session.ts)): describe →
-review → plan. The confirmed profile, choices and language are saved to `localStorage`, validated
-with the same Zod schema on read, so a refresh never loses the plan and a tampered save can
-never reach the engine. The plan view and the engine are a lazily loaded chunk.
-
-## Why these shapes
-
-See [decisions.md](decisions.md) for each decision and what it cost.
+- **The engine decides, the model words it.** Every number, verdict and threshold is in tested
+  code; the model reads and writes language. See [AI.md](AI.md).
+- **One container, one origin.** No CORS, a strict CSP, one thing to deploy.
+- **Interfaces at every edge.** The LLM, the data sources, the store, the messenger and both
+  token verifiers are injected, so the whole server is tested with fakes; the remaining bindings
+  are one call each and tested against fakes of the SDK objects.

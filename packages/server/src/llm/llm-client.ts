@@ -1,5 +1,5 @@
 /** What a model call is for; used in logs and to pick a token ceiling. */
-export type LlmPurpose = 'guard' | 'extract' | 'coach' | 'ask';
+export type LlmPurpose = 'guard' | 'understand' | 'reply';
 
 export interface LlmRequest {
   readonly purpose: LlmPurpose;
@@ -21,7 +21,7 @@ export interface LlmClient {
   generate(request: LlmRequest): Promise<string>;
 }
 
-/** Every configured model failed; the family can try again or fill in the form. */
+/** Every configured model failed; the engine answers instead. */
 export class LlmUnavailableError extends Error {
   constructor(message: string) {
     super(message);

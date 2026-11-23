@@ -11,19 +11,23 @@ Only the deployed `main` branch is supported.
 
 ## How this project protects users
 
-- The Gemini key lives only on the server, in Google Secret Manager; production refuses to
-  start without it, and CI fails if a key-shaped string reaches the client bundle.
-- Every request body is validated with Zod and capped at 16 KB; errors are sanitised.
-- Untrusted text is screened by a pattern pre-check and an independent LLM judge, then fenced
-  before it reaches a prompt. Model output is validated against closed vocabularies, and every
-  number in an AI explanation must come from the engine's own plan, or the answer is not shown.
-- The server rebuilds every plan it explains from its own forecast; numbers from the browser
-  are never trusted. Location is rounded to ~1 km before it leaves the server.
-- No account and no server-side storage of household or health details: the plan lives in the
-  family's own browser and is re-validated when restored.
-- Rate limiting keys on the client address resolved through a fixed number of trusted proxy
-  hops, so a forged `X-Forwarded-For` cannot bypass it.
-- Strict Content-Security-Policy with no inline script, HSTS, COOP/CORP, `nosniff`.
-- Logs are structured and never contain user text.
+- **Sign-in and isolation.** Every personal route (`/api/me*`, `/api/chat`) needs a Firebase ID
+  token that the server verifies; the user id comes only from that token, never from the request,
+  so one family can never read or change another's record.
+- **The scheduler route is invisible.** `/api/internal/check-alerts` answers 404 unless the
+  request carries a Google-signed OIDC token for this service's audience, issued to the
+  scheduler's own service account; it does not exist at all when the scheduler is not configured.
+- **Keys stay on the server.** Gemini, data.gov.in and WAQI keys are server-side only (Secret
+  Manager in production). The Firebase web config is public by design and served at runtime, so
+  no key-shaped string is committed; CI fails if one reaches the client bundle.
+- **Model input and output are constrained.** User text is screened by patterns and an
+  independent Gemini judge, then fenced. Answers are schema-constrained to the engine's closed
+  vocabularies and re-validated; the engine, not the model, applies memory changes. A reply with a
+  number the facts do not contain, a link or instruction-like text is never shown.
+- **Minimal data.** Stored per family: the memory chips, the chosen place (rounded to ~1 km),
+  alert settings and device installation ids. Never the conversation. One request deletes it all.
+- **Hardening.** Bodies capped at 32 KB and validated with Zod; sanitised errors; rate limits on
+  a proxy-resolved client address; strict CSP with no inline script, opened only for the Google
+  sign-in hosts when sign-in is on; HSTS, COOP, CORP, `nosniff`; logs never contain user text.
 
 Details and tests: [docs/SECURITY.md](docs/SECURITY.md).
