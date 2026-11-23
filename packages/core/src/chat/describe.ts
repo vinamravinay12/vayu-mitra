@@ -66,3 +66,29 @@ export function describeAdvice(advice: ActivityAdvice, report: AirReport): strin
   const tips = advice.tips.map((tip) => ADVICE_TIPS[tip]).join(' ');
   return `${verdicts[advice.verdict]}${who}${tips === '' ? '' : ` ${tips}`}`;
 }
+
+/** Another place's air, named, as the reply and the comparison use it. */
+export interface PlaceAir {
+  readonly name: string;
+  readonly report: AirReport;
+}
+
+/** One place's air now, in a line: "Ghaziabad: Very poor (AQI 342), measured at …". */
+export const describePlace = ({ name, report }: PlaceAir): string =>
+  `${name}: ${describeLevel(report.current)}, ${describeSource(report)}`;
+
+/** Each place's air now, and which is cleaner when there are several. */
+export function comparePlaces(places: readonly PlaceAir[]): string {
+  const lines = `${places.map(describePlace).join('. ')}.`;
+  const [cleanest, next] = [...places].sort(
+    (first, second) => first.report.current.aqi - second.report.current.aqi,
+  );
+  if (cleanest === undefined || next === undefined) {
+    return lines;
+  }
+  const verdict =
+    cleanest.report.current.aqi === next.report.current.aqi
+      ? 'The air is about the same in both right now.'
+      : `${cleanest.name} has the cleaner air right now.`;
+  return `${lines} ${verdict}`;
+}

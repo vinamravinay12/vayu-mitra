@@ -5,10 +5,10 @@ kind, plain words** in their language. It never decides anything about the air o
 
 ## The two calls
 
-| Call           | Input                                                                                                                       | Output (schema-constrained JSON)                                                                                                        | Temperature |
-| :------------- | :-------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | :---------- |
-| **understand** | the message, the last 8 turns, what is remembered (with ids)                                                                | memory changes (remember a person, routine or home feature; forget an id), the activity asked about, the person, the time, on/off topic | 0           |
-| **reply**      | the message and the engine's facts: the air in words, the verdict in words, what is remembered and what was just remembered | `{ reply }`, 2–5 sentences in the message's language                                                                                    | 0.3         |
+| Call           | Input                                                                                                                                          | Output (schema-constrained JSON)                                                                                                                                                                                                                                                             | Temperature |
+| :------------- | :--------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------- |
+| **understand** | the message, the last 8 turns, what is remembered (with ids)                                                                                   | memory changes (remember a person, routine or home feature; forget an id), the activity asked about, the person, the time, the day (today or tomorrow), other places asked about (up to 3), on/off topic; a follow-up such as “and tomorrow?” keeps the earlier question's activity and time | 0           |
+| **reply**      | the message, the last 8 turns, and the engine's facts: the air in words, the verdict in words, what is remembered and what was just remembered | `{ reply }`, 2–5 sentences in the message's language, answering what is asked now and not repeating earlier turns                                                                                                                                                                            | 0.3         |
 
 An independent **guard** call classifies the message as safe or manipulation, in parallel with
 `understand` and the air report, so screening adds no latency.
@@ -17,11 +17,14 @@ An independent **guard** call classifies the message as safe or manipulation, in
 
 1. Applies the proposed memory changes itself, after checking each against strict schemas and
    closed vocabularies; anything that does not fit is dropped.
-2. Reads the intent: the AI's activity, person and time take precedence, then keywords (English
-   and common Hinglish), times in the message, and remembered routines.
+2. Reads the intent: the AI's activity, person, time and day take precedence, then keywords
+   (English and common Hinglish, including “kal” and “aaj”), times in the message, the question
+   a follow-up refers to, and remembered routines.
 3. Decides the advice: the planned hour, the cleanest daylight window, the verdict, the
    precautions, from intensity and who is sensitive.
-4. Writes its own sentence for the same facts, used whenever the AI cannot be.
+4. For a question about other places (“Is Gurgaon better than Ghaziabad?”), looks each one up
+   and fetches its station-anchored air through the same cache, and compares them.
+5. Writes its own sentence for the same facts, used whenever the AI cannot be.
 
 ## Guardrails
 

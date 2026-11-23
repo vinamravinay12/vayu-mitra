@@ -15,13 +15,16 @@
 
 ## Advice
 
-| Assumption                                                                                           | Reason                                                                                                                 |
-| :--------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------- |
-| Highest category that is fine: light or moderate activity — Moderate; vigorous — Satisfactory        | CPCB health statements: discomfort for sensitive groups from Moderate, for most people on prolonged exposure from Poor |
-| One category lower for infants, children, older adults, pregnancy and anyone with a listed condition | WHO and CPCB name these groups as most at risk                                                                         |
-| One more category is acceptable with precautions                                                     | Short, gentle activity away from traffic with an N95 cuts dose substantially                                           |
-| Outdoor windows offered only 06:00–20:00                                                             | Families do not plan walks at night, and night air is usually the worst                                                |
-| N95 advice from Poor (Moderate for sensitive people); cloth and surgical masks are not recommended   | Filtration evidence for PM2.5                                                                                          |
+| Assumption                                                                                                                                   | Reason                                                                                                                                               |
+| :------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Highest category that is fine: light or moderate activity — Moderate; vigorous — Satisfactory                                                | CPCB health statements: discomfort for sensitive groups from Moderate, for most people on prolonged exposure from Poor                               |
+| A car trip is fine up to Poor for a healthy adult, with windows up and the AC on recirculate                                                 | A closed cabin on recirculation keeps PM2.5 well below the road's; the risk is at stops and in queues, hence a mask for stops and avoiding rush hour |
+| A car trip is fine up to Poor for a healthy adult, with windows up and the AC on recirculate                                                 | A closed cabin on recirculation keeps PM2.5 well below the road's; the risk is at stops and in queues, hence a mask for stops and avoiding rush hour |
+| One category lower for infants, children, older adults, pregnancy and anyone with a listed condition                                         | WHO and CPCB name these groups as most at risk                                                                                                       |
+| One more category is acceptable with precautions                                                                                             | Short, gentle activity away from traffic with an N95 cuts dose substantially                                                                         |
+| “Tomorrow” with no time is planned at tomorrow's cleanest daylight window; a time already past on the day asked moves to its next occurrence | People asking about tomorrow want its best time; asking at 10 am about a 6:30 walk “today” means the next one                                        |
+| Outdoor windows offered only 06:00–20:00                                                                                                     | Families do not plan walks at night, and night air is usually the worst                                                                              |
+| N95 advice from Poor (Moderate for sensitive people); cloth and surgical masks are not recommended                                           | Filtration evidence for PM2.5                                                                                                                        |
 
 The thresholds rank options; they are not a medical judgement, and the app says so.
 

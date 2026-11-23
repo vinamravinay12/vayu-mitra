@@ -8,6 +8,9 @@ export const ADVICE_TIPS = {
   'run-purifier': 'Keep windows shut and run the air purifier in the room you use most.',
   'keep-windows-shut': 'Keep windows shut while the air is this bad.',
   recirculate: 'In the car, keep windows up and the AC on recirculate.',
+  'mask-for-stops': 'Keep an N95 handy for when you step out at stops.',
+  'avoid-rush-hour':
+    'Avoid rush hour if you can; queues of traffic are where the smog is thickest.',
 } as const;
 
 export type AdviceTip = keyof typeof ADVICE_TIPS;
