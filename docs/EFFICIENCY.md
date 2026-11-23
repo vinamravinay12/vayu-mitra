@@ -45,7 +45,7 @@ design spends its effort:
 - **Shared upstream work.** One national CPCB fetch per 15 minutes serves every family in India;
   air reports are cached per ~1 km cell for 10 minutes, and concurrent requests for the same cell
   share one in-flight call. Failures are never cached.
-- **Small, fast models.** Flash-Lite with minimal thinking and token ceilings sized to each schema;
+- **Fast models, bounded.** Gemini Flash with minimal thinking and token ceilings sized to each schema;
   a slow model hands over to the next after 10 s rather than holding a Cloud Run slot.
 - **Small payloads.** A 36-hour report is 3.3 KB before gzip; a chat reply with advice, memory and
   suggestions about 1.3 KB; a family's stored record under 1 KB.

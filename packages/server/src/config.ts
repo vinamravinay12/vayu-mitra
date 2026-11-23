@@ -56,15 +56,15 @@ export const DEFAULT_AI_REQUESTS_PER_MINUTE = 10;
 export const DEFAULT_AUTH_REQUESTS_PER_MINUTE = 10;
 
 /**
- * Gemini 3.5 Flash-Lite first: in probing with the real extraction schema it
- * answered in 0.9–1.8 s while 3.6 and 3.8 Flash were overloaded (503s and 30 s
- * timeouts). The Flash-Lite models behind it take over when it is busy or
- * rate-limited, rather than the family seeing an error.
+ * Gemini 3.8 Flash first, then 3.6 Flash, then 3.5 Flash-Lite. The Flash
+ * models read and write better; under load they have been seen to answer 503
+ * or hang, so each gets 10 s before the next takes over, and Flash-Lite, the
+ * fastest, is the last resort rather than the family seeing an error.
  */
 export const DEFAULT_MODELS: readonly string[] = [
+  'gemini-3.8-flash',
+  'gemini-3.6-flash',
   'gemini-3.5-flash-lite',
-  'gemini-flash-lite-latest',
-  'gemini-3.1-flash-lite',
 ];
 
 /** Port used when PORT is unset or invalid (Cloud Run sets it). */

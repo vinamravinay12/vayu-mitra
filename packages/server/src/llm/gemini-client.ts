@@ -20,8 +20,8 @@ const DEFAULT_RETRY: RetryOptions = { attempts: 2, baseDelayMs: 500, delay: slee
 
 /**
  * Per model, not per request. A hung call must not hold a Cloud Run slot open:
- * in probing, Gemini 3.6 and 3.8 Flash timed out at 30 s under load while
- * 3.5 Flash-Lite answered in 0.9–1.8 s, so a slow model hands over to the next.
+ * Flash models have been seen to hang for 30 s under load, so a slow model
+ * hands over to the next in the chain instead.
  */
 const REQUEST_TIMEOUT_MS = 10_000;
 

@@ -50,17 +50,17 @@ or with fixture air.
 
 ## Configuration reference
 
-| Variable                                                 | Default          | Meaning                                                                                             |
-| :------------------------------------------------------- | :--------------- | :-------------------------------------------------------------------------------------------------- |
-| `GEMINI_API_KEY`                                         | —                | Required in production                                                                              |
-| `GEMINI_MODELS` / `GEMINI_MODEL`                         | Flash-Lite chain | Replace the fallback chain, or move one model first                                                 |
-| `SESSION_SECRET`                                         | —                | Signs session cookies (≥ 32 characters); required in production; without it locally, sign-in is off |
-| `STORE`                                                  | `memory`         | `firestore` in production (required); `memory` loses records on restart                             |
-| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | —                | Web Push; all three or none; without them alerts are not offered                                    |
-| `DATA_GOV_IN_API_KEY`, `WAQI_TOKEN`                      | —                | Station feeds; without both, reports are forecast-only                                              |
-| `SCHEDULER_AUDIENCE`, `SCHEDULER_SERVICE_ACCOUNT`        | —                | Both or neither; without them the alert route does not exist                                        |
-| `TRUST_PROXY_HOPS`                                       | `1`              | Proxies in front of the app (Cloud Run has one)                                                     |
-| `AI_REQUESTS_PER_MINUTE`                                 | `10`             | Chat requests per client address per minute                                                         |
-| `AUTH_REQUESTS_PER_MINUTE`                               | `10`             | Sign-in and sign-up attempts per client address per minute                                          |
-| `AIR_DATA_MODE`                                          | `live`           | `fixture` for demos and CI; refused in production                                                   |
-| `PORT`                                                   | `8080`           | Set by Cloud Run                                                                                    |
+| Variable                                                 | Default                                | Meaning                                                                                             |
+| :------------------------------------------------------- | :------------------------------------- | :-------------------------------------------------------------------------------------------------- |
+| `GEMINI_API_KEY`                                         | —                                      | Required in production                                                                              |
+| `GEMINI_MODELS` / `GEMINI_MODEL`                         | 3.8 Flash → 3.6 Flash → 3.5 Flash-Lite | Replace the fallback chain, or move one model first                                                 |
+| `SESSION_SECRET`                                         | —                                      | Signs session cookies (≥ 32 characters); required in production; without it locally, sign-in is off |
+| `STORE`                                                  | `memory`                               | `firestore` in production (required); `memory` loses records on restart                             |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | —                                      | Web Push; all three or none; without them alerts are not offered                                    |
+| `DATA_GOV_IN_API_KEY`, `WAQI_TOKEN`                      | —                                      | Station feeds; without both, reports are forecast-only                                              |
+| `SCHEDULER_AUDIENCE`, `SCHEDULER_SERVICE_ACCOUNT`        | —                                      | Both or neither; without them the alert route does not exist                                        |
+| `TRUST_PROXY_HOPS`                                       | `1`                                    | Proxies in front of the app (Cloud Run has one)                                                     |
+| `AI_REQUESTS_PER_MINUTE`                                 | `10`                                   | Chat requests per client address per minute                                                         |
+| `AUTH_REQUESTS_PER_MINUTE`                               | `10`                                   | Sign-in and sign-up attempts per client address per minute                                          |
+| `AIR_DATA_MODE`                                          | `live`                                 | `fixture` for demos and CI; refused in production                                                   |
+| `PORT`                                                   | `8080`                                 | Set by Cloud Run                                                                                    |

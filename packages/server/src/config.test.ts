@@ -102,9 +102,12 @@ describe('loadConfig', () => {
 });
 
 describe('DEFAULT_MODELS', () => {
-  it('prefers Gemini 3.5 Flash-Lite and keeps Flash-Lite fallbacks behind it', () => {
-    expect(DEFAULT_MODELS[0]).toBe('gemini-3.5-flash-lite');
-    expect(DEFAULT_MODELS.slice(1)).toEqual(['gemini-flash-lite-latest', 'gemini-3.1-flash-lite']);
+  it('prefers Gemini 3.8 Flash, then 3.6 Flash, with 3.5 Flash-Lite as the last resort', () => {
+    expect(DEFAULT_MODELS).toEqual([
+      'gemini-3.8-flash',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash-lite',
+    ]);
   });
 });
 
@@ -112,10 +115,10 @@ describe('parseModels', () => {
   it('uses the defaults, a preferred first model, or a full list', () => {
     expect(parseModels({})).toEqual(DEFAULT_MODELS);
     expect(parseModels({ GEMINI_MODEL: 'gemini-x' })).toEqual(['gemini-x', ...DEFAULT_MODELS]);
-    expect(parseModels({ GEMINI_MODEL: 'gemini-3.1-flash-lite' })).toEqual([
-      'gemini-3.1-flash-lite',
+    expect(parseModels({ GEMINI_MODEL: 'gemini-3.5-flash-lite' })).toEqual([
       'gemini-3.5-flash-lite',
-      'gemini-flash-lite-latest',
+      'gemini-3.8-flash',
+      'gemini-3.6-flash',
     ]);
     expect(parseModels({ GEMINI_MODELS: ' a, ,b ' })).toEqual(['a', 'b']);
     expect(parseModels({ GEMINI_MODELS: ' , ' })).toEqual(DEFAULT_MODELS);

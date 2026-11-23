@@ -41,8 +41,8 @@ An independent **guard** call classifies the message as safe or manipulation, in
 
 ## Models
 
-`gemini-3.5-flash-lite` first, then `gemini-flash-lite-latest` and `gemini-3.1-flash-lite`,
-10-second timeout per model, two attempts on 5xx, minimal thinking, token ceilings sized to each
+`gemini-3.8-flash` first, then `gemini-3.6-flash`, with `gemini-3.5-flash-lite` as the last
+resort, 10-second timeout per model, two attempts on 5xx, minimal thinking, token ceilings sized to each
 schema (guard 120, understand 900, reply 600). Configurable with `GEMINI_MODELS`.
 
 ## Without a key
