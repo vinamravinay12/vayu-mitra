@@ -29,7 +29,7 @@ async function checkOne(
   uid: string,
   record: UserRecord,
 ): Promise<boolean> {
-  if (record.place === null || record.pushIds.length === 0) {
+  if (record.place === null || record.pushSubscriptions.length === 0) {
     return false;
   }
   const now = deps.now();
@@ -42,16 +42,18 @@ async function checkOne(
     placeName: record.place.name,
     now,
   });
-  let pushIds = record.pushIds;
+  let pushSubscriptions = record.pushSubscriptions;
   if (decision.send) {
-    const { staleIds } = await deps.messenger.send(pushIds, decision);
-    pushIds = pushIds.filter((id) => !staleIds.includes(id));
+    const { staleEndpoints } = await deps.messenger.send(pushSubscriptions, decision);
+    pushSubscriptions = pushSubscriptions.filter(
+      (subscription) => !staleEndpoints.includes(subscription.endpoint),
+    );
   }
   const changed =
-    pushIds.length !== record.pushIds.length ||
+    pushSubscriptions.length !== record.pushSubscriptions.length ||
     JSON.stringify(decision.state) !== JSON.stringify(record.alertState);
   if (changed) {
-    await deps.store.put(uid, { ...record, alertState: decision.state, pushIds });
+    await deps.store.put(uid, { ...record, alertState: decision.state, pushSubscriptions });
   }
   return decision.send;
 }

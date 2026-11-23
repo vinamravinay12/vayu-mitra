@@ -1,15 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_MODELS, DEFAULT_PORT, loadConfig, parseModels } from './config.js';
-import { loadFirebase, loadScheduler } from './firebase-config.js';
+import { loadPush, loadScheduler, loadSessionSecret } from './settings.js';
 
-const FIREBASE = {
-  FIREBASE_PROJECT_ID: 'vayu-test',
-  FIREBASE_WEB_API_KEY: 'web-key',
-  FIREBASE_APP_ID: '1:2:web:3',
-  FIREBASE_MESSAGING_SENDER_ID: '2',
+const SECRET = 'a-session-secret-of-at-least-32-chars';
+
+const PRODUCTION = {
+  NODE_ENV: 'production',
+  GEMINI_API_KEY: 'key',
+  SESSION_SECRET: SECRET,
+  STORE: 'firestore',
 };
 
-const PRODUCTION = { NODE_ENV: 'production', GEMINI_API_KEY: 'key', ...FIREBASE };
+const VAPID = {
+  VAPID_PUBLIC_KEY: 'pub',
+  VAPID_PRIVATE_KEY: 'priv',
+  VAPID_SUBJECT: 'mailto:a@b.test',
+};
 
 describe('loadConfig', () => {
   it('runs offline in development without a key', () => {
@@ -23,10 +29,13 @@ describe('loadConfig', () => {
       airDataMode: 'live',
       dataGovInApiKey: null,
       waqiToken: null,
-      firebase: null,
+      sessionSecret: null,
       authMode: 'none',
+      store: 'memory',
+      push: null,
       scheduler: null,
       aiRequestsPerMinute: 10,
+      authRequestsPerMinute: 10,
     });
   });
 
@@ -38,7 +47,7 @@ describe('loadConfig', () => {
   it('allows fixture air data only outside production', () => {
     expect(loadConfig({ AIR_DATA_MODE: 'fixture' }).airDataMode).toBe('fixture');
     expect(() => loadConfig({ ...PRODUCTION, AIR_DATA_MODE: 'fixture' })).toThrow(
-      'not allowed in production',
+      'AIR_DATA_MODE=fixture is not allowed',
     );
   });
 
@@ -62,14 +71,20 @@ describe('loadConfig', () => {
       staticDir: '/srv/client',
       dataGovInApiKey: 'cpcb',
       waqiToken: 'waqi',
-      authMode: 'firebase',
+      authMode: 'password',
+      store: 'firestore',
     });
   });
 
-  it('refuses production without sign-in', () => {
-    expect(() => loadConfig({ NODE_ENV: 'production', GEMINI_API_KEY: 'key' })).toThrow(
-      'FIREBASE_PROJECT_ID is required',
+  it('lists everything production is missing', () => {
+    expect(() => loadConfig({ NODE_ENV: 'production' })).toThrow(
+      'In production: GEMINI_API_KEY is required; SESSION_SECRET is required; STORE=firestore is required',
     );
+  });
+
+  it('reads the sign-in rate limit', () => {
+    expect(loadConfig({ AUTH_REQUESTS_PER_MINUTE: '30' }).authRequestsPerMinute).toBe(30);
+    expect(loadConfig({ AUTH_REQUESTS_PER_MINUTE: '0' }).authRequestsPerMinute).toBe(1);
   });
 
   it('reads the AI rate limit, never below one request a minute', () => {
@@ -107,32 +122,24 @@ describe('parseModels', () => {
   });
 });
 
-describe('loadFirebase', () => {
-  it('is off without a project and complete with one', () => {
-    expect(loadFirebase({})).toBeNull();
-    expect(loadFirebase({ ...FIREBASE, FIREBASE_VAPID_KEY: 'vapid' })).toEqual({
-      projectId: 'vayu-test',
-      web: {
-        apiKey: 'web-key',
-        authDomain: 'vayu-test.firebaseapp.com',
-        projectId: 'vayu-test',
-        appId: '1:2:web:3',
-        messagingSenderId: '2',
-      },
-      vapidKey: 'vapid',
-    });
-    expect(loadFirebase({ ...FIREBASE, FIREBASE_AUTH_DOMAIN: 'login.example.test' })).toMatchObject(
-      {
-        web: { authDomain: 'login.example.test' },
-        vapidKey: null,
-      },
-    );
+describe('loadSessionSecret', () => {
+  it('is off when unset and refuses a short secret', () => {
+    expect(loadSessionSecret({})).toBeNull();
+    expect(loadSessionSecret({ SESSION_SECRET: ` ${SECRET} ` })).toBe(SECRET);
+    expect(() => loadSessionSecret({ SESSION_SECRET: 'short' })).toThrow('at least 32 characters');
   });
+});
 
-  it('refuses a half-configured project', () => {
-    expect(() => loadFirebase({ FIREBASE_PROJECT_ID: 'p', FIREBASE_APP_ID: 'a' })).toThrow(
-      'FIREBASE_WEB_API_KEY, FIREBASE_MESSAGING_SENDER_ID is missing',
-    );
+describe('loadPush', () => {
+  it('needs all three VAPID values or none', () => {
+    expect(loadPush({})).toBeNull();
+    expect(loadPush(VAPID)).toEqual({
+      publicKey: 'pub',
+      privateKey: 'priv',
+      subject: 'mailto:a@b.test',
+    });
+    expect(() => loadPush({ VAPID_PUBLIC_KEY: 'pub' })).toThrow('together');
+    expect(() => loadPush({ ...VAPID, VAPID_SUBJECT: ' ' })).toThrow('together');
   });
 });
 
