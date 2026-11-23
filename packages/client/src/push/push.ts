@@ -1,44 +1,63 @@
-import type { FirebaseApp } from 'firebase/app';
-
 /** How turning alerts on went. */
 export type PushOutcome = 'enabled' | 'denied' | 'unsupported';
 
-/** Where the browser reports this device's push id to, and its removal. */
-export interface PushCallbacks {
-  readonly onRegistered: (id: string) => void;
-  readonly onUnregistered: (id: string) => void;
+/** A push subscription as the server stores it (`PushSubscription.toJSON()`). */
+export interface PushSubscriptionJson {
+  readonly endpoint: string;
+  readonly keys: { readonly p256dh: string; readonly auth: string };
 }
 
 /** The app's own service worker, which shows alerts while the tab is closed. */
 export const SERVICE_WORKER_URL = '/push-sw.js';
 
+/** A base64url VAPID key as the bytes `pushManager.subscribe` wants. */
+export function keyBytes(base64url: string): Uint8Array<ArrayBuffer> {
+  const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+  const binary = atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '='));
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+}
+
+/** The subscription's endpoint and keys, or null if the browser gave an incomplete one. */
+function toJson(subscription: PushSubscription): PushSubscriptionJson | null {
+  const { endpoint, keys } = subscription.toJSON();
+  const p256dh = keys?.p256dh;
+  const auth = keys?.auth;
+  return endpoint === undefined || p256dh === undefined || auth === undefined
+    ? null
+    : { endpoint, keys: { p256dh, auth } };
+}
+
 /**
- * Registers this browser for alerts with Firebase Cloud Messaging, by its
- * Firebase Installation ID. Asks for notification permission first, and only
- * when the family switches alerts on.
+ * Subscribes this browser to Web Push with the server's VAPID key and hands
+ * the subscription to `save`. Asks for notification permission first, and
+ * only when the family switches alerts on.
  */
 export async function enablePush(
-  app: FirebaseApp,
   vapidKey: string,
-  callbacks: PushCallbacks,
+  save: (subscription: PushSubscriptionJson) => Promise<unknown>,
 ): Promise<PushOutcome> {
-  const messaging = await import('firebase/messaging');
-  if (!(await messaging.isSupported()) || !('serviceWorker' in navigator)) {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     return 'unsupported';
   }
   if ((await Notification.requestPermission()) !== 'granted') {
     return 'denied';
   }
   const registration = await navigator.serviceWorker.register(SERVICE_WORKER_URL);
-  const instance = messaging.getMessaging(app);
-  messaging.onRegistered(instance, callbacks.onRegistered);
-  messaging.onUnregistered(instance, callbacks.onUnregistered);
-  await messaging.register(instance, { vapidKey, serviceWorkerRegistration: registration });
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: keyBytes(vapidKey),
+  });
+  const json = toJson(subscription);
+  if (json === null) return 'unsupported';
+  await save(json);
   return 'enabled';
 }
 
-/** Stops alerts on this browser; the unregister callback tells the server. */
-export async function disablePush(app: FirebaseApp): Promise<void> {
-  const messaging = await import('firebase/messaging');
-  await messaging.unregister(messaging.getMessaging(app));
+/** Unsubscribes this browser and tells the server which endpoint went away. */
+export async function disablePush(forget: (endpoint: string) => Promise<unknown>): Promise<void> {
+  const registration = await navigator.serviceWorker.getRegistration(SERVICE_WORKER_URL);
+  const subscription = await registration?.pushManager.getSubscription();
+  if (subscription === undefined || subscription === null) return;
+  await subscription.unsubscribe();
+  await forget(subscription.endpoint);
 }

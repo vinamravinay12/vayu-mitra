@@ -1,54 +1,75 @@
 import { ApiError, requestJson } from './http.js';
 
-/** The project's public Firebase web config. */
-export interface FirebaseWebConfig {
-  readonly apiKey: string;
-  readonly authDomain: string;
-  readonly projectId: string;
-  readonly appId: string;
-  readonly messagingSenderId: string;
-}
-
 /** What the browser needs to start. */
 export interface ClientConfig {
-  readonly auth: 'firebase' | 'none';
-  readonly firebase: FirebaseWebConfig | null;
+  /** `password`: email-and-password accounts. `none`: development, one local household. */
+  readonly auth: 'password' | 'none';
+  /** The Web Push public key; null when alerts are not set up. */
   readonly vapidKey: string | null;
 }
 
-const WEB_KEYS = ['apiKey', 'authDomain', 'projectId', 'appId', 'messagingSenderId'] as const;
+/** Who is signed in. */
+export interface Session {
+  readonly signedIn: boolean;
+  /** Null with sign-in off. */
+  readonly email: string | null;
+}
 
 /** True for a plain object. */
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
-/** The Firebase web config, if the value is one. */
-function readFirebase(value: unknown): FirebaseWebConfig | null | undefined {
-  if (value === null) return null;
-  if (!isRecord(value) || !WEB_KEYS.every((key) => typeof value[key] === 'string'))
-    return undefined;
-  return value as unknown as FirebaseWebConfig;
+/** The answer, or an ApiError naming what came back incomplete. */
+function check<T>(valid: boolean, value: T, what: string): T {
+  if (!valid) throw new ApiError(`The ${what} came back incomplete. Please try again.`);
+  return value;
 }
 
 /**
- * Checked by hand rather than with a schema library: this runs before the
- * first screen, and keeping Zod out of it halves the JavaScript that paint waits for.
+ * Checked by hand rather than with a schema library: these run before the
+ * first screen, and keeping Zod out of them halves the JavaScript that paint waits for.
  */
 export function readConfig(value: unknown): ClientConfig {
-  const firebase = isRecord(value) ? readFirebase(value.firebase) : undefined;
-  const auth = isRecord(value) ? value.auth : undefined;
-  const vapidKey = isRecord(value) ? value.vapidKey : undefined;
-  if (
-    (auth !== 'firebase' && auth !== 'none') ||
-    firebase === undefined ||
-    (typeof vapidKey !== 'string' && vapidKey !== null)
-  ) {
-    throw new ApiError('The app settings came back incomplete. Please try again.');
-  }
-  return { auth, firebase, vapidKey };
+  const config = isRecord(value) ? value : {};
+  const { auth, vapidKey } = config;
+  const valid =
+    (auth === 'password' || auth === 'none') && (typeof vapidKey === 'string' || vapidKey === null);
+  return check(valid, { auth, vapidKey } as ClientConfig, 'app settings');
 }
 
-/** Reads the start-up config; it needs no sign-in. */
+/** A session answer, checked by hand for the same reason. */
+export function readSession(value: unknown): Session {
+  const session = isRecord(value) ? value : {};
+  const { signedIn, email } = session;
+  const valid = typeof signedIn === 'boolean' && (typeof email === 'string' || email === null);
+  return check(valid, { signedIn, email } as Session, 'sign-in status');
+}
+
+/** Reads the start-up config. */
 export async function fetchConfig(): Promise<ClientConfig> {
-  return readConfig(await requestJson('/api/config', () => Promise.resolve(null)));
+  return readConfig(await requestJson('/api/config'));
+}
+
+/** Who is signed in on this browser, from the session cookie. */
+export async function fetchSession(): Promise<Session> {
+  return readSession(await requestJson('/api/auth/session'));
+}
+
+/** Signs in, or creates an account and signs in; the server sets the cookie. */
+export async function signIn(
+  mode: 'login' | 'register',
+  email: string,
+  password: string,
+): Promise<{ readonly email: string }> {
+  const answer = await requestJson(`/api/auth/${mode}`, {
+    method: 'POST',
+    body: { email, password },
+  });
+  const signedInEmail = isRecord(answer) ? answer.email : undefined;
+  return check(typeof signedInEmail === 'string', { email: String(signedInEmail) }, 'sign-in');
+}
+
+/** Signs out on this browser. */
+export async function signOut(): Promise<void> {
+  await requestJson('/api/auth/logout', { method: 'POST' });
 }
