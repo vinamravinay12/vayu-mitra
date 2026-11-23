@@ -12,8 +12,10 @@ export interface ReplyFacts {
   readonly otherPlaces: readonly string[];
   /** The engine's verdict in words, when the message asked about an activity. */
   readonly advice: string | null;
-  readonly remembered: readonly string[];
-  readonly justRemembered: readonly string[];
+  /** Learnt from this message: the only memory the reply may confirm. */
+  readonly newlyRemembered: readonly string[];
+  /** Known from before; mentioned only if the message asks what is remembered. */
+  readonly alreadyKnown: readonly string[];
   readonly onTopic: boolean;
 }
 
@@ -27,7 +29,7 @@ const REPLY_INSTRUCTION = [
   'Read the earlier turns. Answer the question actually being asked now: if the family corrects or narrows an earlier question ("I meant by car", "I am asking about tomorrow"), say briefly that you have it and answer the corrected question.',
   "If there is advice, lead with its verdict and its day and time, then the one or two precautions that matter most. If the message asks about other places, answer from otherPlaces: say each one's air now and which is cleaner. Otherwise answer from the air facts.",
   'Do not repeat precautions or sentences you already gave in an earlier turn unless the advice changed; say only what is new.',
-  'If something was just remembered, confirm it from your side in a few words, such as "Noted: you have a car.", so they can correct it.',
+  'Only if newlyRemembered is not empty, confirm those items from your side in a few words, such as "Noted: you have a car." Never confirm or repeat alreadyKnown items unless the message asks what you remember.',
   'If the message is off topic, say briefly what you can help with.',
   'Reply in the language and script of the new message (English, Hindi or Hinglish). Two to five short sentences, plain text, no lists, no links.',
   'You are not a doctor: for symptoms such as breathlessness or chest pain, tell them to seek medical care.',

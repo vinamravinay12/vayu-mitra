@@ -5,15 +5,15 @@ import {
   type Activity,
   type Day,
   type HomeFeature,
+  type Period,
 } from '../catalog/vocabulary.js';
 import type { PersonFact } from '../memory/memory-schema.js';
-import { nowHour, type AirReport, type ReportHour } from '../schemas/air-report.js';
-import { localClock, minutesOfDay } from '../time/local-clock.js';
+import type { AirReport, ReportHour } from '../schemas/air-report.js';
 import type { ActivityAdvice, AdviceHour, Verdict } from './advice-schema.js';
 import { chooseTips } from './choose-tips.js';
+import { planAndWindow } from './plan.js';
 
-/** Outdoor plans are only suggested in these local hours. */
-export const DAYLIGHT = { first: 6, last: 20 } as const;
+export { cleanestWindow, dateFor, DAYLIGHT, plannedHour } from './plan.js';
 
 /** Highest category each intensity is fine in for a healthy adult, outdoors. */
 const GO_LIMIT: Readonly<Record<Intensity, number>> = { light: 2, moderate: 2, vigorous: 1 };
@@ -37,50 +37,6 @@ const toAdviceHour = (hour: ReportHour): AdviceHour => ({
   aqi: hour.aqi,
   category: hour.category,
 });
-
-/** The local date a day refers to, or null when no day was given. */
-export function dateFor(report: AirReport, day: Day | null, now: Date): string | null {
-  if (day === null) return null;
-  const today = new Date(`${localClock(now, report.utcOffsetSeconds).date}T00:00:00Z`);
-  today.setUTCDate(today.getUTCDate() + (day === 'tomorrow' ? 1 : 0));
-  return today.toISOString().slice(0, 10);
-}
-
-/**
- * The outlook hour a plan is for: `HH:MM` on the given date; if that has
- * passed or the outlook does not reach it, the next `HH:MM`; with no time, now.
- */
-export function plannedHour(
-  report: AirReport,
-  time: string | null,
-  date: string | null,
-): ReportHour {
-  if (time === null) {
-    return nowHour(report);
-  }
-  const wanted = Math.floor(minutesOfDay(time) / 60);
-  const at = (on: string | null) =>
-    report.hours.find(
-      (hour) =>
-        Number(hour.time.slice(11, 13)) === wanted && (on === null || hour.time.startsWith(on)),
-    );
-  return at(date) ?? at(null) ?? nowHour(report);
-}
-
-/** The window of `length` hours in daylight with the lowest mean index, as its first hour. */
-export function cleanestWindow(hours: readonly ReportHour[], length: number): ReportHour | null {
-  let best: { hour: ReportHour; mean: number } | null = null;
-  for (const [start, hour] of hours.entries()) {
-    const window = hours.slice(start, start + length);
-    const startHour = Number(hour.time.slice(11, 13));
-    const inDaylight = startHour >= DAYLIGHT.first && startHour + length - 1 <= DAYLIGHT.last;
-    const mean = window.reduce((sum, next) => sum + next.aqi, 0) / length;
-    if (window.length === length && inDaylight && (best === null || mean < best.mean)) {
-      best = { hour, mean };
-    }
-  }
-  return best?.hour ?? null;
-}
 
 /** Highest category ranks that mean go, and go with care. */
 function limits(profile: ActivityProfile, sensitive: boolean): { go: number; care: number } {
@@ -109,26 +65,6 @@ function decideVerdict(
   return { verdict: 'skip', chosen: planned };
 }
 
-/**
- * The hour the plan is for and the cleanest window to compare it with. Asked
- * about a day, the window is looked for on that day only; "tomorrow" with no
- * time plans for tomorrow's cleanest window itself.
- */
-function planAndWindow(
-  input: AdviceInput,
-  defaultMinutes: number,
-): { planned: ReportHour; best: ReportHour | null } {
-  const date = dateFor(input.report, input.day, input.now);
-  const length = Math.max(1, Math.ceil((input.minutes ?? defaultMinutes) / 60));
-  const hours = input.report.hours.filter((hour) => date === null || hour.time.startsWith(date));
-  const best = cleanestWindow(hours, length);
-  const planned =
-    input.time === null && date !== null && best !== null
-      ? best
-      : plannedHour(input.report, input.time, date);
-  return { planned, best };
-}
-
 /** Inputs for one piece of advice. */
 export interface AdviceInput {
   readonly activity: Activity;
@@ -139,6 +75,8 @@ export interface AdviceInput {
   readonly time: string | null;
   /** Today or tomorrow, when the question said; null means the next occurrence. */
   readonly day: Day | null;
+  /** Morning, afternoon, evening or night, when the question said one instead of a time. */
+  readonly period: Period | null;
   readonly minutes: number | null;
 }
 

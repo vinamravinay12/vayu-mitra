@@ -81,12 +81,13 @@ async function answer(
         : describeAir(report);
   const known = new Set(memoryChips(before).map((chip) => chip.label));
   const chips = memoryChips(memory).map((chip) => chip.label);
+  const newlyRemembered = chips.filter((label) => !known.has(label));
   const facts = {
     air: describeAir(report),
     otherPlaces: elsewhere.map(describePlace),
     advice: advice === null ? null : describeAdvice(advice, report),
-    remembered: chips,
-    justRemembered: chips.filter((label) => !known.has(label)),
+    newlyRemembered,
+    alreadyKnown: chips.filter((label) => known.has(label)),
     onTopic: understood.onTopic || advice !== null || elsewhere.length > 0,
   };
   return writeReply(deps.llm, request, facts, engineText);

@@ -30,8 +30,8 @@ const FACTS = {
   air: 'AQI 250',
   otherPlaces: [],
   advice: null,
-  remembered: [],
-  justRemembered: [],
+  newlyRemembered: [],
+  alreadyKnown: [],
   onTopic: true,
 };
 
@@ -53,7 +53,13 @@ describe('understand', () => {
       'remember-home',
       'forget',
     ]);
-    expect(result.hints).toEqual({ activity: 'walk', person: 'Dadi', time: null, day: null });
+    expect(result.hints).toEqual({
+      activity: 'walk',
+      person: 'Dadi',
+      time: null,
+      day: null,
+      period: null,
+    });
   });
 
   it('falls back to nothing when off, off-schema or failing', async () => {
@@ -139,7 +145,19 @@ describe('runChat', () => {
         ?.prompt.split('\n')[0]
         ?.slice(7) ?? '{}',
     );
-    expect(facts.justRemembered).toEqual(['Dadi · older adult, asthma', 'Walk · 6:30 am · Dadi']);
+    expect(facts.newlyRemembered).toEqual(['Dadi · older adult, asthma', 'Walk · 6:30 am · Dadi']);
+    expect(facts.alreadyKnown).toEqual([]);
+  });
+
+  it('does not present what was already known as new on a later turn', async () => {
+    const deps = testDeps();
+    await runChat({ ...deps, llm: llmFor(DADI_UNDERSTOOD) }, 'u1', ask('Dadi walks at 6:30'));
+    const llm = llmFor(DADI_UNDERSTOOD);
+    await runChat({ ...deps, llm }, 'u1', ask('Is it advisable to walk in the morning?'));
+    const prompt = llm.requests.find((r) => r.purpose === 'reply')?.prompt ?? '';
+    const facts = JSON.parse(prompt.split('\n')[0]?.slice(7) ?? '{}');
+    expect(facts.newlyRemembered).toEqual([]);
+    expect(facts.alreadyKnown).toHaveLength(2);
   });
 
   it('answers about the air when there is no activity', async () => {

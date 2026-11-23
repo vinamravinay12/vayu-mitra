@@ -42,6 +42,19 @@ export type Activity = (typeof ACTIVITIES)[number];
 export type HomeFeature = (typeof HOME_FEATURES)[number];
 export type Day = (typeof DAYS)[number];
 
+/** Parts of the day people plan by, when they give no clock time. */
+export const PERIODS = ['morning', 'afternoon', 'evening', 'night'] as const;
+
+export type Period = (typeof PERIODS)[number];
+
+/** The local hours each part of the day covers, inclusive. */
+export const PERIOD_HOURS: Readonly<Record<Period, { first: number; last: number }>> = {
+  morning: { first: 5, last: 11 },
+  afternoon: { first: 12, last: 16 },
+  evening: { first: 17, last: 20 },
+  night: { first: 21, last: 23 },
+};
+
 /** Readable labels for life stages. */
 export const AGE_LABELS: Readonly<Record<AgeGroup, string>> = {
   infant: 'baby',
