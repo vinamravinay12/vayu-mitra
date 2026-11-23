@@ -24,7 +24,16 @@ const ask = (message: string, history: { role: 'user' | 'assistant'; text: strin
   history,
 });
 
-const FACTS = { air: 'AQI 250', advice: null, remembered: [], justRemembered: [], onTopic: true };
+const TURN = { message: 'm', history: [] };
+
+const FACTS = {
+  air: 'AQI 250',
+  otherPlaces: [],
+  advice: null,
+  remembered: [],
+  justRemembered: [],
+  onTopic: true,
+};
 
 describe('understand', () => {
   it('turns flat changes into strict ones and drops misfits', async () => {
@@ -44,7 +53,7 @@ describe('understand', () => {
       'remember-home',
       'forget',
     ]);
-    expect(result.hints).toEqual({ activity: 'walk', person: 'Dadi', time: null });
+    expect(result.hints).toEqual({ activity: 'walk', person: 'Dadi', time: null, day: null });
   });
 
   it('falls back to nothing when off, off-schema or failing', async () => {
@@ -75,7 +84,7 @@ describe('understand', () => {
 describe('writeReply', () => {
   it('uses the AI wording when it stays within the facts', async () => {
     const llm = fakeLlm({ reply: JSON.stringify({ reply: 'It is AQI 250 now, stay in.' }) });
-    expect(await writeReply(llm, 'm', FACTS, 'engine')).toEqual({
+    expect(await writeReply(llm, TURN, FACTS, 'engine')).toEqual({
       text: 'It is AQI 250 now, stay in.',
       source: 'ai',
     });
@@ -85,13 +94,13 @@ describe('writeReply', () => {
   it('uses the engine sentence for invented numbers, links, bad JSON, errors or no model', async () => {
     const replying = (reply: unknown) => fakeLlm({ reply: JSON.stringify({ reply }) });
     const engine = { text: 'engine', source: 'engine' };
-    expect(await writeReply(replying('AQI is 412 now'), 'm', FACTS, 'engine')).toEqual(engine);
-    expect(await writeReply(replying('see https://x.test'), 'm', FACTS, 'engine')).toEqual(engine);
-    expect(await writeReply(replying(''), 'm', FACTS, 'engine')).toEqual(engine);
-    expect(await writeReply(fakeLlm({ reply: new Error('down') }), 'm', FACTS, 'engine')).toEqual(
+    expect(await writeReply(replying('AQI is 412 now'), TURN, FACTS, 'engine')).toEqual(engine);
+    expect(await writeReply(replying('see https://x.test'), TURN, FACTS, 'engine')).toEqual(engine);
+    expect(await writeReply(replying(''), TURN, FACTS, 'engine')).toEqual(engine);
+    expect(await writeReply(fakeLlm({ reply: new Error('down') }), TURN, FACTS, 'engine')).toEqual(
       engine,
     );
-    expect(await writeReply(null, 'm', FACTS, 'engine')).toEqual(engine);
+    expect(await writeReply(null, TURN, FACTS, 'engine')).toEqual(engine);
   });
 });
 
@@ -162,6 +171,33 @@ describe('runChat', () => {
     expect(response.source).toBe('ai');
     const prompt = llm.requests.find((r) => r.purpose === 'reply')?.prompt ?? '';
     expect(prompt).toContain('"onTopic":false');
+  });
+
+  it('follows up the previous question when the family only changes the day', async () => {
+    const history = [
+      { role: 'user' as const, text: 'I want to go out to Delhi by my car at 6 pm' },
+      { role: 'assistant' as const, text: 'At 6 pm it is fine for the car trip.' },
+    ];
+    const response = await runChat(
+      { ...testDeps(), llm: null },
+      'u1',
+      ask('But I am asking about tomorrow', history),
+    );
+    expect(response.advice?.activity).toBe('car-trip');
+    expect(response.advice?.planned.time).toBe('2026-11-23T18:00');
+    expect(response.reply).toMatch(/^Tomorrow at 6 pm it is /);
+    expect(response.advice?.tips).not.toContain('ease-off');
+  });
+
+  it('gives the reply call the conversation, so it can follow corrections', async () => {
+    const llm = llmFor(NOTHING_UNDERSTOOD, 'Got it, tomorrow by car.');
+    const history = [{ role: 'user' as const, text: 'Can I drive at 6 pm?' }];
+    await runChat({ ...testDeps(), llm }, 'u1', ask('I meant tomorrow', history));
+    const reply = llm.requests.find((request) => request.purpose === 'reply');
+    expect(reply?.prompt).toContain('Can I drive at 6 pm?');
+    expect(reply?.systemInstruction).toContain('Do not repeat precautions');
+    const understanding = llm.requests.find((request) => request.purpose === 'understand');
+    expect(understanding?.systemInstruction).toContain('- day: today or tomorrow');
   });
 
   it('works without a model, from keywords', async () => {

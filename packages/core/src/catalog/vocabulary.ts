@@ -26,8 +26,12 @@ export const ACTIVITIES = [
   'commute',
   'yoga',
   'outdoor-chores',
+  'car-trip',
   'open-windows',
 ] as const;
+
+/** Which day a question is about; the outlook covers today and tomorrow. */
+export const DAYS = ['today', 'tomorrow'] as const;
 
 /** What the home already has that changes the advice. */
 export const HOME_FEATURES = ['air-purifier', 'n95-masks', 'car'] as const;
@@ -36,6 +40,7 @@ export type AgeGroup = (typeof AGE_GROUPS)[number];
 export type HealthCondition = (typeof HEALTH_CONDITIONS)[number];
 export type Activity = (typeof ACTIVITIES)[number];
 export type HomeFeature = (typeof HOME_FEATURES)[number];
+export type Day = (typeof DAYS)[number];
 
 /** Readable labels for life stages. */
 export const AGE_LABELS: Readonly<Record<AgeGroup, string>> = {
