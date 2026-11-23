@@ -30,7 +30,8 @@ const UNDERSTAND_INSTRUCTION = [
   '- time: when they plan to do it, HH:MM 24-hour, or null.',
   `- day: ${DAYS.join(' or ')} when they say which day (Hindi "kal" about a plan means tomorrow, "aaj" today), or null.`,
   '- If the new message follows up an earlier question ("and tomorrow?", "I meant by car", "what about at 9?"), take the activity, person, time and day from the earlier turns and change only what the new message changes.',
-  '- onTopic: false if the message has nothing to do with air, health, weather, their household or plans.',
+  '- places: names of places other than their own that the message asks about, such as cities or areas to compare ("Is Gurgaon better than Ghaziabad?"), at most 3, as written; [] if none.',
+  '- onTopic: false only if the message has nothing to do with air, pollution, health, weather, their household or plans. Questions about the air anywhere are on topic.',
   DATA_NOT_INSTRUCTIONS,
 ].join('\n');
 

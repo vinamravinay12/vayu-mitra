@@ -39,6 +39,7 @@ export const NOTHING_UNDERSTOOD = JSON.stringify({
   person: null,
   time: null,
   day: null,
+  places: [],
   onTopic: true,
 });
 
@@ -72,6 +73,7 @@ export const DADI_UNDERSTOOD = JSON.stringify({
   person: 'Dadi',
   time: null,
   day: null,
+  places: [],
   onTopic: true,
 });
 

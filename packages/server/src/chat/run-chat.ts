@@ -1,11 +1,15 @@
 import {
   adviseActivity,
   applyChanges,
+  comparePlaces,
   describeAdvice,
   describeAir,
+  describePlace,
   memoryChips,
   readIntent,
   suggestQuestions,
+  type ActivityAdvice,
+  type AirReport,
   type ChatRequest,
   type ChatResponse,
   type Memory,
@@ -16,8 +20,9 @@ import { logEvent } from '../logging/log.js';
 import type { LlmClient } from '../llm/llm-client.js';
 import { newUserRecord } from '../store/user-record.js';
 import type { UserStore } from '../store/user-store.js';
-import { understand } from './understand.js';
-import { writeReply } from './write-reply.js';
+import { airElsewhere } from './other-places.js';
+import { understand, type Understood } from './understand.js';
+import { writeReply, type WrittenReply } from './write-reply.js';
 
 export interface ChatDependencies {
   readonly llm: LlmClient | null;
@@ -48,6 +53,44 @@ const screen = (llm: LlmClient | null, message: string): Promise<ScreenResult> =
   llm === null
     ? Promise.resolve({ safe: true, judgedBy: 'heuristic' })
     : judgeWithLlm(llm, message);
+
+/** What the reply is built from. */
+interface AnswerParts {
+  readonly report: AirReport;
+  readonly advice: ActivityAdvice | null;
+  readonly understood: Understood;
+  readonly before: Memory;
+  readonly memory: Memory;
+}
+
+/**
+ * The reply: the advice, else other places asked about, else the air here,
+ * worded by the model within the engine's facts, or by the engine itself.
+ */
+async function answer(
+  deps: ChatDependencies,
+  request: ChatRequest,
+  { report, advice, understood, before, memory }: AnswerParts,
+): Promise<WrittenReply> {
+  const elsewhere = await airElsewhere(deps.air, understood.places);
+  const engineText =
+    advice !== null
+      ? describeAdvice(advice, report)
+      : elsewhere.length > 0
+        ? comparePlaces(elsewhere)
+        : describeAir(report);
+  const known = new Set(memoryChips(before).map((chip) => chip.label));
+  const chips = memoryChips(memory).map((chip) => chip.label);
+  const facts = {
+    air: describeAir(report),
+    otherPlaces: elsewhere.map(describePlace),
+    advice: advice === null ? null : describeAdvice(advice, report),
+    remembered: chips,
+    justRemembered: chips.filter((label) => !known.has(label)),
+    onTopic: understood.onTopic || advice !== null || elsewhere.length > 0,
+  };
+  return writeReply(deps.llm, request, facts, engineText);
+}
 
 /**
  * One turn of the conversation.
@@ -88,21 +131,13 @@ export async function runChat(
           now,
           home: memory.home.map((fact) => fact.feature),
         });
-  const engineText = advice === null ? describeAir(report) : describeAdvice(advice, report);
-  const before = new Set(memoryChips(record.memory).map((chip) => chip.label));
-  const chips = memoryChips(memory).map((chip) => chip.label);
-  const reply = await writeReply(
-    deps.llm,
-    request,
-    {
-      air: describeAir(report),
-      advice: advice === null ? null : describeAdvice(advice, report),
-      remembered: chips,
-      justRemembered: chips.filter((label) => !before.has(label)),
-      onTopic: understood.onTopic || advice !== null,
-    },
-    engineText,
-  );
+  const reply = await answer(deps, request, {
+    report,
+    advice,
+    understood,
+    before: record.memory,
+    memory,
+  });
   await deps.store.put(uid, {
     ...record,
     memory,

@@ -6,7 +6,10 @@ import { DATA_NOT_INSTRUCTIONS, fenceUntrusted } from './fence-untrusted.js';
 
 /** The facts the reply may use, all computed by the engine. */
 export interface ReplyFacts {
+  /** The air at the family's own place. */
   readonly air: string;
+  /** The air now in other places the message asked about, one line each. */
+  readonly otherPlaces: readonly string[];
   /** The engine's verdict in words, when the message asked about an activity. */
   readonly advice: string | null;
   readonly remembered: readonly string[];
@@ -22,7 +25,7 @@ const REPLY_INSTRUCTION = [
   'You are Vayu Mitra, a warm, practical clean-air coach for Indian families during winter smog, in the middle of a conversation.',
   'Answer the new message using only the facts given. Every number you write must appear in the facts; never estimate, never add an AQI, a time or a percentage of your own.',
   'Read the earlier turns. Answer the question actually being asked now: if the family corrects or narrows an earlier question ("I meant by car", "I am asking about tomorrow"), say briefly that you have it and answer the corrected question.',
-  'If there is advice, lead with its verdict and its day and time, then the one or two precautions that matter most. If not, answer from the air facts.',
+  "If there is advice, lead with its verdict and its day and time, then the one or two precautions that matter most. If the message asks about other places, answer from otherPlaces: say each one's air now and which is cleaner. Otherwise answer from the air facts.",
   'Do not repeat precautions or sentences you already gave in an earlier turn unless the advice changed; say only what is new.',
   'If something was just remembered, confirm it from your side in a few words, such as "Noted: you have a car.", so they can correct it.',
   'If the message is off topic, say briefly what you can help with.',
