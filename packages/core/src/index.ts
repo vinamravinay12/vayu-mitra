@@ -4,27 +4,11 @@
  * code, so the advice a family sees and the facts the AI is grounded in agree.
  */
 export * from './catalog/vocabulary.js';
-export {
-  AQI_CATEGORIES,
-  CATEGORY_GUIDANCE,
-  CATEGORY_LABELS,
-  WHO_PM25_24H_GUIDELINE,
-} from './catalog/aqi-bands.js';
-export type { AqiCategory } from './catalog/aqi-bands.js';
+export { CATEGORY_GUIDANCE, CATEGORY_LABELS } from './catalog/aqi-bands.js';
 export { ACTIVITY_PROFILES } from './catalog/activities.js';
-export type { ActivityProfile, Intensity } from './catalog/activities.js';
 
 export * from './aqi/pollutants.js';
-export {
-  categoryOf,
-  categoryRank,
-  computeAqi,
-  computeNaqi,
-  concentrationFor,
-  particulateAqi,
-  subIndex,
-} from './aqi/compute-aqi.js';
-export type { AqiReading } from './aqi/compute-aqi.js';
+export { categoryOf, computeNaqi, concentrationFor } from './aqi/compute-aqi.js';
 export { EPA_PM10_BANDS, EPA_PM25_BANDS, epaIndexToConcentration } from './aqi/us-aqi.js';
 
 export * from './time/local-clock.js';

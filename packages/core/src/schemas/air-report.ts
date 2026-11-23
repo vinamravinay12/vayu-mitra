@@ -13,13 +13,13 @@ export const placeSchema = z.object({
 });
 
 /** Where the hourly outlook came from. */
-export const FORECAST_SOURCES = ['open-meteo', 'fixture'] as const;
+const FORECAST_SOURCES = ['open-meteo', 'fixture'] as const;
 
 const aqiValue = z.number().int().min(0).max(500);
 const concentration = z.number().min(0).max(MAX_CONCENTRATION);
 
 /** One local hour of the outlook, already anchored to the station. */
-export const reportHourSchema = z.object({
+const reportHourSchema = z.object({
   /** Local wall-clock time, `YYYY-MM-DDTHH:00`. */
   time: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:00$/),
   pm25: concentration,

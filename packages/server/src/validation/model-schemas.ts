@@ -31,7 +31,7 @@ const time = z.string().regex(TIME_OF_DAY_PATTERN).nullable();
  * null. Flat objects decode more reliably than a union; each is then checked
  * against the engine's strict union, and anything that does not fit is dropped.
  */
-export const flatChangeSchema = z.object({
+const flatChangeSchema = z.object({
   op: z.enum(['remember-person', 'remember-routine', 'remember-home', 'forget']),
   label: z.string().max(40).nullable(),
   ageGroup: z.enum(AGE_GROUPS).nullable(),
@@ -90,6 +90,3 @@ export function toResponseSchema(schema: z.ZodType): Record<string, unknown> {
   const { $schema: _ignored, ...rest } = z.toJSONSchema(schema) as Record<string, unknown>;
   return rest;
 }
-
-export type GuardVerdict = z.infer<typeof guardVerdictSchema>;
-export type Understanding = z.infer<typeof understandingSchema>;

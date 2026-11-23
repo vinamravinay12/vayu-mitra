@@ -1,13 +1,14 @@
 import {
   CATEGORY_GUIDANCE,
   CATEGORY_LABELS,
+  formatHour,
+  hourOfTime,
   STATION_SOURCE_LABELS,
   type AirReport,
   type Place,
 } from '@vayu/core';
 import type { AirState } from '../../state/use-air.js';
 import { Alert } from '../ui/Alert.js';
-import { observedHour } from './format.js';
 import { HourStrip } from './HourStrip.js';
 
 /** Where "now" comes from, in one line. */
@@ -17,7 +18,7 @@ function SourceLine({ report }: { readonly report: AirReport }): React.JSX.Eleme
     <p className="text-sm text-muted">
       {station === null
         ? 'Forecast estimate: no official station has reported nearby in the last few hours.'
-        : `Measured at ${station.name}, ${String(station.distanceKm)} km away (${STATION_SOURCE_LABELS[station.source]}, ${observedHour(station.observedAt)}). Hours ahead: forecast adjusted to this station.`}
+        : `Measured at ${station.name}, ${String(station.distanceKm)} km away (${STATION_SOURCE_LABELS[station.source]}, ${formatHour(hourOfTime(station.observedAt))}). Hours ahead: forecast adjusted to this station.`}
     </p>
   );
 }

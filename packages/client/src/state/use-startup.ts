@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { fetchConfig, fetchSession, type ClientConfig } from '../api/config.js';
 
 /** Where start-up has got to. */
-export type Startup =
+type Startup =
   | { readonly status: 'loading' }
   | { readonly status: 'error'; readonly message: string }
   | {

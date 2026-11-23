@@ -10,7 +10,7 @@ export type SchedulerVerifier = (idToken: string) => Promise<boolean>;
 export type SessionResolver = (token: string) => Promise<AccountSession | null>;
 
 /** The user every request belongs to when sign-in is off (development only). */
-export const LOCAL_USER = 'local-household';
+const LOCAL_USER = 'local-household';
 
 /** Longest bearer token accepted; Google OIDC tokens are about 1 KB. */
 const MAX_TOKEN_LENGTH = 4096;

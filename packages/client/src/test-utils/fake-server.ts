@@ -14,7 +14,7 @@ import type { ClientConfig } from '../api/config.js';
 import { DELHI, emptyHousehold, LOCAL_CONFIG, makeReport } from './fixtures.js';
 
 /** A failure a route can be told to give: an HTTP status, or a dropped connection. */
-export type Failure = number | 'network';
+type Failure = number | 'network';
 
 export interface FakeServer {
   household: Household;

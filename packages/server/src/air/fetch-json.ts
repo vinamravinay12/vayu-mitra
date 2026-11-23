@@ -10,7 +10,7 @@ export class UpstreamError extends Error {
 }
 
 /** Upstream calls must not hold a request open: Open-Meteo normally answers in under a second. */
-export const UPSTREAM_TIMEOUT_MS = 8000;
+const UPSTREAM_TIMEOUT_MS = 8000;
 
 /** The real network call: GET with a timeout, JSON only, non-2xx is an error. */
 export const fetchJsonOverNetwork: FetchJson = async (url) => {

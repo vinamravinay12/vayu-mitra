@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 
 /** How long a sign-in lasts on a device. */
-export const SESSION_DAYS = 30;
+const SESSION_DAYS = 30;
 
 const SESSION_MS = SESSION_DAYS * 24 * 60 * 60_000;
 

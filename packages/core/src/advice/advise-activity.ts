@@ -13,7 +13,7 @@ import type { ActivityAdvice, AdviceHour, Verdict } from './advice-schema.js';
 import { chooseTips } from './choose-tips.js';
 import { planAndWindow } from './plan.js';
 
-export { cleanestWindow, dateFor, DAYLIGHT, plannedHour } from './plan.js';
+export { cleanestWindow, dateFor, plannedHour } from './plan.js';
 
 /** Highest category each intensity is fine in for a healthy adult, outdoors. */
 const GO_LIMIT: Readonly<Record<Intensity, number>> = { light: 2, moderate: 2, vigorous: 1 };

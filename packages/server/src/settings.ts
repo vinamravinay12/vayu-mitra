@@ -15,7 +15,7 @@ export interface SchedulerSettings {
 type Env = Readonly<Record<string, string | undefined>>;
 
 /** Shortest session-signing secret accepted: 32 characters, e.g. `openssl rand -base64 48`. */
-export const MIN_SESSION_SECRET_LENGTH = 32;
+const MIN_SESSION_SECRET_LENGTH = 32;
 
 /** The trimmed value, or undefined when it is missing or blank. */
 export const present = (value: string | undefined): string | undefined => {

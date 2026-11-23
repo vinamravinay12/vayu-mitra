@@ -16,7 +16,7 @@ import { expectShape, requestJson } from './http.js';
 import type { PushSubscriptionJson } from '../push/push.js';
 
 /** The family's record as the server shows it. */
-export const householdSchema = z.object({
+const householdSchema = z.object({
   memory: memorySchema,
   place: placeSchema.nullable(),
   alerts: alertSettingsSchema,
@@ -24,8 +24,6 @@ export const householdSchema = z.object({
 });
 
 export type Household = z.infer<typeof householdSchema>;
-
-export type { ClientConfig } from './config.js';
 
 /** Every call the app makes, each re-validated before the UI sees it. */
 export function createApi() {

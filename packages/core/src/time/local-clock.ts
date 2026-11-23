@@ -1,6 +1,3 @@
-/** Minutes in a day. */
-export const MINUTES_PER_DAY = 24 * 60;
-
 /** A wall-clock time of day, `HH:MM`. */
 export const TIME_OF_DAY_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -49,3 +46,18 @@ export function formatHour(hour: number): string {
   const twelve = normalized % 12 === 0 ? 12 : normalized % 12;
   return `${String(twelve)} ${normalized < 12 ? 'am' : 'pm'}`;
 }
+
+/** The local hour in a `YYYY-MM-DDTHH:…` time, as the outlook and station times are written. */
+export const hourOfTime = (time: string): number => Number(time.slice(11, 13));
+
+/**
+ * An outlook hour as people say it, relative to `today`: "7 am" or
+ * "tomorrow 7 am"; with `at`, "at 7 am" or "tomorrow at 7 am".
+ */
+export function labelHour(time: string, today: string | undefined, at = false): string {
+  const hour = `${at ? 'at ' : ''}${formatHour(hourOfTime(time))}`;
+  return time.slice(0, 10) === today ? hour : `tomorrow ${hour}`;
+}
+
+/** The text with its first letter upper-cased. */
+export const capitalise = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);

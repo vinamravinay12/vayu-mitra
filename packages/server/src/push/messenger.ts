@@ -2,7 +2,7 @@ import { logEvent } from '../logging/log.js';
 import type { PushSubscriptionJson } from '../validation/request-schemas.js';
 
 /** A notification for the family's devices. */
-export interface PushMessage {
+interface PushMessage {
   readonly title: string;
   readonly body: string;
 }

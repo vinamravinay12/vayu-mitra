@@ -51,7 +51,7 @@ export function computeAqi(pm25: number, pm10: number): AqiReading {
 export const categoryRank = (category: AqiCategory): number => AQI_CATEGORIES.indexOf(category);
 
 /** CPCB computes NAQI only from at least this many pollutants. */
-export const MIN_NAQI_POLLUTANTS = 3;
+const MIN_NAQI_POLLUTANTS = 3;
 
 /**
  * The full NAQI from a station's readings: the worst sub-index across every

@@ -73,16 +73,6 @@ export const CATEGORY_GUIDANCE: Readonly<Record<AqiCategory, string>> = {
     'Affects healthy people and seriously affects those with existing disease. Stay indoors as much as possible.',
 };
 
-/** WHO 2021 guideline for 24-hour mean PM2.5, in µg/m³. */
-export const WHO_PM25_24H_GUIDELINE = 15;
-
-/**
- * Breathing air at this 24-hour PM2.5 average does roughly the damage of one
- * cigarette a day (Berkeley Earth, Muller & Muller 2015). Used only to make
- * numbers relatable, never as a medical claim.
- */
-export const PM25_PER_CIGARETTE = 22;
-
 /**
  * The other NAQI pollutants, as CPCB's real-time feed reports them. Units are
  * µg/m³ except CO, which CPCB reports in mg/m³. The open top band of each uses
