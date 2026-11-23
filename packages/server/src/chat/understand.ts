@@ -9,6 +9,8 @@ import { toMemoryChange, understandingSchema } from '../validation/model-schemas
 export interface Understood {
   readonly changes: readonly MemoryChange[];
   readonly hints: IntentHints;
+  /** Other places the message asks about. */
+  readonly places: readonly string[];
   readonly onTopic: boolean;
 }
 
@@ -16,6 +18,7 @@ export interface Understood {
 export const NOT_UNDERSTOOD: Understood = {
   changes: [],
   hints: { activity: null, person: null, time: null, day: null },
+  places: [],
   onTopic: true,
 };
 
@@ -40,10 +43,11 @@ export async function understand(
       logEvent('WARNING', 'understand answered off-schema');
       return NOT_UNDERSTOOD;
     }
-    const { memoryChanges, activity, person, time, day, onTopic } = parsed.data;
+    const { memoryChanges, activity, person, time, day, places, onTopic } = parsed.data;
     return {
       changes: memoryChanges.flatMap((flat) => toMemoryChange(flat) ?? []),
       hints: { activity, person, time, day },
+      places,
       onTopic,
     };
   } catch (cause) {

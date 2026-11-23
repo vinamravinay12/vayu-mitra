@@ -26,7 +26,14 @@ const ask = (message: string, history: { role: 'user' | 'assistant'; text: strin
 
 const TURN = { message: 'm', history: [] };
 
-const FACTS = { air: 'AQI 250', advice: null, remembered: [], justRemembered: [], onTopic: true };
+const FACTS = {
+  air: 'AQI 250',
+  otherPlaces: [],
+  advice: null,
+  remembered: [],
+  justRemembered: [],
+  onTopic: true,
+};
 
 describe('understand', () => {
   it('turns flat changes into strict ones and drops misfits', async () => {

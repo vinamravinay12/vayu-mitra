@@ -3,7 +3,13 @@ import { adviseActivity } from '../advice/advise-activity.js';
 import { EMPTY_MEMORY, type Memory } from '../memory/memory-schema.js';
 import { DADI, makeReport, NOW, PAPA } from '../test-utils/fixtures.js';
 import { chatRequestSchema, chatResponseSchema } from './chat-schema.js';
-import { describeAdvice, describeAir, describeSource, describeTime } from './describe.js';
+import {
+  comparePlaces,
+  describeAdvice,
+  describeAir,
+  describeSource,
+  describeTime,
+} from './describe.js';
 import { detectActivity, detectDay, detectTime, readIntent } from './read-request.js';
 import { STARTER_QUESTIONS, suggestQuestions } from './suggest-questions.js';
 
@@ -168,6 +174,23 @@ describe('describe', () => {
       /Dadi and Nana are more sensitive/,
     );
     expect(at([40])).toBe('At 10 am it is Good (AQI 40), which is fine for the walk.');
+  });
+});
+
+describe('other places', () => {
+  const gurgaon = { name: 'Gurgaon', report: makeReport([210]) };
+  const ghaziabad = { name: 'Ghaziabad', report: makeReport([342]) };
+
+  it('describes one place, and compares several by their air now', () => {
+    expect(comparePlaces([gurgaon])).toBe(
+      'Gurgaon: Poor (AQI 210), measured at ITO, Delhi - CPCB, 2.1 km away (CPCB).',
+    );
+    expect(comparePlaces([ghaziabad, gurgaon])).toMatch(
+      /^Ghaziabad: Very poor \(AQI 342\).*Gurgaon: Poor \(AQI 210\).* Gurgaon has the cleaner air right now\.$/,
+    );
+    const twin = { name: 'Noida', report: makeReport([210]) };
+    expect(comparePlaces([gurgaon, twin])).toMatch(/about the same in both right now\.$/);
+    expect(comparePlaces([])).toBe('.');
   });
 });
 
