@@ -1,8 +1,18 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { AuthMode } from '../config.js';
-import { LOCAL_USER, type IdTokenVerifier } from './verifiers.js';
+import type { AccountSession } from './accounts.js';
+import { sessionCookie } from './sessions.js';
 
-/** Longest bearer token accepted; Firebase ID tokens are about 1 KB. */
+/** True only for a Google-signed token issued to the alert scheduler's identity. */
+export type SchedulerVerifier = (idToken: string) => Promise<boolean>;
+
+/** Finds the live account a session token belongs to, or null. */
+export type SessionResolver = (token: string) => Promise<AccountSession | null>;
+
+/** The user every request belongs to when sign-in is off (development only). */
+export const LOCAL_USER = 'local-household';
+
+/** Longest bearer token accepted; Google OIDC tokens are about 1 KB. */
 const MAX_TOKEN_LENGTH = 4096;
 
 /** The bearer token in an Authorization header, or null. */
@@ -15,27 +25,34 @@ export function bearerToken(header: string | undefined): string | null {
 /** The signed-in user a request was verified for. Only valid after `requireUser`. */
 export const userOf = (response: Response): string => String(response.locals.uid);
 
+/** The signed-in account behind a request's session cookie, or null. */
+export async function currentAccount(
+  request: Request,
+  resolve: SessionResolver | null,
+): Promise<AccountSession | null> {
+  const token = sessionCookie(request.get('cookie'));
+  return token === null || resolve === null ? null : resolve(token);
+}
+
 /**
- * Personal routes need a verified Firebase ID token. The user id comes only
- * from the verified token, never from the request body, so one family can
+ * Personal routes need a signed-in account. The user id comes only from the
+ * verified session cookie, never from the request body, so one family can
  * never read or change another's data. With sign-in off (development) every
  * request is the one local household.
  */
-export function requireUser(mode: AuthMode, verify: IdTokenVerifier | null) {
+export function requireUser(mode: AuthMode, resolve: SessionResolver | null) {
   return async (request: Request, response: Response, next: NextFunction): Promise<void> => {
-    if (mode === 'none' || verify === null) {
+    if (mode === 'none') {
       response.locals.uid = LOCAL_USER;
       next();
       return;
     }
-    const token = bearerToken(request.get('authorization'));
-    try {
-      if (token === null) throw new Error('missing token');
-      response.locals.uid = (await verify(token)).uid;
-    } catch {
-      response.status(401).json({ error: 'Please sign in again to continue.' });
+    const account = await currentAccount(request, resolve);
+    if (account === null) {
+      response.status(401).json({ error: 'Please sign in to continue.' });
       return;
     }
+    response.locals.uid = account.uid;
     next();
   };
 }

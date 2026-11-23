@@ -15,6 +15,8 @@ export function healthRouter(mode: 'gemini' | 'offline', config: ServerConfig): 
         waqi: config.waqiToken !== null,
       },
       auth: config.authMode,
+      store: config.store,
+      push: config.push !== null,
       alerts: config.scheduler !== null,
     });
   });

@@ -1,10 +1,20 @@
 import { describeCause, logEvent } from '../logging/log.js';
 import { userRecordSchema, type UserRecord } from './user-record.js';
 
-/** The few document operations the store needs, so Firestore and memory are interchangeable. */
+/** A create found the document already there. */
+export class AlreadyExistsError extends Error {
+  constructor(id: string) {
+    super(`Document already exists (${String(id.length)}-character id)`);
+    this.name = 'AlreadyExistsError';
+  }
+}
+
+/** The few document operations the stores need, so Firestore and memory are interchangeable. */
 export interface DocumentCollection {
   get(id: string): Promise<unknown>;
   set(id: string, data: unknown): Promise<void>;
+  /** Writes only if absent, atomically; otherwise rejects with AlreadyExistsError. */
+  create(id: string, data: unknown): Promise<void>;
   delete(id: string): Promise<void>;
   /** Documents whose field (a dotted path) equals the value. */
   whereEquals(field: string, value: unknown): Promise<readonly { id: string; data: unknown }[]>;
@@ -73,6 +83,11 @@ export function createMemoryCollection(): DocumentCollection {
   return {
     get: (id) => Promise.resolve(structuredClone(documents.get(id))),
     set(id, data) {
+      documents.set(id, structuredClone(data));
+      return Promise.resolve();
+    },
+    create(id, data) {
+      if (documents.has(id)) return Promise.reject(new AlreadyExistsError(id));
       documents.set(id, structuredClone(data));
       return Promise.resolve();
     },

@@ -7,7 +7,7 @@ import {
   type Place,
 } from '@vayu/core';
 import type { Household } from '../api/api.js';
-import type { ClientConfig, FirebaseWebConfig } from '../api/config.js';
+import type { ClientConfig } from '../api/config.js';
 
 export const DELHI: Place = {
   name: 'New Delhi',
@@ -17,20 +17,13 @@ export const DELHI: Place = {
   longitude: 77.21,
 };
 
-export const LOCAL_CONFIG: ClientConfig = { auth: 'none', firebase: null, vapidKey: null };
+export const LOCAL_CONFIG: ClientConfig = { auth: 'none', vapidKey: null };
 
-export const FIREBASE_WEB: FirebaseWebConfig = {
-  apiKey: 'web-key',
-  authDomain: 'vayu-test.firebaseapp.com',
-  projectId: 'vayu-test',
-  appId: '1:2:web:3',
-  messagingSenderId: '2',
-};
-
-export const FIREBASE_CONFIG: ClientConfig = {
-  auth: 'firebase',
-  firebase: FIREBASE_WEB,
-  vapidKey: 'vapid',
+/** Accounts on, and alerts set up. */
+export const PASSWORD_CONFIG: ClientConfig = {
+  auth: 'password',
+  vapidKey:
+    'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
 };
 
 /** A winter day from 10:00: clearing to the afternoon, worst overnight, easing next morning. */

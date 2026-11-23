@@ -6,8 +6,8 @@ nearest official air station, answers for your family, remembers who is at home,
 you when the air turns bad.**
 
 📦 **Repository:** https://github.com/vinamravinay12/vayu-mitra
-🌐 **Live app:** https://vayu-mitra-982453010059.asia-south1.run.app (still the earlier,
-form-based build until this version is deployed; see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md))
+🌐 **Live app:** https://vayu-mitra-982453010059.asia-south1.run.app (deploy the current
+version with one script: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md))
 
 ---
 
@@ -35,11 +35,12 @@ front are abandoned. And an assistant that invents numbers cannot be trusted wit
   purifier, recirculation) for who is involved. Gemini only words it, and a reply with any number
   the engine did not produce is rejected and replaced with the engine’s own sentence.
 - **Alerts in the background.** Cloud Scheduler runs a check every 30 minutes; families who opted
-  in get a push notification (Firebase Cloud Messaging) when their place reaches their chosen
-  category, never in their quiet hours, and not twice in six hours unless it gets worse.
-- **Signed in with Google, and private.** Firebase Auth; one Firestore document per family with
-  only the chips, the place and alert settings. The conversation itself is never stored. One
-  button deletes everything.
+  in get a standard Web Push notification when their place reaches their chosen category, never in
+  their quiet hours, and not twice in six hours unless it gets worse.
+- **Its own accounts, and private.** Email and password, hashed with scrypt; the session is an
+  HttpOnly cookie no script can read. One Firestore document per family with only the chips, the
+  place and alert settings. The conversation itself is never stored. One button deletes
+  everything, account included.
 
 ## 🧭 How a message flows
 
@@ -60,11 +61,11 @@ front are abandoned. And an assistant that invents numbers cannot be trusted wit
 
 ## 🏗️ Architecture
 
-| Package           | What it is                                                                                                                                    |
-| :---------------- | :-------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/core`   | The engine: NAQI from every pollutant, EPA→NAQI, nearest station, forecast anchoring, memory, advice, alerts. Pure functions, no I/O.         |
-| `packages/server` | Express API: station and forecast adapters, the chat pipeline, Firebase Auth/Firestore/FCM, the scheduler-only alert route, security headers. |
-| `packages/client` | React app: sign-in, air card, chat, memory chips, alert settings, delete-my-data. Firebase loads only when configured.                        |
+| Package           | What it is                                                                                                                                                   |
+| :---------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/core`   | The engine: NAQI from every pollutant, EPA→NAQI, nearest station, forecast anchoring, memory, advice, alerts. Pure functions, no I/O.                        |
+| `packages/server` | Express API: station and forecast adapters, the chat pipeline, accounts and sessions, Firestore, Web Push, the scheduler-only alert route, security headers. |
+| `packages/client` | React app: sign-in, air card, chat, memory chips, alert settings, delete-my-data. No third-party SDKs.                                                       |
 
 Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · AI design: [docs/AI.md](docs/AI.md) ·
 decisions: [docs/decisions.md](docs/decisions.md) · assumptions: [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md)
@@ -87,16 +88,28 @@ sentences, and live Open-Meteo air without station anchoring. Add keys in `packa
 | `GEMINI_API_KEY`                                  | Understanding messages (and so memory) and AI-worded replies |
 | `DATA_GOV_IN_API_KEY`                             | CPCB official station readings                               |
 | `WAQI_TOKEN`                                      | WAQI stations, where CPCB has none nearby                    |
-| `FIREBASE_*`                                      | Google sign-in, Firestore storage, push alerts               |
+| `SESSION_SECRET`, `STORE=firestore`               | Email-and-password accounts, kept in Firestore               |
+| `VAPID_*`                                         | Background push alerts                                       |
 | `SCHEDULER_AUDIENCE`, `SCHEDULER_SERVICE_ACCOUNT` | The background alert check                                   |
 
 `AIR_DATA_MODE=fixture` serves a fixed winter day for offline demos; production refuses it.
 
+## ☁️ Deploy
+
+Everything runs on Google Cloud (Cloud Run, Firestore, Secret Manager, Cloud Scheduler). From
+Cloud Shell, one command does it all, asking only for the Gemini key:
+
+```bash
+bash scripts/deploy-gcp.sh gen-lang-client-0308156900
+```
+
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for what it creates.
+
 ## ✅ Quality gates
 
 ```bash
-npm run verify   # format check → lint → typecheck → 256 tests at 100% coverage → build
-npm run e2e      # 10 browser journeys: desktop + 375 px, light + dark, axe at each step
+npm run verify   # format check → lint → typecheck → 270 tests at 100% coverage → build
+npm run e2e      # 12 browser journeys: desktop + 375 px, light + dark, axe at each step
 npm run profile  # engine and HTTP latency, heap growth, payload sizes
 ```
 
@@ -107,10 +120,11 @@ that the client bundle carries no key, and a container build. See [docs/TESTING.
 
 ## 🔒 Security and privacy
 
-Every personal route needs a verified Firebase ID token, and the user id comes only from it. The
+Every personal route needs a signed session cookie (HttpOnly, Secure, SameSite=Strict), and the
+user id comes only from it; passwords are hashed with scrypt. The
 alert route accepts only a Google-signed OIDC token from the scheduler’s own service account.
 Gemini, data.gov.in and WAQI keys live only on the server. Strict CSP with no inline script,
-opened only for the Google sign-in hosts when sign-in is on. Every model answer is
+with no third-party hosts at all. Every model answer is
 schema-constrained and re-validated; user text is fenced. Details in [SECURITY.md](SECURITY.md)
 and [docs/SECURITY.md](docs/SECURITY.md).
 

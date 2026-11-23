@@ -5,8 +5,8 @@ const E2E_PORT = 4173;
 
 /**
  * Real-browser checks against the production build, served with the production security
- * headers (CSP included) and no Gemini key, so CI needs no secrets. Sign-in is off, so all
- * tests share one local household: they run one at a time.
+ * headers (CSP included), real email-and-password accounts and no Gemini key, so CI needs no
+ * secrets. Accounts live in the server's memory, so tests run one at a time on one server.
  */
 export default defineConfig({
   testDir: './e2e',
@@ -25,7 +25,7 @@ export default defineConfig({
   ],
   webServer: {
     // Builds everything, then serves the production client with the production
-    // security headers, no Gemini key (the engine answers) and fixture air data.
+    // security headers, accounts on, no Gemini key (the engine answers) and fixture air data.
     command: 'npm run start:e2e',
     url: `http://localhost:${String(E2E_PORT)}/api/health`,
     reuseExistingServer: !process.env.CI,

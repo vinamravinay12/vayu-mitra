@@ -25,14 +25,14 @@ that the client bundle carries no credentials.
 
 ## Where code goes
 
-| Change                                                                  | Place                                                                                            |
-| :---------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------- |
-| A vocabulary, activity, AQI band or threshold                           | `packages/core/src/catalog/` (data, one list per file), with its source in `docs/ASSUMPTIONS.md` |
-| Logic that computes a number, date or decision                          | `packages/core/src/` (pure, clock passed in)                                                     |
-| A schema shared by client and server                                    | `packages/core/src/schemas/` (types via `z.infer`)                                               |
-| An HTTP route, Gemini call, guard, upstream adapter or Firebase binding | `packages/server/src/`                                                                           |
-| A screen or component                                                   | `packages/client/src/`                                                                           |
-| A repository-wide standard                                              | `tests/quality/hygiene.test.ts`                                                                  |
+| Change                                                               | Place                                                                                            |
+| :------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------- |
+| A vocabulary, activity, AQI band or threshold                        | `packages/core/src/catalog/` (data, one list per file), with its source in `docs/ASSUMPTIONS.md` |
+| Logic that computes a number, date or decision                       | `packages/core/src/` (pure, clock passed in)                                                     |
+| A schema shared by client and server                                 | `packages/core/src/schemas/` (types via `z.infer`)                                               |
+| An HTTP route, Gemini call, guard, upstream adapter or cloud binding | `packages/server/src/`                                                                           |
+| A screen or component                                                | `packages/client/src/`                                                                           |
+| A repository-wide standard                                           | `tests/quality/hygiene.test.ts`                                                                  |
 
 ## Standards
 

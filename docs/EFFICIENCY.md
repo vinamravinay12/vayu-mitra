@@ -5,16 +5,15 @@ linux/x64, in CI and in development); bundle sizes from `vite build`.
 
 ## What the browser downloads
 
-| Chunk                                                    | When                                 |                        gzip |
-| :------------------------------------------------------- | :----------------------------------- | --------------------------: |
-| App shell (React, sign-in screen, header)                | first paint                          |                 **72.0 KB** |
-| CSS                                                      | first paint                          |                      4.7 KB |
-| Signed-in app (`Home`: engine, Zod schemas, chat, chips) | after the first paint                |                     35.3 KB |
-| Firebase Auth                                            | only when sign-in is configured      | ≈ 54 KB across three chunks |
-| Firebase Messaging and the push helper                   | only when the family turns alerts on |            loaded on demand |
+| Chunk                                                    | When                                 |        gzip |
+| :------------------------------------------------------- | :----------------------------------- | ----------: |
+| App shell (React, sign-in screen, header)                | first paint                          | **72.5 KB** |
+| CSS                                                      | first paint                          |      4.7 KB |
+| Signed-in app (`Home`: engine, Zod schemas, chat, chips) | after the first paint                |     35.3 KB |
+| Web Push helper                                          | only when the family turns alerts on |      0.5 KB |
 
 The start-up config is validated by hand so that Zod stays out of the first paint, which cut
-first-load JavaScript from 106 KB to 72 KB. Fingerprinted assets are cached for a year
+first-load JavaScript from 106 KB to 72 KB. There is no third-party SDK at all: sign-in is a plain form and push uses the browser's own API. Fingerprinted assets are cached for a year
 (`immutable`); `index.html` is never cached, so a deploy is picked up on the next load.
 
 ## Engine (5 000 runs each)

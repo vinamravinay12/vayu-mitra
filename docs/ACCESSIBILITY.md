@@ -30,6 +30,9 @@ orphaned the list items), and a second place picker that repeated the first one'
 - **The AQI** is never colour alone: the number and category are text, and every bar in the
   12-hour strip has its value above it and a screen-reader label (“2 pm: Moderate”).
 - Suggested questions are real buttons in a labelled group; the message box has a label.
+- **Sign-in** is a plain form: labelled email and password fields with the right `autocomplete`
+  (`email`, `current-password` or `new-password`), so password managers fill them; the length rule
+  is linked to the password field with `aria-describedby`; errors are announced as alerts.
 - The theme choice is three radios (light, system, dark) in a `fieldset`; the first paint follows
   the system with no script, because the CSP forbids inline script.
 

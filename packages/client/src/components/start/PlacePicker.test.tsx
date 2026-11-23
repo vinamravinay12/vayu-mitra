@@ -5,7 +5,7 @@ import { createApi } from '../../api/api.js';
 import { installFakeServer } from '../../test-utils/fake-server.js';
 import { currentPlace, PlacePicker } from './PlacePicker.js';
 
-const api = createApi(() => Promise.resolve(null));
+const api = createApi();
 
 /** A geolocation that answers with a position or an error. */
 const geolocation = (answer: 'ok' | 'error'): Geolocation =>

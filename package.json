@@ -28,7 +28,7 @@
     "start": "npm run start -w @vayu/server",
     "dev": "npm run dev:server & npm run dev:client",
     "e2e": "playwright test",
-    "start:e2e": "npm run build && cross-env AIR_DATA_MODE=fixture AI_REQUESTS_PER_MINUTE=1000 STATIC_DIR=packages/client/dist node packages/server/dist/index.js"
+    "start:e2e": "npm run build && cross-env AIR_DATA_MODE=fixture AI_REQUESTS_PER_MINUTE=1000 AUTH_REQUESTS_PER_MINUTE=1000 SESSION_SECRET=e2e-only-local-session-key-not-for-production STATIC_DIR=packages/client/dist node packages/server/dist/index.js"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
@@ -44,6 +44,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@types/supertest": "^7.2.1",
+    "@types/web-push": "3.6.4",
     "@vitejs/plugin-react": "^6.1.2",
     "@vitest/coverage-v8": "^5.0.5",
     "cross-env": "^10.1.0",
@@ -59,11 +60,5 @@
     "vite": "^8.3.5",
     "vitest": "^5.0.5",
     "vitest-axe": "^0.1.0"
-  },
-  "overrides": {
-    "@firebase/firestore": {
-      "@grpc/grpc-js": "1.14.7",
-      "@grpc/proto-loader": "0.8.1"
-    }
   }
 }
