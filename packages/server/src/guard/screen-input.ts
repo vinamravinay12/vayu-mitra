@@ -2,7 +2,7 @@ import { describeCause, logEvent } from '../logging/log.js';
 import type { LlmClient } from '../llm/llm-client.js';
 import { buildGuardRequest } from '../prompts/build-guard-prompt.js';
 import { parseJson } from '../prompts/parse-json.js';
-import { guardVerdictSchema } from '../validation/schemas.js';
+import { guardVerdictSchema } from '../validation/model-schemas.js';
 import { detectInjection } from './detect-injection.js';
 
 export type ScreenResult =
@@ -21,9 +21,10 @@ export function screenHeuristic(text: string): ScreenResult {
  * Layer two: an independent LLM judge for paraphrased or obfuscated attempts.
  *
  * If the judge is unavailable or answers off-schema, the request proceeds on the
- * heuristic result. That is a deliberate fail-open: the extractor's output is
- * schema-constrained to closed vocabularies, so even a successful injection can
- * only choose wrong values, which the family sees and corrects on the review form.
+ * heuristic result. That is a deliberate fail-open: the understand call's output
+ * is schema-constrained to closed vocabularies, the engine applies any memory
+ * change itself, and every remembered fact is shown as a chip the family can
+ * forget, so even a successful injection can only choose wrong values in view.
  */
 export async function judgeWithLlm(llm: LlmClient, text: string): Promise<ScreenResult> {
   try {

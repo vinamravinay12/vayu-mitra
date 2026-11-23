@@ -1,9 +1,23 @@
+import {
+  loadFirebase,
+  loadScheduler,
+  present,
+  type FirebaseSettings,
+  type SchedulerSettings,
+} from './firebase-config.js';
+
 /** Where air data and place search come from. */
 export type AirDataMode = 'live' | 'fixture';
 
+/**
+ * `firebase`: every personal route needs a verified Google sign-in.
+ * `none`: development only; everyone shares one local household.
+ */
+export type AuthMode = 'firebase' | 'none';
+
 export interface ServerConfig {
   readonly port: number;
-  /** Null runs the deterministic offline client — used by tests and keyless local runs. */
+  /** Null answers from the engine's own sentences — used by tests and keyless local runs. */
   readonly geminiApiKey: string | null;
   /** Tried in order: a capacity spike on Gemini is per model, so a fallback turns an error into an answer. */
   readonly models: readonly string[];
@@ -12,8 +26,15 @@ export interface ServerConfig {
   readonly trustProxyHops: number;
   /** Built client to serve, or null to run as an API only. */
   readonly staticDir: string | null;
-  /** `live` calls Open-Meteo; `fixture` serves a fixed winter forecast for tests and offline demos. */
+  /** `live` calls Open-Meteo, CPCB and WAQI; `fixture` serves fixed winter data for tests and demos. */
   readonly airDataMode: AirDataMode;
+  /** data.gov.in key for CPCB's real-time station feed; null skips that feed. */
+  readonly dataGovInApiKey: string | null;
+  /** WAQI token; null skips that feed. */
+  readonly waqiToken: string | null;
+  readonly firebase: FirebaseSettings | null;
+  readonly authMode: AuthMode;
+  readonly scheduler: SchedulerSettings | null;
   /** AI requests one client may make per minute. Parallel browser tests share one address. */
   readonly aiRequestsPerMinute: number;
 }
@@ -37,12 +58,6 @@ export const DEFAULT_MODELS: readonly string[] = [
 export const DEFAULT_PORT = 8080;
 
 type Env = Readonly<Record<string, string | undefined>>;
-
-/** The trimmed value, or undefined when it is missing or blank. */
-const present = (value: string | undefined): string | undefined => {
-  const trimmed = value?.trim();
-  return trimmed === undefined || trimmed.length === 0 ? undefined : trimmed;
-};
 
 /** `GEMINI_MODELS` replaces the list; `GEMINI_MODEL` only moves one model to the front. */
 export function parseModels(env: Env): readonly string[] {
@@ -68,20 +83,17 @@ const parseInteger = (value: string | undefined, fallback: number, max: number):
 /**
  * Reads configuration from the environment.
  *
- * A missing key and fixture air data are tolerated in development so the app
- * runs end to end offline, but refused in production: a deployed assistant
- * answering from keyword rules or a made-up forecast would misrepresent what
- * it is.
+ * A missing key, fixture air data and no sign-in are tolerated in development
+ * so the app runs end to end offline, but refused in production: a deployed
+ * assistant with made-up air, or one household shared by every visitor, would
+ * misrepresent what it is.
  */
 export function loadConfig(env: Env): ServerConfig {
-  const production = env.NODE_ENV === 'production';
-  const geminiApiKey = present(env.GEMINI_API_KEY) ?? null;
-  if (production && geminiApiKey === null) {
-    throw new Error('GEMINI_API_KEY is required in production');
-  }
+  const geminiApiKey = orNull(env.GEMINI_API_KEY);
   const airDataMode: AirDataMode = env.AIR_DATA_MODE === 'fixture' ? 'fixture' : 'live';
-  if (production && airDataMode === 'fixture') {
-    throw new Error('AIR_DATA_MODE=fixture is not allowed in production');
+  const firebase = loadFirebase(env);
+  if (env.NODE_ENV === 'production') {
+    refuseUnsafeProduction(geminiApiKey, airDataMode, firebase);
   }
   const port = parseInteger(env.PORT, DEFAULT_PORT, 65_535);
   return {
@@ -90,11 +102,36 @@ export function loadConfig(env: Env): ServerConfig {
     models: parseModels(env),
     allowedOrigin: present(env.ALLOWED_ORIGIN) ?? 'same-origin',
     trustProxyHops: parseInteger(env.TRUST_PROXY_HOPS, 1, 5),
-    staticDir: present(env.STATIC_DIR) ?? null,
+    staticDir: orNull(env.STATIC_DIR),
     airDataMode,
+    dataGovInApiKey: orNull(env.DATA_GOV_IN_API_KEY),
+    waqiToken: orNull(env.WAQI_TOKEN),
+    firebase,
+    authMode: firebase === null ? 'none' : 'firebase',
+    scheduler: loadScheduler(env),
     aiRequestsPerMinute: Math.max(
       1,
       parseInteger(env.AI_REQUESTS_PER_MINUTE, DEFAULT_AI_REQUESTS_PER_MINUTE, 1000),
     ),
   };
+}
+
+/** The trimmed value, or null when it is missing or blank. */
+const orNull = (value: string | undefined): string | null => present(value) ?? null;
+
+/** What production must have. */
+function refuseUnsafeProduction(
+  geminiApiKey: string | null,
+  airDataMode: AirDataMode,
+  firebase: FirebaseSettings | null,
+): void {
+  if (geminiApiKey === null) {
+    throw new Error('GEMINI_API_KEY is required in production');
+  }
+  if (airDataMode === 'fixture') {
+    throw new Error('AIR_DATA_MODE=fixture is not allowed in production');
+  }
+  if (firebase === null) {
+    throw new Error('FIREBASE_PROJECT_ID is required in production');
+  }
 }

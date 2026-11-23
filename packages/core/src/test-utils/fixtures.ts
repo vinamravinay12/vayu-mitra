@@ -1,7 +1,15 @@
-import type { AirSnapshot } from '../schemas/air.js';
-import type { HouseholdProfile, Member } from '../schemas/profile.js';
+import type { Forecast } from '../stations/anchor-forecast.js';
+import type { StationReading } from '../stations/station.js';
+import { nowHour, type AirReport, type ReportHour } from '../schemas/air-report.js';
+import { categoryOf } from '../aqi/compute-aqi.js';
+import type { PersonFact } from '../memory/memory-schema.js';
 
-/** A winter day's PM2.5 curve: worst around 02:00, cleanest around 14:00. */
+/** 10:00 IST on 22 November 2026. */
+export const NOW = new Date('2026-11-22T04:30:00.000Z');
+
+export const IST = 19_800;
+
+/** A winter PM2.5 curve: worst around 02:00, cleanest around 14:00. */
 export function winterCurve(mean: number, swing = 0.45): number[] {
   return Array.from(
     { length: 24 },
@@ -10,23 +18,16 @@ export function winterCurve(mean: number, swing = 0.45): number[] {
   );
 }
 
-/** A two-day snapshot for New Delhi (UTC+05:30) starting on `date`. */
-export function makeSnapshot(
-  date = '2026-11-21',
-  todayMean = 150,
-  tomorrowMean = 150,
-): AirSnapshot {
-  const tomorrow = new Date(`${date}T00:00:00Z`);
-  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+/** A two-day model forecast for Delhi starting at midnight on 22 November. */
+export function makeForecast(todayMean = 150, tomorrowMean = todayMean): Forecast {
   const days: [string, number][] = [
-    [date, todayMean],
-    [tomorrow.toISOString().slice(0, 10), tomorrowMean],
+    ['2026-11-22', todayMean],
+    ['2026-11-23', tomorrowMean],
   ];
   return {
     timezone: 'Asia/Kolkata',
-    utcOffsetSeconds: 19_800,
+    utcOffsetSeconds: IST,
     source: 'fixture',
-    fetchedAt: `${date}T04:30:00.000Z`,
     hours: days.flatMap(([day, mean]) =>
       winterCurve(mean).map((pm25, hour) => ({
         time: `${day}T${String(hour).padStart(2, '0')}:00`,
@@ -37,72 +38,71 @@ export function makeSnapshot(
   };
 }
 
-/** 10:00 IST on 21 November 2026. */
-export const MORNING_IN_DELHI = new Date('2026-11-21T04:30:00Z');
-
-/** A healthy adult who drives to the office. */
-export function makeMember(overrides: Partial<Member> = {}): Member {
+/** A CPCB station reading near central Delhi. */
+export function makeStation(overrides: Partial<StationReading> = {}): StationReading {
   return {
-    name: 'Asha',
-    ageGroup: 'adult',
-    conditions: [],
-    daytime: 'office',
-    commuteMode: 'car-petrol',
-    commuteKm: 12,
-    outdoorExercise: 'none',
-    exerciseHour: 7,
+    id: 'ito',
+    name: 'ITO, Delhi - CPCB',
+    latitude: 28.6289,
+    longitude: 77.2411,
+    source: 'cpcb',
+    observedAt: '2026-11-22T10:00:00+05:30',
+    pollutants: { pm25: 180, pm10: 290, no2: 60, so2: 12, co: 1.5, o3: 30 },
     ...overrides,
   };
 }
 
-/** A three-generation Delhi household with the classic winter habits. */
-export function makeProfile(overrides: Partial<HouseholdProfile> = {}): HouseholdProfile {
+/** A report whose hours from 10:00 have exactly the given index values. */
+export function makeReport(aqis: readonly number[], overrides: Partial<AirReport> = {}): AirReport {
+  const hours: ReportHour[] = aqis.map((aqi, index) => {
+    const total = 10 + index;
+    const day = total >= 24 ? '2026-11-23' : '2026-11-22';
+    return {
+      time: `${day}T${String(total % 24).padStart(2, '0')}:00`,
+      pm25: 0,
+      pm10: 0,
+      aqi,
+      category: categoryOf(aqi),
+    };
+  });
+  const first = nowHour({ hours });
   return {
-    place: {
-      name: 'New Delhi',
-      region: 'Delhi',
-      country: 'India',
-      latitude: 28.61,
-      longitude: 77.21,
+    timezone: 'Asia/Kolkata',
+    utcOffsetSeconds: IST,
+    fetchedAt: NOW.toISOString(),
+    current: { aqi: first.aqi, category: first.category, dominant: 'pm25', basis: 'station' },
+    station: {
+      name: 'ITO, Delhi - CPCB',
+      source: 'cpcb',
+      distanceKm: 2.1,
+      observedAt: '2026-11-22T10:00:00+05:30',
     },
-    members: [
-      makeMember(),
-      makeMember({
-        name: 'Dadaji',
-        ageGroup: 'senior',
-        conditions: ['asthma'],
-        daytime: 'home',
-        commuteKm: 0,
-        outdoorExercise: 'light',
-        exerciseHour: 6,
-      }),
-      makeMember({
-        name: 'Meera',
-        ageGroup: 'child',
-        daytime: 'school',
-        commuteMode: 'bus',
-        commuteKm: 4,
-        outdoorExercise: 'vigorous',
-        exerciseHour: 17,
-      }),
-    ],
-    home: {
-      tightness: 'leaky',
-      ventilation: 'morning',
-      hasPurifier: false,
-      cookingFuel: 'lpg',
-      hasKitchenExhaust: false,
-      heating: 'none',
-      indoorSources: ['incense'],
-    },
-    lifestyle: {
-      workDaysPerWeek: 5,
-      departHour: 8,
-      burnsWaste: false,
-      generatorHoursPerWeek: 0,
-      transitNearby: true,
-      communityHouseholds: 200,
-    },
+    hours,
+    forecastSource: 'fixture',
     ...overrides,
   };
+}
+
+export const DADI: PersonFact = {
+  kind: 'person',
+  id: 'person:dadi',
+  label: 'Dadi',
+  ageGroup: 'senior',
+  conditions: ['asthma'],
+};
+
+export const PAPA: PersonFact = {
+  kind: 'person',
+  id: 'person:papa',
+  label: 'Papa',
+  ageGroup: 'adult',
+  conditions: [],
+};
+
+/** The value, failing the test when it is null or undefined. */
+export function definite<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) {
+    throw new Error('Expected a value');
+  }
+  return value;
 }

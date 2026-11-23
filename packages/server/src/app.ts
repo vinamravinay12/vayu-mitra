@@ -1,16 +1,18 @@
 import compression from 'compression';
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
 import type { AirService } from './air/air-service.js';
-import { createTtlCache } from './cache/ttl-cache.js';
-import type { CoachSummary } from './coach/engine-summary.js';
+import { requireUser } from './auth/require-user.js';
+import type { IdTokenVerifier, SchedulerVerifier } from './auth/verifiers.js';
 import type { ServerConfig } from './config.js';
-import type { ExtractedProfile } from './extract/extract-profile.js';
-import { describeCause, logEvent } from './logging/log.js';
 import type { LlmClient } from './llm/llm-client.js';
+import { describeCause, logEvent } from './logging/log.js';
+import type { Messenger } from './push/messenger.js';
 import { airRouter } from './routes/air.js';
-import { coachRouter } from './routes/coach.js';
-import { extractRouter } from './routes/extract.js';
+import { chatRouter } from './routes/chat.js';
+import { configRouter } from './routes/config.js';
 import { healthRouter } from './routes/health.js';
+import { internalRouter } from './routes/internal.js';
+import { meRouter } from './routes/me.js';
 import {
   AI_RATE_LIMIT,
   DATA_RATE_LIMIT,
@@ -19,20 +21,23 @@ import {
 } from './security/rate-limit.js';
 import { securityHeaders } from './security/security-headers.js';
 import { serveClient } from './static/serve-client.js';
+import type { UserStore } from './store/user-store.js';
 
-/** A profile and a question are a few kilobytes at most. */
-const BODY_LIMIT = '16kb';
-
-const CACHE_ENTRIES = 500;
-const CACHE_TTL_MS = 15 * 60_000;
+/** A message, a few turns of history and the memory are a few kilobytes at most. */
+const BODY_LIMIT = '32kb';
 
 export interface AppDependencies {
-  readonly llm: LlmClient;
-  readonly air: AirService;
   readonly config: ServerConfig;
-  readonly mode: 'gemini' | 'offline';
+  /** Null when there is no Gemini key: the engine answers in its own words. */
+  readonly llm: LlmClient | null;
+  readonly air: AirService;
+  readonly store: UserStore;
+  readonly messenger: Messenger;
+  /** Null when sign-in is off. */
+  readonly verifyIdToken: IdTokenVerifier | null;
+  /** Null when the scheduler is not set up: the alert route does not exist. */
+  readonly verifyScheduler: SchedulerVerifier | null;
   readonly now?: () => Date;
-  /** Limits for the AI routes; the data routes use a looser limit of their own. */
   readonly rateLimitOptions?: RateLimitOptions;
 }
 
@@ -41,10 +46,7 @@ const KNOWN_ERRORS: Readonly<Record<string, { status: number; message: string }>
   'entity.too.large': { status: 413, message: 'Request is too large.' },
 };
 
-/**
- * Errors the framework raises on purpose — a body that will not parse, a
- * missing static file — carry a type or a 4xx status. Anything else is a bug.
- */
+/** Errors the framework raises on purpose carry a type or a 404; anything else is a bug. */
 export function describeBodyError(error: unknown): { status: number; message: string } | undefined {
   if (typeof error !== 'object' || error === null) {
     return undefined;
@@ -62,7 +64,7 @@ const notFound = (_request: Request, response: Response): void => {
   response.status(404).json({ error: 'Not found.' });
 };
 
-/** Last-resort handler: known request errors get their status; anything else is logged and answered with a generic 500. */
+/** Last resort: known request errors get their status; anything else is logged and a generic 500. */
 function errorHandler(
   error: unknown,
   _request: Request,
@@ -73,51 +75,44 @@ function errorHandler(
   if (known === undefined) {
     logEvent('ERROR', 'unhandled error', { cause: describeCause(error) });
   }
-  // Never surface an internal message: it can leak configuration detail.
   response.status(known?.status ?? 500).json({ error: known?.message ?? 'Something went wrong.' });
 }
 
 /**
  * Builds the Express app. Every dependency is passed in, so tests run it with
- * a fake model and fixture air. Middleware order matters: headers, then
- * compression and the body cap, then rate limits, routes, static files and
- * the sanitised error handler last.
+ * fakes. Order matters: headers, compression and the body cap, rate limits,
+ * public routes, then sign-in for personal routes, static files, errors last.
  */
-export function createApp({
-  llm,
-  air,
-  config,
-  mode,
-  now = () => new Date(),
-  rateLimitOptions,
-}: AppDependencies): Express {
+export function createApp(deps: AppDependencies): Express {
+  const { config, llm, air, store } = deps;
+  const now = deps.now ?? (() => new Date());
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', config.trustProxyHops);
-  app.use(securityHeaders(config.allowedOrigin));
+  app.use(securityHeaders(config.allowedOrigin, config.firebase?.web.authDomain ?? null));
   app.use(compression());
   app.use('/api', express.json({ limit: BODY_LIMIT }));
-  const aiLimiter = rateLimit(
-    rateLimitOptions ?? { ...AI_RATE_LIMIT, max: config.aiRequestsPerMinute },
-  );
-  const dataLimiter = rateLimit(rateLimitOptions ?? DATA_RATE_LIMIT);
-  for (const path of ['/api/extract', '/api/coach', '/api/ask']) {
-    app.use(path, aiLimiter);
-  }
-  app.use(['/api/places', '/api/air'], dataLimiter);
-  app.use('/api', healthRouter(mode, config.airDataMode));
   app.use(
-    '/api',
-    extractRouter({ llm, cache: createTtlCache<ExtractedProfile>(CACHE_ENTRIES, CACHE_TTL_MS) }),
+    '/api/chat',
+    rateLimit(deps.rateLimitOptions ?? { ...AI_RATE_LIMIT, max: config.aiRequestsPerMinute }),
   );
+  app.use(
+    ['/api/places', '/api/air', '/api/me'],
+    rateLimit(deps.rateLimitOptions ?? DATA_RATE_LIMIT),
+  );
+  app.use('/api', healthRouter(llm === null ? 'offline' : 'gemini', config));
+  app.use('/api', configRouter(config));
   app.use('/api', airRouter(air));
-  app.use(
-    '/api',
-    coachRouter(
-      { llm, air, cache: createTtlCache<CoachSummary>(CACHE_ENTRIES, CACHE_TTL_MS) },
-      now,
-    ),
-  );
+  if (deps.verifyScheduler !== null) {
+    app.use(
+      '/api',
+      internalRouter({ air, store, messenger: deps.messenger, now }, deps.verifyScheduler),
+    );
+  }
+  const signedIn = requireUser(config.authMode, deps.verifyIdToken);
+  app.use(['/api/me', '/api/chat'], signedIn);
+  app.use('/api', meRouter(store, now));
+  app.use('/api', chatRouter({ llm, air, store, now }));
   app.use('/api', notFound);
   if (config.staticDir !== null) {
     app.use(serveClient(config.staticDir));

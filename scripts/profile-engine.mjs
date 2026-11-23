@@ -1,146 +1,124 @@
 /**
  * Profiles the clean-air engine with real timings (run via `npm run profile`):
- *  - buildPlan latency percentiles for three households
- *  - the cost of one "tick an action" recompute, which runs on every click
- *  - heap growth across many plans (to catch retention)
- *  - payload sizes: the forecast over the wire and the saved session
+ *  - picking the nearest of every CPCB station in India and anchoring the forecast
+ *  - one piece of activity advice, and one full chat turn's engine work
+ *  - applying memory changes and an alert decision
+ *  - heap growth across many turns, and the payload sizes sent to the browser
  */
-import { buildPlan, toggleChoice } from '../packages/core/dist/index.js';
-import { fixtureForecast } from '../packages/server/dist/air/fixture-air.js';
+import {
+  adviseActivity,
+  anchorForecast,
+  applyChanges,
+  decideAlert,
+  DEFAULT_ALERT_SETTINGS,
+  describeAdvice,
+  EMPTY_MEMORY,
+  INITIAL_ALERT_STATE,
+  memoryChips,
+  nearestStation,
+  readIntent,
+  suggestQuestions,
+} from '../packages/core/dist/index.js';
+import { fixtureForecast, fixtureStations } from '../packages/server/dist/air/fixture-air.js';
 import { measure, PLANNED_AT } from './lib/stats.mjs';
 
-const place = {
-  name: 'New Delhi',
-  region: 'Delhi',
-  country: 'India',
-  latitude: 28.61,
-  longitude: 77.21,
-};
-const lifestyle = {
-  workDaysPerWeek: 5,
-  departHour: 8,
-  burnsWaste: false,
-  generatorHoursPerWeek: 0,
-  transitNearby: true,
-  communityHouseholds: 120,
-};
-const home = {
-  tightness: 'average',
-  ventilation: 'morning',
-  hasPurifier: false,
-  cookingFuel: 'lpg',
-  hasKitchenExhaust: false,
-  heating: 'none',
-  indoorSources: [],
-};
-const adult = {
-  name: 'Asha',
-  ageGroup: 'adult',
-  conditions: [],
-  daytime: 'office',
-  commuteMode: 'car-petrol',
-  commuteKm: 14,
-  outdoorExercise: 'none',
-  exerciseHour: 7,
-};
+const DELHI = { latitude: 28.61, longitude: 77.21 };
 
-const HOUSEHOLDS = {
-  'single commuter': { place, home, lifestyle, members: [adult] },
-  'family of four, coal heater': {
-    place,
-    lifestyle: { ...lifestyle, burnsWaste: true },
-    home: {
-      ...home,
-      tightness: 'leaky',
-      heating: 'coal-or-wood',
-      indoorSources: ['incense', 'mosquito-coil'],
-    },
-    members: [
-      adult,
-      {
-        ...adult,
-        name: 'Dadaji',
-        ageGroup: 'senior',
-        conditions: ['asthma'],
-        daytime: 'home',
-        outdoorExercise: 'light',
-        exerciseHour: 6,
-      },
-      {
-        ...adult,
-        name: 'Meera',
-        ageGroup: 'child',
-        daytime: 'school',
-        commuteMode: 'bus',
-        commuteKm: 5,
-        outdoorExercise: 'vigorous',
-        exerciseHour: 17,
-      },
-      { ...adult, name: 'Baby', ageGroup: 'infant', daytime: 'home' },
-    ],
-  },
-  'eight people, every source': {
-    place,
-    lifestyle: { ...lifestyle, burnsWaste: true, generatorHoursPerWeek: 10 },
-    home: {
-      ...home,
-      tightness: 'leaky',
-      cookingFuel: 'biomass',
-      heating: 'kerosene',
-      indoorSources: ['incense', 'mosquito-coil', 'indoor-smoking', 'candles'],
-    },
-    members: Array.from({ length: 8 }, (_unused, index) => ({
-      ...adult,
-      name: `Person ${String(index + 1)}`,
-      commuteMode: index % 2 === 0 ? 'two-wheeler' : 'auto-rickshaw',
-      outdoorExercise: 'light',
-      exerciseHour: 6,
-    })),
-  },
-};
+/** About as many stations as CPCB's national feed carries, spread over India. */
+const STATIONS = Array.from({ length: 550 }, (_unused, index) => ({
+  ...fixtureStations(PLANNED_AT)[index % 4],
+  id: `station-${String(index)}`,
+  latitude: 8 + (index % 25) * 1.2,
+  longitude: 68 + Math.floor(index / 25) * 1.4,
+}));
+STATIONS.push(fixtureStations(PLANNED_AT)[0]);
 
-const air = fixtureForecast(28.61, PLANNED_AT);
-/** Builds a plan for a household on the fixture forecast. */
-const planFor = (profile, chosenIds = null) =>
-  buildPlan({ profile, air, now: PLANNED_AT, chosenIds });
+const forecast = fixtureForecast(DELHI.latitude, PLANNED_AT);
+const station = nearestStation(DELHI, STATIONS, PLANNED_AT);
+const report = anchorForecast(forecast, station, PLANNED_AT);
+
+const CHANGES = [
+  { op: 'remember-person', label: 'Dadi', ageGroup: 'senior', conditions: ['asthma'] },
+  { op: 'remember-routine', activity: 'walk', person: 'Dadi', time: '06:30', minutes: null },
+  { op: 'remember-home', feature: 'n95-masks' },
+];
+const memory = applyChanges(EMPTY_MEMORY, CHANGES);
+const MESSAGE = 'Dadi has asthma and walks at 6:30 every morning. Can she go today?';
+
+/** The engine's share of one chat turn: memory, intent, advice, words, suggestions. */
+function chatTurn() {
+  const updated = applyChanges(EMPTY_MEMORY, CHANGES);
+  const intent = readIntent(MESSAGE, updated);
+  const advice = adviseActivity({ ...intent, report, now: PLANNED_AT, home: ['n95-masks'] });
+  return [describeAdvice(advice, report), memoryChips(updated), suggestQuestions(updated)];
+}
+
+const ROWS = [
+  ['nearest of 551 stations', () => nearestStation(DELHI, STATIONS, PLANNED_AT)],
+  ['anchor a 72-hour forecast', () => anchorForecast(forecast, station, PLANNED_AT)],
+  [
+    'advise one activity',
+    () =>
+      adviseActivity({
+        activity: 'walk',
+        report,
+        now: PLANNED_AT,
+        people: memory.people,
+        home: [],
+        time: '06:30',
+        minutes: 30,
+      }),
+  ],
+  ['engine share of a chat turn', chatTurn],
+  [
+    'alert decision',
+    () =>
+      decideAlert({
+        settings: { ...DEFAULT_ALERT_SETTINGS, enabled: true },
+        state: INITIAL_ALERT_STATE,
+        report,
+        memory,
+        placeName: 'New Delhi',
+        now: PLANNED_AT,
+      }),
+  ],
+];
 
 console.log('\n## Engine latency (5 000 runs each)\n');
-console.log('| Household | p50 | p95 | p99 | plans/sec |\n| :-- | --: | --: | --: | --: |');
-for (const [name, profile] of Object.entries(HOUSEHOLDS)) {
-  const timing = measure(() => planFor(profile), 5_000);
+console.log('| Operation | p50 | p95 | p99 | ops/sec |\n| :-- | --: | --: | --: | --: |');
+for (const [name, operation] of ROWS) {
+  const timing = measure(operation, 5_000);
   console.log(
     `| ${name} | ${timing.p50} | ${timing.p95} | ${timing.p99} | ${timing.opsPerSec.toLocaleString('en-IN')} |`,
   );
 }
-const family = HOUSEHOLDS['family of four, coal heater'];
-const basePlan = planFor(family);
-const toggled = toggleChoice(basePlan.chosenIds, 'seal-gaps', basePlan.actions);
-const tick = measure(() => planFor(family, toggled), 5_000);
-console.log(
-  `| one tick (toggle + full recompute) | ${tick.p50} | ${tick.p95} | ${tick.p99} | ${tick.opsPerSec.toLocaleString('en-IN')} |`,
-);
 
 console.log('\n## Memory\n');
 globalThis.gc?.();
 const before = process.memoryUsage().heapUsed;
-const profiles = Object.values(HOUSEHOLDS);
-for (let run = 0; run < 20_000; run += 1) planFor(profiles[run % profiles.length]);
+for (let run = 0; run < 20_000; run += 1) chatTurn();
 globalThis.gc?.();
 const after = process.memoryUsage().heapUsed;
 console.log(
-  `Heap change after 20 000 plans: ${((after - before) / 1024 / 1024).toFixed(2)} MB${globalThis.gc ? '' : ' (run with --expose-gc for a settled figure)'}`,
+  `Heap change after 20 000 chat turns: ${((after - before) / 1024 / 1024).toFixed(2)} MB${globalThis.gc ? '' : ' (run with --expose-gc for a settled figure)'}`,
 );
 
 /** Size of a string in kilobytes, as UTF-8 bytes. */
 const kilobytes = (text) => `${(Buffer.byteLength(text) / 1024).toFixed(1)} KB`;
+const advice = adviseActivity({
+  ...readIntent(MESSAGE, memory),
+  report,
+  now: PLANNED_AT,
+  home: [],
+});
 console.log('\n## Payloads\n');
 console.log('| Item | Size |\n| :-- | --: |');
 console.log(
-  `| Forecast sent to the browser (48 hours, before gzip) | ${kilobytes(JSON.stringify(air))} |`,
+  `| Air report sent to the browser (36 hours, before gzip) | ${kilobytes(JSON.stringify(report))} |`,
 );
 console.log(
-  `| Saved session in localStorage | ${kilobytes(JSON.stringify({ profile: family, chosenIds: basePlan.chosenIds, language: 'en' }))} |`,
+  `| Chat reply with advice, memory and suggestions | ${kilobytes(JSON.stringify({ reply: describeAdvice(advice, report), advice, memory, suggestions: suggestQuestions(memory), source: 'engine' }))} |`,
 );
 console.log(
-  `| Full plan object (computed in the browser, never sent) | ${kilobytes(JSON.stringify(basePlan))} |`,
+  `| Stored family record (memory, place, alerts) | ${kilobytes(JSON.stringify({ memory, place: DELHI, alerts: DEFAULT_ALERT_SETTINGS, alertState: INITIAL_ALERT_STATE, pushIds: ['x'.repeat(152)] }))} |`,
 );

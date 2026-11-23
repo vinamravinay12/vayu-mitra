@@ -2,7 +2,7 @@ import { Router, type Response } from 'express';
 import type { AirService } from '../air/air-service.js';
 import { UpstreamError } from '../air/fetch-json.js';
 import { describeCause, logEvent } from '../logging/log.js';
-import { airQuerySchema, placesQuerySchema, TEXT_LIMITS } from '../validation/schemas.js';
+import { airQuerySchema, placesQuerySchema, TEXT_LIMITS } from '../validation/request-schemas.js';
 
 /** Answers an upstream failure with 502; returns false for anything else. */
 export function respondToUpstreamError(cause: unknown, response: Response): boolean {
@@ -19,7 +19,7 @@ export function respondToUpstreamError(cause: unknown, response: Response): bool
   return true;
 }
 
-/** GET /api/places and GET /api/air — place search and the hourly forecast. */
+/** GET /api/places and GET /api/air — place search and the station-anchored air report. */
 export function airRouter(air: AirService): Router {
   const router = Router();
   router.get('/places', async (request, response) => {
@@ -44,9 +44,9 @@ export function airRouter(air: AirService): Router {
       return;
     }
     try {
-      const snapshot = await air.forecast(parsed.data.lat, parsed.data.lon);
-      response.setHeader('Cache-Control', 'public, max-age=900');
-      response.json(snapshot);
+      const report = await air.report(parsed.data.lat, parsed.data.lon);
+      response.setHeader('Cache-Control', 'public, max-age=300');
+      response.json(report);
     } catch (cause) {
       if (!respondToUpstreamError(cause, response)) throw cause;
     }
