@@ -10,7 +10,7 @@ import {
   describeSource,
   describeTime,
 } from './describe.js';
-import { detectActivity, detectDay, detectTime, readIntent } from './read-request.js';
+import { detectActivity, detectDay, detectPeriod, detectTime, readIntent } from './read-request.js';
 import { STARTER_QUESTIONS, suggestQuestions } from './suggest-questions.js';
 
 const memory: Memory = {
@@ -117,6 +117,61 @@ describe('days and follow-ups', () => {
   });
 });
 
+describe('parts of the day', () => {
+  it('reads them in English and Hinglish', () => {
+    expect(detectPeriod('Can I run tomorrow morning?')).toBe('morning');
+    expect(detectPeriod('kal subah walk?')).toBe('morning');
+    expect(detectPeriod('dopahar mein khelna')).toBe('afternoon');
+    expect(detectPeriod('shaam ko walk')).toBe('evening');
+    expect(detectPeriod('Is it OK tonight?')).toBe('night');
+    expect(detectPeriod('Can I run?')).toBeNull();
+  });
+
+  it('carries the day across a follow-up about the same activity, as in the reported chat', () => {
+    const previous = 'And can I go out for a run tomorrow morning';
+    expect(readIntent(previous, memory)).toMatchObject({
+      activity: 'run',
+      day: 'tomorrow',
+      period: 'morning',
+      time: null,
+    });
+    const followUp = readIntent(
+      'but is it advisable to run in morning or not',
+      memory,
+      undefined,
+      previous,
+    );
+    expect(followUp).toMatchObject({
+      activity: 'run',
+      day: 'tomorrow',
+      period: 'morning',
+      time: null,
+    });
+    // A different activity is a new question: nothing is carried over.
+    const walk = readIntent('Can I walk?', memory, undefined, previous);
+    expect(walk).toMatchObject({ activity: 'walk', day: null, period: null });
+  });
+
+  it('lets a clock time beat a part of the day, and a part of the day replace an earlier time', () => {
+    expect(readIntent('Can I run at 7 am in the morning?', memory)).toMatchObject({
+      time: '07:00',
+      period: null,
+    });
+    const previous = 'Can I run at 9 pm?';
+    expect(readIntent('what about in the morning?', memory, undefined, previous)).toMatchObject({
+      activity: 'run',
+      time: null,
+      period: 'morning',
+    });
+    expect(
+      readIntent('and at 6 am?', memory, undefined, 'Can I run in the evening?'),
+    ).toMatchObject({
+      time: '06:00',
+      period: null,
+    });
+  });
+});
+
 describe('readIntent with hints', () => {
   it('lets the AI reading override keywords', () => {
     const intent = readIntent('क्या माँ टहल सकती हैं?', memory, {
@@ -124,6 +179,7 @@ describe('readIntent with hints', () => {
       person: 'Papa',
       time: '08:00',
       day: 'tomorrow',
+      period: null,
     });
     expect(intent?.day).toBe('tomorrow');
     expect(intent?.activity).toBe('walk');
@@ -159,6 +215,7 @@ describe('describe', () => {
           home: [],
           time: null,
           day: null,
+          period: null,
           minutes: null,
         }),
         makeReport(aqis),
