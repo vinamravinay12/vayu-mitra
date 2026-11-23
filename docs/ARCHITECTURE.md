@@ -3,18 +3,18 @@
 Three packages in one npm workspace, one container in production.
 
 ```
-browser (React)                       server (Express on Cloud Run)                 outside
-───────────────                       ─────────────────────────────                 ───────
-sign-in ──── Firebase Auth popup ───────────────────────────────────────────────►  Google
-GET /api/config ─────────────────►    which auth, public web config
-GET /api/air?lat&lon ────────────►    air service ── cache per ~1 km cell ──────►  Open-Meteo (CAMS)
-                                        │  nearest fresh station ────────────────►  CPCB (data.gov.in)
-                                        │  anchored outlook                     ►  WAQI
-POST /api/chat (ID token) ───────►    verify token → chat pipeline ─────────────►  Gemini
-GET/PUT/DELETE /api/me* ─────────►    verify token → Firestore users/{uid}  ────►  Firestore
-register FID ── Firebase Messaging ─► POST /api/me/push-id
-                                      POST /api/internal/check-alerts ◄── OIDC ──  Cloud Scheduler
-push-sw.js ◄──────────────── FCM data message ◄── alert job ─────────────────────  FCM
+browser (React)                        server (Express on Cloud Run)                 Google Cloud / outside
+───────────────                        ─────────────────────────────                 ──────────────────────
+GET /api/config, /api/auth/session ─►  which auth, Web Push public key, who is in
+POST /api/auth/register|login ──────►  scrypt check → signed __Host- cookie ───────►  Firestore accounts
+GET /api/air?lat&lon ───────────────►  air service ── cache per ~1 km cell ────────►  Open-Meteo (CAMS)
+                                         │  nearest fresh station ──────────────────►  CPCB (data.gov.in)
+                                         │  anchored outlook                       ►  WAQI
+POST /api/chat (cookie) ────────────►  session → chat pipeline ────────────────────►  Gemini
+GET/PUT/DELETE /api/me* (cookie) ───►  session → users/{uid} ──────────────────────►  Firestore
+pushManager.subscribe(VAPID) ───────►  POST /api/me/push-subscription
+                                       POST /api/internal/check-alerts ◄── OIDC ────  Cloud Scheduler
+push-sw.js ◄────────────── encrypted Web Push ◄── alert job ───────────────────────  browser push service
 ```
 
 ## `packages/core` — the engine
@@ -41,19 +41,22 @@ for every answer and alert; the browser runs parts of it for labels and suggesti
   grounded), `run-chat` (the turn), `check-grounding`.
 - `guard/`, `prompts/`, `llm/`, `validation/` — injection screening, prompt builders with fencing,
   the Gemini adapter with retries and model fallback, and every schema at the boundaries.
-- `auth/`, `firebase/`, `store/`, `push/` — token checks, thin Firebase Admin bindings, the
-  validated user store (Firestore, or in memory for development), and the messenger.
+- `auth/` — scrypt passwords, signed sessions, the account store with unique emails, and the
+  middleware that turns a cookie into a user.
+- `gcp/`, `store/`, `push/` — thin Firestore, Web Push and OIDC bindings, the validated user store
+  (Firestore, or memory for development), and the messenger.
 - `alerts/check-alerts.ts` — the background run, batched, one family's failure never stops others.
 - `routes/`, `app.ts`, `security/` — HTTP, middleware order, headers, rate limits.
 
 ## `packages/client`
 
 - `App.tsx` starts with `/api/config` (validated by hand, so no schema library delays the first
-  paint), then the matching sign-in client. Firebase is imported only when the server has it on.
+  paint), and who is signed in. Sign-in is a plain form; the session cookie is never visible to scripts.
 - `components/Home.tsx` (lazy) holds the signed-in app: air card, chat, chips, alerts, privacy.
+- `push/push.ts` subscribes with the browser's Push API and the server's VAPID key.
 - `state/` hooks own the household record, the air report (refreshed every 10 minutes), the chat
   (kept only in the tab) and push registration.
-- `public/push-sw.js` shows FCM data messages as notifications; it needs no Firebase code.
+- `public/push-sw.js` shows Web Push messages as notifications.
 
 ## Why the shape
 

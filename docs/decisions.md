@@ -33,13 +33,16 @@ US EPA indices, also converted to concentrations; the engine then computes NAQI.
 180 is "poor" in NAQI terms, not "moderate"; showing it raw would mislead. **Cost:** conversion
 tables to maintain (WAQI documents the 2016 EPA PM2.5 table; that is the one used).
 
-## 5. Firebase for sign-in, storage and push
+## 5. Our own accounts and Web Push, on Google Cloud only
 
-**Decided:** Google sign-in, one Firestore document per family, FCM by Firebase Installation ID
-(the SDK's current API; registration tokens are deprecated), a 40-line service worker with no
-Firebase code. **Why:** memory and alerts need an identity; Firebase gives all three with no
-servers to run and works on Android Chrome, where most of the audience is. **Cost:** a Google
-account is required in production; ~54 KB of Firebase JS, loaded only when sign-in is on.
+**Decided:** email-and-password accounts built into the server (scrypt hashes in Firestore,
+HMAC-signed HttpOnly session cookies) and standard Web Push with VAPID keys, instead of Firebase
+Auth and Cloud Messaging. **Why:** everything stays on Google Cloud with one deploy script and no
+console set-up; no third-party script runs on the page, so the CSP stays fully closed and the
+first paint ships no SDK; the browser's own Push API works the same in Chrome, Firefox, Safari
+and Edge. **Cost:** we own password storage and its rules (rate limits, enumeration, hashing
+parameters); there is no password reset by email yet, so a forgotten password means a new
+account; no sign-in with Google.
 
 ## 6. The server alone touches Firestore
 
@@ -64,6 +67,6 @@ tab. **Why:** families mention health; the least data is the safest data, and de
 ## 9. Lazy first paint
 
 **Decided:** the start-up config is validated by hand; the signed-in screen (engine, Zod) and
-Firebase load after the first paint. **Why:** first-load JavaScript fell from 106 KB to 72 KB
+the push code load after the first paint. **Why:** first-load JavaScript fell from 106 KB to 72 KB
 gzipped on the phones most families use. **Cost:** one hand-written validator to keep in step
 with the server's config route (it has its own tests).
