@@ -38,6 +38,7 @@ export const NOTHING_UNDERSTOOD = JSON.stringify({
   activity: null,
   person: null,
   time: null,
+  day: null,
   onTopic: true,
 });
 
@@ -70,6 +71,7 @@ export const DADI_UNDERSTOOD = JSON.stringify({
   activity: 'walk',
   person: 'Dadi',
   time: null,
+  day: null,
   onTopic: true,
 });
 

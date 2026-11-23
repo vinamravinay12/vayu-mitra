@@ -4,7 +4,7 @@ import { EMPTY_MEMORY, type Memory } from '../memory/memory-schema.js';
 import { DADI, makeReport, NOW, PAPA } from '../test-utils/fixtures.js';
 import { chatRequestSchema, chatResponseSchema } from './chat-schema.js';
 import { describeAdvice, describeAir, describeSource, describeTime } from './describe.js';
-import { detectActivity, detectTime, readIntent } from './read-request.js';
+import { detectActivity, detectDay, detectTime, readIntent } from './read-request.js';
 import { STARTER_QUESTIONS, suggestQuestions } from './suggest-questions.js';
 
 const memory: Memory = {
@@ -89,13 +89,37 @@ describe('readIntent', () => {
   });
 });
 
+describe('days and follow-ups', () => {
+  it('reads the day a message is about', () => {
+    expect(detectDay('Can I drive to Delhi tomorrow?')).toBe('tomorrow');
+    expect(detectDay('kal subah walk?')).toBe('tomorrow');
+    expect(detectDay('Is tonight OK?')).toBe('today');
+    expect(detectDay('aaj park chalein?')).toBe('today');
+    expect(detectDay('Can I walk?')).toBeNull();
+  });
+
+  it('reads a car trip, and keeps it for a follow-up that only changes when', () => {
+    expect(detectActivity('I want to go to Delhi by my car')).toBe('car-trip');
+    const previous = 'Can I drive to Delhi at 6 pm?';
+    const intent = readIntent('But I am asking about tomorrow', memory, undefined, previous);
+    expect(intent).toMatchObject({ activity: 'car-trip', day: 'tomorrow', time: '18:00' });
+    expect(readIntent('and at 9 am?', memory, undefined, previous)?.time).toBe('09:00');
+    // A new question is not a follow-up, and no previous question means no guess.
+    expect(readIntent('How is the air tomorrow?', memory, undefined, null)).toBeNull();
+    expect(readIntent('How is the air?', memory, undefined, previous)).toBeNull();
+    expect(readIntent('Can I walk tomorrow?', memory, undefined, previous)?.activity).toBe('walk');
+  });
+});
+
 describe('readIntent with hints', () => {
   it('lets the AI reading override keywords', () => {
     const intent = readIntent('क्या माँ टहल सकती हैं?', memory, {
       activity: 'walk',
       person: 'Papa',
       time: '08:00',
+      day: 'tomorrow',
     });
+    expect(intent?.day).toBe('tomorrow');
     expect(intent?.activity).toBe('walk');
     expect(intent?.people).toEqual([PAPA]);
     expect(intent?.time).toBe('08:00');
@@ -128,6 +152,7 @@ describe('describe', () => {
           people,
           home: [],
           time: null,
+          day: null,
           minutes: null,
         }),
         makeReport(aqis),

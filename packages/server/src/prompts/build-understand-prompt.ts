@@ -1,5 +1,6 @@
 import {
   ACTIVITIES,
+  DAYS,
   AGE_GROUPS,
   HEALTH_CONDITIONS,
   HOME_FEATURES,
@@ -27,6 +28,8 @@ const UNDERSTAND_INSTRUCTION = [
   `- activity: what they ask about doing now or soon, from the list (${ACTIVITIES.join(', ')}), or null.`,
   '- person: the label of who the question is about, or null.',
   '- time: when they plan to do it, HH:MM 24-hour, or null.',
+  `- day: ${DAYS.join(' or ')} when they say which day (Hindi "kal" about a plan means tomorrow, "aaj" today), or null.`,
+  '- If the new message follows up an earlier question ("and tomorrow?", "I meant by car", "what about at 9?"), take the activity, person, time and day from the earlier turns and change only what the new message changes.',
   '- onTopic: false if the message has nothing to do with air, health, weather, their household or plans.',
   DATA_NOT_INSTRUCTIONS,
 ].join('\n');

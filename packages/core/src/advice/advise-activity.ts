@@ -1,22 +1,28 @@
-import { ACTIVITY_PROFILES, type Intensity } from '../catalog/activities.js';
+import { ACTIVITY_PROFILES, type ActivityProfile, type Intensity } from '../catalog/activities.js';
 import { categoryRank } from '../aqi/compute-aqi.js';
 import {
-  RESPIRATORY_CONDITIONS,
   SENSITIVE_AGES,
   type Activity,
+  type Day,
   type HomeFeature,
 } from '../catalog/vocabulary.js';
 import type { PersonFact } from '../memory/memory-schema.js';
 import { nowHour, type AirReport, type ReportHour } from '../schemas/air-report.js';
 import { localClock, minutesOfDay } from '../time/local-clock.js';
 import type { ActivityAdvice, AdviceHour, Verdict } from './advice-schema.js';
-import type { AdviceTip } from './tips.js';
+import { chooseTips } from './choose-tips.js';
 
 /** Outdoor plans are only suggested in these local hours. */
 export const DAYLIGHT = { first: 6, last: 20 } as const;
 
-/** Highest category each intensity is fine in for a healthy adult. */
+/** Highest category each intensity is fine in for a healthy adult, outdoors. */
 const GO_LIMIT: Readonly<Record<Intensity, number>> = { light: 2, moderate: 2, vigorous: 1 };
+
+/**
+ * In a closed car with the AC on recirculate, cabin PM2.5 runs well below the
+ * road's, so a trip is fine up to Poor for a healthy adult.
+ */
+const VEHICLE_GO_LIMIT = 3;
 
 /** Who is at higher risk among the people involved. */
 export function sensitivePeople(people: readonly PersonFact[]): string[] {
@@ -32,15 +38,33 @@ const toAdviceHour = (hour: ReportHour): AdviceHour => ({
   category: hour.category,
 });
 
-/** The next outlook hour a `HH:MM` falls in, or the first hour (now) when unset. */
-export function plannedHour(report: AirReport, time: string | null, now: Date): ReportHour {
+/** The local date a day refers to, or null when no day was given. */
+export function dateFor(report: AirReport, day: Day | null, now: Date): string | null {
+  if (day === null) return null;
+  const today = new Date(`${localClock(now, report.utcOffsetSeconds).date}T00:00:00Z`);
+  today.setUTCDate(today.getUTCDate() + (day === 'tomorrow' ? 1 : 0));
+  return today.toISOString().slice(0, 10);
+}
+
+/**
+ * The outlook hour a plan is for: `HH:MM` on the given date; if that has
+ * passed or the outlook does not reach it, the next `HH:MM`; with no time, now.
+ */
+export function plannedHour(
+  report: AirReport,
+  time: string | null,
+  date: string | null,
+): ReportHour {
   if (time === null) {
     return nowHour(report);
   }
-  const clock = localClock(now, report.utcOffsetSeconds);
-  // The outlook starts at the current hour, so a time already past today lands on tomorrow.
-  const offset = (Math.floor(minutesOfDay(time) / 60) - clock.hour + 24) % 24;
-  return report.hours[offset] ?? nowHour(report);
+  const wanted = Math.floor(minutesOfDay(time) / 60);
+  const at = (on: string | null) =>
+    report.hours.find(
+      (hour) =>
+        Number(hour.time.slice(11, 13)) === wanted && (on === null || hour.time.startsWith(on)),
+    );
+  return at(date) ?? at(null) ?? nowHour(report);
 }
 
 /** The window of `length` hours in daylight with the lowest mean index, as its first hour. */
@@ -58,45 +82,10 @@ export function cleanestWindow(hours: readonly ReportHour[], length: number): Re
   return best?.hour ?? null;
 }
 
-/** What the precautions depend on. */
-interface TipContext {
-  readonly rank: number;
-  readonly sensitive: boolean;
-  readonly people: readonly PersonFact[];
-  readonly home: readonly HomeFeature[];
-  readonly activity: Activity;
-}
-
-/** Precautions for being outside. */
-function outdoorTips({ rank, sensitive, home, activity }: TipContext): AdviceTip[] {
-  if (activity === 'open-windows') {
-    return [];
-  }
-  const mask: AdviceTip[] =
-    rank >= 3 || (sensitive && rank >= 2)
-      ? [home.includes('n95-masks') ? 'wear-n95' : 'get-n95']
-      : [];
-  const pace: AdviceTip[] = rank >= 2 ? ['ease-off', 'avoid-traffic'] : [];
-  return [...mask, ...pace];
-}
-
-/** The precautions that apply, in the order they matter. */
-function chooseTips(context: TipContext): AdviceTip[] {
-  const { rank, people, home, activity } = context;
-  const lungs = people.some((person) =>
-    person.conditions.some((condition) => RESPIRATORY_CONDITIONS.includes(condition)),
-  );
-  const tips = [...outdoorTips(context), ...(lungs ? (['carry-inhaler'] as const) : [])];
-  if (rank >= 3) {
-    tips.push(home.includes('air-purifier') ? 'run-purifier' : 'keep-windows-shut');
-    if (activity === 'school-run' && home.includes('car')) tips.push('recirculate');
-  }
-  return tips;
-}
-
 /** Highest category ranks that mean go, and go with care. */
-function limits(intensity: Intensity, sensitive: boolean): { go: number; care: number } {
-  const go = Math.max(0, GO_LIMIT[intensity] - (sensitive ? 1 : 0));
+function limits(profile: ActivityProfile, sensitive: boolean): { go: number; care: number } {
+  const base = profile.setting === 'in-vehicle' ? VEHICLE_GO_LIMIT : GO_LIMIT[profile.intensity];
+  const go = Math.max(0, base - (sensitive ? 1 : 0));
   return { go, care: go + 1 };
 }
 
@@ -120,6 +109,26 @@ function decideVerdict(
   return { verdict: 'skip', chosen: planned };
 }
 
+/**
+ * The hour the plan is for and the cleanest window to compare it with. Asked
+ * about a day, the window is looked for on that day only; "tomorrow" with no
+ * time plans for tomorrow's cleanest window itself.
+ */
+function planAndWindow(
+  input: AdviceInput,
+  defaultMinutes: number,
+): { planned: ReportHour; best: ReportHour | null } {
+  const date = dateFor(input.report, input.day, input.now);
+  const length = Math.max(1, Math.ceil((input.minutes ?? defaultMinutes) / 60));
+  const hours = input.report.hours.filter((hour) => date === null || hour.time.startsWith(date));
+  const best = cleanestWindow(hours, length);
+  const planned =
+    input.time === null && date !== null && best !== null
+      ? best
+      : plannedHour(input.report, input.time, date);
+  return { planned, best };
+}
+
 /** Inputs for one piece of advice. */
 export interface AdviceInput {
   readonly activity: Activity;
@@ -128,6 +137,8 @@ export interface AdviceInput {
   readonly people: readonly PersonFact[];
   readonly home: readonly HomeFeature[];
   readonly time: string | null;
+  /** Today or tomorrow, when the question said; null means the next occurrence. */
+  readonly day: Day | null;
   readonly minutes: number | null;
 }
 
@@ -139,17 +150,15 @@ export interface AdviceInput {
  */
 export function adviseActivity(input: AdviceInput): ActivityAdvice {
   const profile = ACTIVITY_PROFILES[input.activity];
-  const airing = input.activity === 'open-windows';
+  const airing = profile.setting === 'home';
   const sensitiveFor = airing ? [] : sensitivePeople(input.people);
-  const planned = plannedHour(input.report, input.time, input.now);
-  const length = Math.max(1, Math.ceil((input.minutes ?? profile.defaultMinutes) / 60));
-  const best = cleanestWindow(input.report.hours, length);
+  const { planned, best } = planAndWindow(input, profile.defaultMinutes);
   const better =
     best !== null && best.aqi < planned.aqi && best.time !== planned.time ? best : null;
   const { verdict, chosen } = decideVerdict(
     planned,
     better,
-    limits(profile.intensity, sensitiveFor.length > 0),
+    limits(profile, sensitiveFor.length > 0),
     airing,
   );
   return {
@@ -164,6 +173,7 @@ export function adviseActivity(input: AdviceInput): ActivityAdvice {
       people: input.people,
       home: input.home,
       activity: input.activity,
+      setting: profile.setting,
     }),
     indoorAlternative: profile.indoorAlternative,
   };
