@@ -15,7 +15,7 @@ export interface Understood {
 /** With no understanding, the engine's keyword reading takes over and nothing is remembered. */
 export const NOT_UNDERSTOOD: Understood = {
   changes: [],
-  hints: { activity: null, person: null, time: null },
+  hints: { activity: null, person: null, time: null, day: null },
   onTopic: true,
 };
 
@@ -40,10 +40,10 @@ export async function understand(
       logEvent('WARNING', 'understand answered off-schema');
       return NOT_UNDERSTOOD;
     }
-    const { memoryChanges, activity, person, time, onTopic } = parsed.data;
+    const { memoryChanges, activity, person, time, day, onTopic } = parsed.data;
     return {
       changes: memoryChanges.flatMap((flat) => toMemoryChange(flat) ?? []),
-      hints: { activity, person, time },
+      hints: { activity, person, time, day },
       onTopic,
     };
   } catch (cause) {

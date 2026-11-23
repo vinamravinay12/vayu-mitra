@@ -1,3 +1,4 @@
+import type { ChatTurn } from '@vayu/core';
 import { describeCause, logEvent } from '../logging/log.js';
 import type { LlmClient } from '../llm/llm-client.js';
 import { buildReplyRequest, type ReplyFacts } from '../prompts/build-reply-prompt.js';
@@ -18,7 +19,7 @@ export interface WrittenReply {
  */
 export async function writeReply(
   llm: LlmClient | null,
-  message: string,
+  turn: { readonly message: string; readonly history: readonly ChatTurn[] },
   facts: ReplyFacts,
   engineText: string,
 ): Promise<WrittenReply> {
@@ -28,7 +29,7 @@ export async function writeReply(
   }
   try {
     const parsed = replySchema.safeParse(
-      parseJson(await llm.generate(buildReplyRequest(message, facts))),
+      parseJson(await llm.generate(buildReplyRequest(turn.message, turn.history, facts))),
     );
     if (!parsed.success) {
       logEvent('WARNING', 'reply answered off-schema; engine reply used');

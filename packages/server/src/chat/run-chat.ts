@@ -39,6 +39,10 @@ const refusal = (memory: Memory): ChatResponse => ({
   source: 'engine',
 });
 
+/** The family's last message before this one, which a follow-up like "and tomorrow?" refers to. */
+const previousQuestion = (request: ChatRequest): string | null =>
+  [...request.history].reverse().find((turn) => turn.role === 'user')?.text ?? null;
+
 /** The independent judge, when there is a model; the heuristic result otherwise. */
 const screen = (llm: LlmClient | null, message: string): Promise<ScreenResult> =>
   llm === null
@@ -74,7 +78,7 @@ export async function runChat(
     return refusal(record.memory);
   }
   const memory = applyChanges(record.memory, understood.changes);
-  const intent = readIntent(request.message, memory, understood.hints);
+  const intent = readIntent(request.message, memory, understood.hints, previousQuestion(request));
   const advice =
     intent === null
       ? null
@@ -89,7 +93,7 @@ export async function runChat(
   const chips = memoryChips(memory).map((chip) => chip.label);
   const reply = await writeReply(
     deps.llm,
-    request.message,
+    request,
     {
       air: describeAir(report),
       advice: advice === null ? null : describeAdvice(advice, report),

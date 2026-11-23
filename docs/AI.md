@@ -17,8 +17,9 @@ An independent **guard** call classifies the message as safe or manipulation, in
 
 1. Applies the proposed memory changes itself, after checking each against strict schemas and
    closed vocabularies; anything that does not fit is dropped.
-2. Reads the intent: the AI's activity, person and time take precedence, then keywords (English
-   and common Hinglish), times in the message, and remembered routines.
+2. Reads the intent: the AI's activity, person, time and day take precedence, then keywords
+   (English and common Hinglish, including “kal” and “aaj”), times in the message, the question
+   a follow-up refers to, and remembered routines.
 3. Decides the advice: the planned hour, the cleanest daylight window, the verdict, the
    precautions, from intensity and who is sensitive.
 4. Writes its own sentence for the same facts, used whenever the AI cannot be.

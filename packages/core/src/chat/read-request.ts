@@ -1,5 +1,5 @@
 import { ACTIVITY_PROFILES } from '../catalog/activities.js';
-import { ACTIVITIES, type Activity } from '../catalog/vocabulary.js';
+import { ACTIVITIES, type Activity, type Day } from '../catalog/vocabulary.js';
 import type { Memory, PersonFact, RoutineFact } from '../memory/memory-schema.js';
 
 /** Escapes regular-expression metacharacters so a phrase matches literally. */
@@ -26,6 +26,17 @@ export function detectActivity(message: string): Activity | null {
   return found?.activity ?? null;
 }
 
+/** Words that put a question on a day, English and Hinglish ("kal" in a plan means tomorrow). */
+const DAY_WORDS: readonly (readonly [Day, RegExp])[] = [
+  ['tomorrow', /\b(tomorrow|tmrw|kal)\b/i],
+  ['today', /\b(today|tonight|this (morning|afternoon|evening)|aaj)\b/i],
+];
+
+/** The day a message is about, or null when it does not say. */
+export function detectDay(message: string): Day | null {
+  return DAY_WORDS.find(([, pattern]) => pattern.test(message))?.[0] ?? null;
+}
+
 const TWELVE_HOUR = /\b(\d{1,2})(?::([0-5]\d))?\s*(am|pm)\b/i;
 const TWENTY_FOUR_HOUR = /\b([01]?\d|2[0-3]):([0-5]\d)\b/;
 
@@ -50,9 +61,10 @@ export interface IntentHints {
   readonly activity: Activity | null;
   readonly person: string | null;
   readonly time: string | null;
+  readonly day: Day | null;
 }
 
-const NO_HINTS: IntentHints = { activity: null, person: null, time: null };
+const NO_HINTS: IntentHints = { activity: null, person: null, time: null, day: null };
 
 /** What a message asks about, resolved against memory. */
 export interface ChatIntent {
@@ -60,6 +72,7 @@ export interface ChatIntent {
   readonly people: readonly PersonFact[];
   readonly routine: RoutineFact | null;
   readonly time: string | null;
+  readonly day: Day | null;
   readonly minutes: number | null;
 }
 
@@ -74,8 +87,10 @@ export function readIntent(
   message: string,
   memory: Memory,
   hints: IntentHints = NO_HINTS,
+  previous: string | null = null,
 ): ChatIntent | null {
-  const activity = hints.activity ?? detectActivity(message);
+  const earlier = followedUp(message, previous);
+  const activity = hints.activity ?? detectActivity(message) ?? detectActivity(earlier ?? '');
   if (activity === null) {
     return null;
   }
@@ -84,17 +99,32 @@ export function readIntent(
   const routine = findRoutine(memory.routines, activity, named);
   const owner = memory.people.filter((person) => person.id === routine?.personId);
   const people = [named, owner, memory.people].find((group) => group.length > 0) ?? [];
-  return { activity, people, routine, ...timing(message, hints, routine) };
+  return { activity, people, routine, ...timing(message, hints, routine, earlier) };
 }
 
-/** When, and for how long: the AI's time, a time in the message, or the routine's. */
+/** The earlier question a message follows up ("and tomorrow?" keeps its activity and time), or null. */
+const followedUp = (message: string, previous: string | null): string | null =>
+  previous !== null && isFollowUp(message) ? previous : null;
+
+/** A message that only changes when, about a question already asked. */
+const isFollowUp = (message: string): boolean =>
+  detectActivity(message) === null && (detectDay(message) !== null || detectTime(message) !== null);
+
+/**
+ * When, and for how long: the AI's reading first, then the message, then the
+ * question it follows up, then the routine's usual time.
+ */
 function timing(
   message: string,
   hints: IntentHints,
   routine: RoutineFact | null,
-): Pick<ChatIntent, 'time' | 'minutes'> {
+  earlier: string | null,
+): Pick<ChatIntent, 'time' | 'day' | 'minutes'> {
+  const fromEarlier = <T>(read: (text: string) => T | null): T | null =>
+    earlier === null ? null : read(earlier);
   return {
-    time: hints.time ?? detectTime(message) ?? routine?.time ?? null,
+    time: hints.time ?? detectTime(message) ?? fromEarlier(detectTime) ?? routine?.time ?? null,
+    day: hints.day ?? detectDay(message) ?? fromEarlier(detectDay),
     minutes: routine?.minutes ?? null,
   };
 }

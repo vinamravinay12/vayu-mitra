@@ -2,6 +2,7 @@ import {
   ACTIVITIES,
   AGE_GROUPS,
   CHAT_LIMITS,
+  DAYS,
   HEALTH_CONDITIONS,
   HOME_FEATURES,
   memoryChangeSchema,
@@ -48,6 +49,7 @@ export const understandingSchema = z.object({
   activity: z.enum(ACTIVITIES).nullable(),
   person: z.string().max(40).nullable(),
   time,
+  day: z.enum(DAYS).nullable(),
   onTopic: z.boolean(),
 });
 
