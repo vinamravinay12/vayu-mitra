@@ -4,7 +4,7 @@ import { ThemeToggle } from './ThemeToggle.js';
 interface HeaderProps {
   readonly theme: ThemePreference;
   readonly onThemeChange: (preference: ThemePreference) => void;
-  /** Shown only when someone is signed in with Google. */
+  /** Shown only when someone is signed in to an account. */
   readonly onSignOut: (() => void) | null;
 }
 

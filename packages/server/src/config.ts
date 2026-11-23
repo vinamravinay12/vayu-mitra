@@ -1,19 +1,23 @@
 import {
-  loadFirebase,
+  loadPush,
   loadScheduler,
+  loadSessionSecret,
   present,
-  type FirebaseSettings,
+  type PushSettings,
   type SchedulerSettings,
-} from './firebase-config.js';
+} from './settings.js';
 
 /** Where air data and place search come from. */
 export type AirDataMode = 'live' | 'fixture';
 
 /**
- * `firebase`: every personal route needs a verified Google sign-in.
+ * `password`: every personal route needs a signed-in account (email and password).
  * `none`: development only; everyone shares one local household.
  */
-export type AuthMode = 'firebase' | 'none';
+export type AuthMode = 'password' | 'none';
+
+/** Where families' records live: Firestore in production, process memory in development. */
+export type StoreMode = 'firestore' | 'memory';
 
 export interface ServerConfig {
   readonly port: number;
@@ -32,15 +36,24 @@ export interface ServerConfig {
   readonly dataGovInApiKey: string | null;
   /** WAQI token; null skips that feed. */
   readonly waqiToken: string | null;
-  readonly firebase: FirebaseSettings | null;
+  /** Signs session cookies; null only in development, where sign-in is off. */
+  readonly sessionSecret: string | null;
   readonly authMode: AuthMode;
+  readonly store: StoreMode;
+  /** Web Push keys; null turns alerts off. */
+  readonly push: PushSettings | null;
   readonly scheduler: SchedulerSettings | null;
   /** AI requests one client may make per minute. Parallel browser tests share one address. */
   readonly aiRequestsPerMinute: number;
+  /** Sign-up and sign-in attempts one client may make per minute: the brake on password guessing. */
+  readonly authRequestsPerMinute: number;
 }
 
 /** AI requests per client per minute unless configured: enough for a family, not for a script. */
 export const DEFAULT_AI_REQUESTS_PER_MINUTE = 10;
+
+/** Sign-in attempts per client per minute unless configured. */
+export const DEFAULT_AUTH_REQUESTS_PER_MINUTE = 10;
 
 /**
  * Gemini 3.5 Flash-Lite first: in probing with the real extraction schema it
@@ -83,17 +96,18 @@ const parseInteger = (value: string | undefined, fallback: number, max: number):
 /**
  * Reads configuration from the environment.
  *
- * A missing key, fixture air data and no sign-in are tolerated in development
- * so the app runs end to end offline, but refused in production: a deployed
- * assistant with made-up air, or one household shared by every visitor, would
- * misrepresent what it is.
+ * A missing key, fixture air data, no sign-in and in-memory storage are
+ * tolerated in development so the app runs end to end offline, but refused in
+ * production: made-up air, one household shared by every visitor, or records
+ * lost on every restart would misrepresent what it is.
  */
 export function loadConfig(env: Env): ServerConfig {
   const geminiApiKey = orNull(env.GEMINI_API_KEY);
   const airDataMode: AirDataMode = env.AIR_DATA_MODE === 'fixture' ? 'fixture' : 'live';
-  const firebase = loadFirebase(env);
+  const sessionSecret = loadSessionSecret(env);
+  const store: StoreMode = env.STORE === 'firestore' ? 'firestore' : 'memory';
   if (env.NODE_ENV === 'production') {
-    refuseUnsafeProduction(geminiApiKey, airDataMode, firebase);
+    refuseUnsafeProduction({ geminiApiKey, airDataMode, sessionSecret, store });
   }
   const port = parseInteger(env.PORT, DEFAULT_PORT, 65_535);
   return {
@@ -106,12 +120,18 @@ export function loadConfig(env: Env): ServerConfig {
     airDataMode,
     dataGovInApiKey: orNull(env.DATA_GOV_IN_API_KEY),
     waqiToken: orNull(env.WAQI_TOKEN),
-    firebase,
-    authMode: firebase === null ? 'none' : 'firebase',
+    sessionSecret,
+    authMode: sessionSecret === null ? 'none' : 'password',
+    store,
+    push: loadPush(env),
     scheduler: loadScheduler(env),
     aiRequestsPerMinute: Math.max(
       1,
       parseInteger(env.AI_REQUESTS_PER_MINUTE, DEFAULT_AI_REQUESTS_PER_MINUTE, 1000),
+    ),
+    authRequestsPerMinute: Math.max(
+      1,
+      parseInteger(env.AUTH_REQUESTS_PER_MINUTE, DEFAULT_AUTH_REQUESTS_PER_MINUTE, 1000),
     ),
   };
 }
@@ -119,19 +139,20 @@ export function loadConfig(env: Env): ServerConfig {
 /** The trimmed value, or null when it is missing or blank. */
 const orNull = (value: string | undefined): string | null => present(value) ?? null;
 
-/** What production must have. */
-function refuseUnsafeProduction(
-  geminiApiKey: string | null,
-  airDataMode: AirDataMode,
-  firebase: FirebaseSettings | null,
-): void {
-  if (geminiApiKey === null) {
-    throw new Error('GEMINI_API_KEY is required in production');
-  }
-  if (airDataMode === 'fixture') {
-    throw new Error('AIR_DATA_MODE=fixture is not allowed in production');
-  }
-  if (firebase === null) {
-    throw new Error('FIREBASE_PROJECT_ID is required in production');
+/** What production must have: a model, live air, sign-in and durable storage. */
+function refuseUnsafeProduction(settings: {
+  readonly geminiApiKey: string | null;
+  readonly airDataMode: AirDataMode;
+  readonly sessionSecret: string | null;
+  readonly store: StoreMode;
+}): void {
+  const problems = [
+    settings.geminiApiKey === null ? 'GEMINI_API_KEY is required' : null,
+    settings.airDataMode === 'fixture' ? 'AIR_DATA_MODE=fixture is not allowed' : null,
+    settings.sessionSecret === null ? 'SESSION_SECRET is required' : null,
+    settings.store === 'memory' ? 'STORE=firestore is required' : null,
+  ].filter((problem) => problem !== null);
+  if (problems.length > 0) {
+    throw new Error(`In production: ${problems.join('; ')}`);
   }
 }

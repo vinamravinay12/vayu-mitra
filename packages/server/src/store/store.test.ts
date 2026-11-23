@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { subscription } from '../test-utils/app.js';
 import { NOW } from '../test-utils/fake-llm.js';
 import { newUserRecord, publicView } from './user-record.js';
 import { createMemoryCollection, createUserStore } from './user-store.js';
@@ -20,7 +21,12 @@ describe('user store', () => {
     const collection = createMemoryCollection();
     const store = createUserStore(collection);
     await expect(
-      store.put('u1', { ...newUserRecord(NOW()), pushIds: ['x', 'x', 'x', 'x', 'x', 'x'] }),
+      store.put('u1', {
+        ...newUserRecord(NOW()),
+        pushSubscriptions: Array.from({ length: 6 }, (_unused, index) =>
+          subscription(String(index)),
+        ),
+      }),
     ).rejects.toThrow();
     await collection.set('u2', { memory: 'garbage' });
     expect(await store.get('u2')).toBeNull();
@@ -40,9 +46,9 @@ describe('user store', () => {
     expect(await store.alertSubscribers()).toEqual([{ uid: 'on', record: on }]);
   });
 
-  it('never shows device ids to the browser', () => {
-    const view = publicView({ ...newUserRecord(NOW()), pushIds: ['fid-1'] });
-    expect(view).not.toHaveProperty('pushIds');
+  it('never shows push addresses to the browser', () => {
+    const view = publicView({ ...newUserRecord(NOW()), pushSubscriptions: [subscription('a')] });
+    expect(view).not.toHaveProperty('pushSubscriptions');
     expect(view.pushEnabled).toBe(true);
   });
 });

@@ -1,16 +1,15 @@
 /**
  * Vayu Mitra's service worker: shows air alerts while the app is closed.
  *
- * Alerts arrive as Firebase Cloud Messaging data messages, so this worker
- * needs no Firebase code: it reads the title and body the server wrote and
- * shows them, and a tap opens (or focuses) the app.
+ * Alerts arrive as standard Web Push messages, encrypted by the server with
+ * this browser's subscription keys and decrypted by the browser. The payload
+ * is the title and body the server wrote; a tap opens (or focuses) the app.
  */
 
-/** The notification fields from an FCM data message, or null when it is not one of ours. */
+/** The notification fields from a push message, or null when it is not one of ours. */
 function readAlert(event) {
   try {
-    const message = event.data?.json();
-    const fields = message?.data;
+    const fields = event.data?.json();
     return typeof fields?.title === 'string' && typeof fields?.body === 'string' ? fields : null;
   } catch {
     return null;

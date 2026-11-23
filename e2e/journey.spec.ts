@@ -3,9 +3,8 @@ import { expect, test, type Page } from '@playwright/test';
 
 /**
  * Real-browser journeys against the production build, served with the
- * production security headers, no Gemini key (the engine answers) and fixture
- * air data. Sign-in is off, so every test shares one local household; each
- * starts by deleting it and the run is serial.
+ * production security headers, email-and-password accounts, no Gemini key
+ * (the engine answers) and fixture air data. Each test creates its own account.
  */
 
 /** WCAG tags axe runs, colour contrast included (jsdom axe cannot check contrast). */
@@ -58,11 +57,27 @@ async function scrollsHorizontally(page: Page): Promise<boolean> {
   );
 }
 
-/** Starts from an empty household. */
-async function freshStart(page: Page): Promise<void> {
-  await page.request.delete('/api/me');
+const PASSWORD = 'correct horse battery';
+
+/** A fresh email for each account. */
+const newEmail = (): string =>
+  `family-${String(Date.now())}-${String(Math.random()).slice(2, 8)}@example.test`;
+
+/** Fills the account form and submits it. */
+async function submitCredentials(page: Page, email: string, button: string, password = PASSWORD) {
+  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Password').fill(password);
+  await page.getByRole('button', { name: button }).click();
+}
+
+/** Creates a new account, which starts with an empty household; returns its email. */
+async function freshStart(page: Page): Promise<string> {
   await page.goto('/');
+  await page.getByRole('button', { name: 'New here? Create an account' }).click();
+  const email = newEmail();
+  await submitCredentials(page, email, 'Create account');
   await expect(page.getByRole('heading', { name: 'Where are you?' })).toBeVisible();
+  return email;
 }
 
 /** Picks New Delhi and waits for its air. */
@@ -76,7 +91,7 @@ async function pickDelhi(page: Page): Promise<void> {
 
 test.describe.configure({ mode: 'serial' });
 
-test('serves the production security headers and hides the scheduler route', async ({
+test('serves security headers and a locked-down session cookie, and hides the scheduler', async ({
   request,
 }) => {
   const response = await request.get('/');
@@ -85,6 +100,27 @@ test('serves the production security headers and hides the scheduler route', asy
   expect(policy).not.toContain("'unsafe-inline'");
   expect(response.headers()['strict-transport-security']).toBeDefined();
   expect((await request.post('/api/internal/check-alerts')).status()).toBe(404);
+  const signedUp = await request.post('/api/auth/register', {
+    data: { email: newEmail(), password: PASSWORD },
+  });
+  expect(signedUp.status()).toBe(201);
+  expect(signedUp.headers()['set-cookie']).toMatch(
+    /^__Host-vayu_session=.+; Path=\/; HttpOnly; Secure; SameSite=Strict/,
+  );
+});
+
+test('signs out, refuses a wrong password, and signs back in to the same household', async ({
+  page,
+}) => {
+  const email = await freshStart(page);
+  await pickDelhi(page);
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
+  await expectNoAxeViolations(page);
+  await submitCredentials(page, email, 'Sign in', 'not the password');
+  await expect(page.getByRole('alert')).toContainText('do not match an account');
+  await submitCredentials(page, email, 'Sign in');
+  await expect(page.getByRole('heading', { name: 'Air in New Delhi' })).toBeVisible();
 });
 
 for (const colorScheme of ['light', 'dark'] as const) {
@@ -93,6 +129,9 @@ for (const colorScheme of ['light', 'dark'] as const) {
   }) => {
     await page.emulateMedia({ colorScheme });
     const pageErrors = collectPageErrors(page);
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
+    await expectNoAxeViolations(page);
     await freshStart(page);
     await expectNoAxeViolations(page);
     await pickDelhi(page);
@@ -130,10 +169,12 @@ test('memory chips can be edited and forgotten, and shape the suggestions', asyn
   await expect(page.getByRole('region', { name: /^Walk: / })).toContainText('Dadi');
 });
 
-test('deleting the data starts over', async ({ page }) => {
-  await freshStart(page);
+test('deleting the data deletes the account and signs out', async ({ page }) => {
+  const email = await freshStart(page);
   await pickDelhi(page);
   await page.getByRole('button', { name: 'Delete my data' }).click();
   await page.getByRole('button', { name: 'Yes, delete everything' }).click();
-  await expect(page.getByRole('heading', { name: 'Where are you?' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
+  await submitCredentials(page, email, 'Sign in');
+  await expect(page.getByRole('alert')).toContainText('do not match an account');
 });

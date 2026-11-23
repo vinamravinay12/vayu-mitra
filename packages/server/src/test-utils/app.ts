@@ -1,39 +1,53 @@
+import request from 'supertest';
+import type { Express } from 'express';
 import { createApp, type AppDependencies } from '../app.js';
+import { createAccountStore } from '../auth/accounts.js';
 import { loadConfig } from '../config.js';
 import { createLogMessenger } from '../push/messenger.js';
+import { createMemoryCollection } from '../store/user-store.js';
+import type { PushSubscriptionJson } from '../validation/request-schemas.js';
 import { testDeps } from './deps.js';
 
-/** Firebase settings for a project that does not exist; tokens are checked by a fake. */
-export const FIREBASE_ENV = {
-  FIREBASE_PROJECT_ID: 'vayu-test',
-  FIREBASE_WEB_API_KEY: 'web-key',
-  FIREBASE_APP_ID: '1:2:web:3',
-  FIREBASE_MESSAGING_SENDER_ID: '2',
-  FIREBASE_VAPID_KEY: 'vapid',
-};
+/** Turns sign-in on, with a test-only signing key. */
+export const AUTH_ENV = { SESSION_SECRET: 'test-session-secret-that-is-long-enough' };
 
-/** Accepts tokens of the form `token-<uid>`. */
-export const fakeVerifier = (token: string) =>
-  token.startsWith('token-')
-    ? Promise.resolve({ uid: token.slice(6) })
-    : Promise.reject(new Error('invalid token'));
+/** A browser push subscription on Chrome's push service. */
+export const subscription = (name: string): PushSubscriptionJson => ({
+  endpoint: `https://fcm.googleapis.com/fcm/send/${name}`,
+  keys: { p256dh: `p256dh-${name}`, auth: `auth-${name}` },
+});
 
-/** The app over fixture air, an in-memory store and no model, with any part replaced. */
+/** The app over fixture air, in-memory stores and no model, with any part replaced. */
 export function testApp(
   overrides: Partial<AppDependencies> = {},
   env: Record<string, string> = {},
 ) {
   const deps = testDeps();
+  const config = loadConfig({ AIR_DATA_MODE: 'fixture', ...env });
   const dependencies: AppDependencies = {
-    config: loadConfig({ AIR_DATA_MODE: 'fixture', ...env }),
+    config,
     llm: null,
     air: deps.air,
     store: deps.store,
+    accounts:
+      config.authMode === 'none'
+        ? null
+        : createAccountStore(createMemoryCollection(), createMemoryCollection(), deps.now),
     messenger: createLogMessenger(),
-    verifyIdToken: null,
     verifyScheduler: null,
     now: deps.now,
     ...overrides,
   };
   return { app: createApp(dependencies), deps: dependencies };
+}
+
+/** Signs up and returns the Cookie header that carries the new session. */
+export async function signUp(
+  app: Express,
+  email: string,
+  password = 'correct horse battery',
+): Promise<string> {
+  const response = await request(app).post('/api/auth/register').send({ email, password });
+  const [cookie = ''] = (response.headers['set-cookie'] as unknown as string[] | undefined) ?? [];
+  return cookie.split(';')[0] ?? '';
 }

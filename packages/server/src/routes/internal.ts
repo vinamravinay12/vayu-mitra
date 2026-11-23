@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { checkAlerts, type AlertJobDependencies } from '../alerts/check-alerts.js';
 import { bearerToken } from '../auth/require-user.js';
-import type { SchedulerVerifier } from '../auth/verifiers.js';
+import type { SchedulerVerifier } from '../auth/require-user.js';
 
 /**
  * POST /api/internal/check-alerts — the background alert run. Only Cloud

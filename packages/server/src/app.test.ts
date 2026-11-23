@@ -6,8 +6,8 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { UpstreamError } from './air/fetch-json.js';
 import { createApp, describeBodyError } from './app.js';
-import { API_CSP, appCsp } from './security/security-headers.js';
-import { fakeVerifier, FIREBASE_ENV, testApp } from './test-utils/app.js';
+import { API_CSP, APP_CSP } from './security/security-headers.js';
+import { AUTH_ENV, signUp, subscription, testApp } from './test-utils/app.js';
 import { DELHI } from './test-utils/deps.js';
 
 const failingAir = (error: Error) => ({
@@ -34,20 +34,24 @@ describe('public routes', () => {
       airData: 'fixture',
       stations: { cpcb: false, waqi: false },
       auth: 'none',
+      store: 'memory',
+      push: false,
       alerts: false,
     });
-    expect((await request(app).get('/api/config')).body).toEqual({
-      auth: 'none',
-      firebase: null,
-      vapidKey: null,
+    expect((await request(app).get('/api/config')).body).toEqual({ auth: 'none', vapidKey: null });
+    expect((await request(app).get('/api/auth/session')).body).toEqual({
+      signedIn: true,
+      email: null,
     });
-    const firebase = testApp({ verifyIdToken: fakeVerifier }, FIREBASE_ENV).app;
-    const config = await request(firebase).get('/api/config');
-    expect(config.body).toMatchObject({
-      auth: 'firebase',
-      firebase: { projectId: 'vayu-test' },
-      vapidKey: 'vapid',
-    });
+    expect((await request(app).post('/api/auth/login').send({})).status).toBe(404);
+    const env = {
+      ...AUTH_ENV,
+      VAPID_PUBLIC_KEY: 'pub',
+      VAPID_PRIVATE_KEY: 'priv',
+      VAPID_SUBJECT: 'mailto:a@b.test',
+    };
+    const configured = await request(testApp({}, env).app).get('/api/config');
+    expect(configured.body).toEqual({ auth: 'password', vapidKey: 'pub' });
     expect(health.headers['content-security-policy']).toBe(API_CSP);
   });
 
@@ -94,13 +98,34 @@ describe('the family record', () => {
 
   it('registers devices once each, keeps the newest five, and removes them', async () => {
     const { app, deps } = testApp();
-    for (const id of ['a', 'b', 'a', 'c', 'd', 'e', 'f']) {
-      await request(app).post('/api/me/push-id').send({ id });
+    for (const name of ['a', 'b', 'a', 'c', 'd', 'e', 'f']) {
+      await request(app).post('/api/me/push-subscription').send(subscription(name));
     }
-    expect((await deps.store.get('local-household'))?.pushIds).toEqual(['a', 'c', 'd', 'e', 'f']);
-    const removed = await request(app).delete('/api/me/push-id').send({ id: 'f' });
+    const endpoints = async () =>
+      ((await deps.store.get('local-household'))?.pushSubscriptions ?? []).map((s) =>
+        s.endpoint.slice(-1),
+      );
+    expect(await endpoints()).toEqual(['a', 'c', 'd', 'e', 'f']);
+    const removed = await request(app)
+      .delete('/api/me/push-subscription')
+      .send({ endpoint: subscription('f').endpoint });
     expect(removed.body.pushEnabled).toBe(true);
-    expect((await deps.store.get('local-household'))?.pushIds).not.toContain('f');
+    expect(await endpoints()).not.toContain('f');
+  });
+
+  it('refuses push endpoints outside the known push services', async () => {
+    const { app } = testApp();
+    for (const endpoint of [
+      'http://fcm.googleapis.com/x',
+      'https://169.254.169.254/latest',
+      'https://evil.test/fcm.googleapis.com',
+      'not a url',
+    ]) {
+      const response = await request(app)
+        .post('/api/me/push-subscription')
+        .send({ ...subscription('a'), endpoint });
+      expect(response.status).toBe(400);
+    }
   });
 
   it('deletes everything', async () => {
@@ -111,48 +136,111 @@ describe('the family record', () => {
   });
 });
 
-describe('sign-in', () => {
-  const { app } = testApp({ verifyIdToken: fakeVerifier }, FIREBASE_ENV);
+describe('accounts', () => {
+  it('signs up, signs in and out, with an HttpOnly Secure SameSite cookie', async () => {
+    const { app } = testApp({}, AUTH_ENV);
+    const registered = await request(app)
+      .post('/api/auth/register')
+      .send({ email: ' Asha@Example.test ', password: 'correct horse battery' });
+    expect(registered.status).toBe(201);
+    expect(registered.body).toEqual({ email: 'asha@example.test' });
+    const [cookie = ''] = registered.headers['set-cookie'] as unknown as string[];
+    expect(cookie).toMatch(
+      /^__Host-vayu_session=[\w-]+\.[\w-]+; Path=\/; HttpOnly; Secure; SameSite=Strict; Max-Age=2592000$/,
+    );
+    const session = cookie.split(';')[0] ?? '';
+    expect((await request(app).get('/api/auth/session').set('cookie', session)).body).toEqual({
+      signedIn: true,
+      email: 'asha@example.test',
+    });
+    const login = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'asha@example.test', password: 'correct horse battery' });
+    expect(login.status).toBe(200);
+    const logout = await request(app).post('/api/auth/logout');
+    expect(logout.status).toBe(204);
+    expect((logout.headers['set-cookie'] as unknown as string[])[0]).toContain('Max-Age=0');
+  });
 
-  it('requires a valid token on personal routes only', async () => {
-    expect((await request(app).get('/api/me')).status).toBe(401);
-    expect((await request(app).get('/api/me').set('authorization', 'Bearer nope')).status).toBe(
-      401,
-    );
-    expect((await request(app).get('/api/me').set('authorization', 'Basic token-u1')).status).toBe(
-      401,
-    );
+  it('refuses a taken email, bad input, and wrong credentials alike', async () => {
+    const { app } = testApp({}, AUTH_ENV);
+    await signUp(app, 'asha@example.test');
+    const again = await request(app)
+      .post('/api/auth/register')
+      .send({ email: 'ASHA@example.test', password: 'another long one' });
+    expect(again.status).toBe(409);
     expect(
-      (
-        await request(app)
-          .get('/api/me')
-          .set('authorization', `Bearer token-${'x'.repeat(5000)}`)
-      ).status,
+      (await request(app).post('/api/auth/register').send({ email: 'asha', password: 'short' }))
+        .status,
+    ).toBe(400);
+    const wrongPassword = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'asha@example.test', password: 'wrong password!' });
+    const unknownEmail = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'nobody@example.test', password: 'wrong password!' });
+    const malformed = await request(app).post('/api/auth/login').send({ email: 'x' });
+    for (const response of [wrongPassword, unknownEmail, malformed]) {
+      expect(response.status).toBe(401);
+      expect(response.body.error).toBe('That email and password do not match an account.');
+    }
+  });
+
+  it('requires a session on personal routes only', async () => {
+    const { app } = testApp({}, AUTH_ENV);
+    expect((await request(app).get('/api/me')).status).toBe(401);
+    expect(
+      (await request(app).get('/api/me').set('cookie', '__Host-vayu_session=forged.token')).status,
     ).toBe(401);
+    expect((await request(app).get('/api/me').set('cookie', 'other=1')).status).toBe(401);
     expect((await request(app).post('/api/chat').send({})).status).toBe(401);
+    expect((await request(app).get('/api/auth/session')).body).toEqual({
+      signedIn: false,
+      email: null,
+    });
     expect((await request(app).get('/api/health')).status).toBe(200);
   });
 
   it('keeps each family’s record to itself', async () => {
-    await request(app).put('/api/me/place').set('authorization', 'Bearer token-asha').send(DELHI);
-    const asha = await request(app).get('/api/me').set('authorization', 'Bearer token-asha');
-    const ravi = await request(app).get('/api/me').set('authorization', 'Bearer token-ravi');
-    expect(asha.body.place).toEqual(DELHI);
-    expect(ravi.body.place).toBeNull();
+    const { app } = testApp({}, AUTH_ENV);
+    const asha = await signUp(app, 'asha@example.test');
+    const ravi = await signUp(app, 'ravi@example.test');
+    await request(app).put('/api/me/place').set('cookie', asha).send(DELHI);
+    expect((await request(app).get('/api/me').set('cookie', asha)).body.place).toEqual(DELHI);
+    expect((await request(app).get('/api/me').set('cookie', ravi)).body.place).toBeNull();
   });
 
-  it('opens the CSP and opener policy only for Google sign-in', async () => {
-    const page = await request(app).get('/');
-    expect(page.headers['content-security-policy']).toBe(appCsp('vayu-test.firebaseapp.com'));
-    expect(page.headers['content-security-policy']).toContain(
-      'frame-src https://vayu-test.firebaseapp.com',
-    );
-    expect(page.headers['cross-origin-opener-policy']).toBe('same-origin-allow-popups');
-    const plain = await request(testApp().app).get('/');
-    expect(plain.headers['content-security-policy']).toBe(appCsp(null));
-    expect(plain.headers['content-security-policy']).toContain("frame-src 'none'");
-    expect(plain.headers['cross-origin-opener-policy']).toBe('same-origin');
-    expect(plain.headers['permissions-policy']).toContain('geolocation=(self)');
+  it('deletes the account with the data, which ends its sessions and frees the email', async () => {
+    const { app, deps } = testApp({}, AUTH_ENV);
+    const asha = await signUp(app, 'asha@example.test');
+    await request(app).put('/api/me/place').set('cookie', asha).send(DELHI);
+    const deleted = await request(app).delete('/api/me').set('cookie', asha);
+    expect(deleted.status).toBe(204);
+    expect((deleted.headers['set-cookie'] as unknown as string[])[0]).toContain('Max-Age=0');
+    expect((await request(app).get('/api/me').set('cookie', asha)).status).toBe(401);
+    expect(
+      (
+        await request(app)
+          .post('/api/auth/login')
+          .send({ email: 'asha@example.test', password: 'correct horse battery' })
+      ).status,
+    ).toBe(401);
+    expect(
+      (
+        await request(app)
+          .post('/api/auth/register')
+          .send({ email: 'asha@example.test', password: 'a new password' })
+      ).status,
+    ).toBe(201);
+    expect(deps.accounts).not.toBeNull();
+  });
+
+  it('sends one fixed, strict CSP and opener policy', async () => {
+    const page = await request(testApp().app).get('/');
+    expect(page.headers['content-security-policy']).toBe(APP_CSP);
+    expect(page.headers['content-security-policy']).toContain("frame-src 'none'");
+    expect(page.headers['cross-origin-opener-policy']).toBe('same-origin');
+    expect(page.headers['permissions-policy']).toContain('geolocation=(self)');
   });
 });
 
@@ -248,7 +336,7 @@ describe('errors and static files', () => {
     const preflight = await request(app).options('/api/chat');
     expect(preflight.status).toBe(204);
     expect(preflight.headers['access-control-allow-origin']).toBe('https://example.test');
-    expect(preflight.headers['access-control-allow-headers']).toBe('Content-Type, Authorization');
+    expect(preflight.headers['access-control-allow-headers']).toBe('Content-Type');
   });
 
   it('classifies framework errors', () => {
