@@ -97,7 +97,7 @@ export function ChatPanel({ chat, suggestions, today }: ChatPanelProps): React.J
           <button
             key={question}
             type="button"
-            className="btn-secondary min-h-9 py-1 text-sm"
+            className="btn-secondary py-1 text-sm"
             disabled={chat.pending}
             onClick={() => {
               chat.send(question);

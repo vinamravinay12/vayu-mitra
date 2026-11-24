@@ -36,6 +36,7 @@ describe('loadConfig', () => {
       scheduler: null,
       aiRequestsPerMinute: 10,
       authRequestsPerMinute: 10,
+      dataRequestsPerMinute: 60,
     });
   });
 
@@ -85,6 +86,11 @@ describe('loadConfig', () => {
   it('reads the sign-in rate limit', () => {
     expect(loadConfig({ AUTH_REQUESTS_PER_MINUTE: '30' }).authRequestsPerMinute).toBe(30);
     expect(loadConfig({ AUTH_REQUESTS_PER_MINUTE: '0' }).authRequestsPerMinute).toBe(1);
+  });
+
+  it('reads the data-route rate limit', () => {
+    expect(loadConfig({ DATA_REQUESTS_PER_MINUTE: '600' }).dataRequestsPerMinute).toBe(600);
+    expect(loadConfig({ DATA_REQUESTS_PER_MINUTE: '0' }).dataRequestsPerMinute).toBe(1);
   });
 
   it('reads the AI rate limit, never below one request a minute', () => {

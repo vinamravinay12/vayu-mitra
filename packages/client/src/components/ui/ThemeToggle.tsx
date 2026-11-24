@@ -21,13 +21,13 @@ const OPTIONS: readonly (readonly [ThemePreference, string])[] = [
  */
 export function ThemeToggle({ preference, onChange }: ThemeToggleProps): React.JSX.Element {
   return (
-    <fieldset className="rounded-full border border-line bg-card p-0.5">
+    <fieldset className="min-w-0 rounded-3xl border border-line bg-card p-0.5">
       <legend className="sr-only">Colour theme</legend>
-      <div className="flex">
+      <div className="flex flex-wrap">
         {OPTIONS.map(([value, label]) => (
           <label
             key={value}
-            className={`cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand ${
+            className={`inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-full px-3 text-sm font-medium transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand ${
               preference === value ? 'bg-brand text-on-brand' : 'text-muted hover:text-ink'
             }`}
           >

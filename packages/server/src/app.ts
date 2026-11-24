@@ -15,12 +15,7 @@ import { configRouter } from './routes/config.js';
 import { healthRouter } from './routes/health.js';
 import { internalRouter } from './routes/internal.js';
 import { meRouter } from './routes/me.js';
-import {
-  AI_RATE_LIMIT,
-  DATA_RATE_LIMIT,
-  rateLimit,
-  type RateLimitOptions,
-} from './security/rate-limit.js';
+import { AI_RATE_LIMIT, rateLimit, type RateLimitOptions } from './security/rate-limit.js';
 import { admission } from './security/admission.js';
 import { securityHeaders } from './security/security-headers.js';
 import { serveClient } from './static/serve-client.js';
@@ -107,7 +102,10 @@ function rateLimits(app: Express, deps: AppDependencies): void {
     ['/api/auth/login', '/api/auth/register'],
     rateLimit(rateLimitOptions ?? { ...AI_RATE_LIMIT, max: config.authRequestsPerMinute }),
   );
-  app.use(['/api/places', '/api/air', '/api/me'], rateLimit(rateLimitOptions ?? DATA_RATE_LIMIT));
+  app.use(
+    ['/api/places', '/api/air', '/api/me'],
+    rateLimit(rateLimitOptions ?? { ...AI_RATE_LIMIT, max: config.dataRequestsPerMinute }),
+  );
 }
 
 /**

@@ -62,5 +62,6 @@ or with fixture air.
 | `TRUST_PROXY_HOPS`                                       | `1`                                    | Proxies in front of the app (Cloud Run has one)                                                     |
 | `AI_REQUESTS_PER_MINUTE`                                 | `10`                                   | Chat requests per client address per minute                                                         |
 | `AUTH_REQUESTS_PER_MINUTE`                               | `10`                                   | Sign-in and sign-up attempts per client address per minute                                          |
+| `DATA_REQUESTS_PER_MINUTE`                               | `60`                                   | Place, air and household requests per client address per minute                                     |
 | `AIR_DATA_MODE`                                          | `live`                                 | `fixture` for demos and CI; refused in production                                                   |
 | `PORT`                                                   | `8080`                                 | Set by Cloud Run                                                                                    |

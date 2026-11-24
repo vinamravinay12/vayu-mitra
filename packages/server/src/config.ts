@@ -47,6 +47,7 @@ export interface ServerConfig {
   readonly aiRequestsPerMinute: number;
   /** Sign-up and sign-in attempts one client may make per minute: the brake on password guessing. */
   readonly authRequestsPerMinute: number;
+  readonly dataRequestsPerMinute: number;
 }
 
 /** AI requests per client per minute unless configured: enough for a family, not for a script. */
@@ -54,6 +55,9 @@ const DEFAULT_AI_REQUESTS_PER_MINUTE = 10;
 
 /** Sign-in attempts per client per minute unless configured. */
 const DEFAULT_AUTH_REQUESTS_PER_MINUTE = 10;
+
+/** Requests to the cached, cheap data routes per client per minute unless configured. */
+const DEFAULT_DATA_REQUESTS_PER_MINUTE = 60;
 
 /**
  * Gemini 3.8 Flash first, then 3.6 Flash, then 3.5 Flash-Lite. The Flash
@@ -132,6 +136,10 @@ export function loadConfig(env: Env): ServerConfig {
     authRequestsPerMinute: Math.max(
       1,
       parseInteger(env.AUTH_REQUESTS_PER_MINUTE, DEFAULT_AUTH_REQUESTS_PER_MINUTE, 1000),
+    ),
+    dataRequestsPerMinute: Math.max(
+      1,
+      parseInteger(env.DATA_REQUESTS_PER_MINUTE, DEFAULT_DATA_REQUESTS_PER_MINUTE, 5000),
     ),
   };
 }
