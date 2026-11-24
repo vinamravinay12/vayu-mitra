@@ -66,6 +66,8 @@
   }
   body {
     @apply bg-surface text-ink font-sans antialiased;
+    /* Long words and numbers break rather than push a narrow screen sideways (1.4.10). */
+    overflow-wrap: anywhere;
   }
   :focus-visible {
     outline: 3px solid var(--color-accent);
@@ -122,7 +124,7 @@
     @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-edge bg-card px-4 py-2 font-medium text-ink transition-colors hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-60;
   }
   .field {
-    @apply min-h-11 w-full rounded-lg border border-edge bg-card px-3 py-2.5 text-ink placeholder:text-muted;
+    @apply min-h-11 w-full min-w-0 rounded-lg border border-edge bg-card px-3 py-2.5 text-ink placeholder:text-muted;
   }
   .label {
     @apply mb-1.5 block text-sm font-semibold text-ink;
