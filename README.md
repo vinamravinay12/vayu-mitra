@@ -11,9 +11,9 @@ deployed with one script: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md))
 
 ---
 
-## 🎯 The problem
+## 🎯 Chosen vertical
 
-A GenAI assistant that helps families get through severe winter smog: **low-emission daily
+**Air quality: a clean-air coach for families in winter smog.** A GenAI assistant that helps families get through severe winter smog: **low-emission daily
 routines**, **indoor air habits** and **safer alternatives**, tailored to **where they live and how
 they live**, with the **direct impact of each choice** explained.
 
@@ -21,7 +21,12 @@ they live**, with the **direct impact of each choice** explained.
 _this_ hour, is OK for _this_ person, and what to do instead. Forms that ask twenty questions up
 front are abandoned. And an assistant that invents numbers cannot be trusted with someone’s lungs.
 
-## 💬 What it does
+## 🧠 Approach and logic
+
+One rule shapes the design: **the engine decides, the AI explains.** Gemini reads what the
+family says and words the answer; every verdict, hour and number comes from a pure, tested engine
+that reads official air data. The family never fills in a form: what they mention becomes memory
+they can see and correct, and every later answer is for those people and routines.
 
 Each part of the brief, matched to its code and the test that proves it:
 [PROBLEM_ALIGNMENT.md](PROBLEM_ALIGNMENT.md).
@@ -45,7 +50,7 @@ Each part of the brief, matched to its code and the test that proves it:
   place and alert settings. The conversation itself is never stored. One button deletes
   everything, account included.
 
-## 🧭 How a message flows
+## ⚙️ How the solution works
 
 ```
  "Dadi has asthma and walks at 6:30 every morning. Is it OK today?"
@@ -72,6 +77,25 @@ Each part of the brief, matched to its code and the test that proves it:
 
 Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · AI design: [docs/AI.md](docs/AI.md) ·
 decisions: [docs/decisions.md](docs/decisions.md) · assumptions: [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md)
+
+### 📁 Directory organization
+
+```
+packages/core/src/      the engine: pure functions, no I/O, imported by server and browser
+  catalog/              vocabularies as data: activities, conditions, NAQI bands
+  aqi/  stations/       NAQI from pollutants; nearest station; forecast anchored to it
+  memory/  chat/        what the family told us; reading a question; the engine's sentences
+  advice/  alerts/      go / later / care / skip with precautions; when to alert
+packages/server/src/    the API and its trust boundary
+  routes/  security/    HTTP edge: routes, admission, headers, rate limits
+  chat/  guard/         one chat turn; injection screening (patterns, then a model judge)
+  air/  alerts/         station and forecast adapters behind one service; the alert run
+  auth/  store/         accounts, sessions, families' records
+  llm/  gcp/            one adapter per vendor SDK (Gemini; Firestore, Web Push, OIDC)
+packages/client/src/    React: screens in components/, state in hooks, calls in api/
+tests/quality/          repository rules as tests: hygiene, layering, contrast, conventions
+e2e/                    Playwright journeys against the production build
+```
 
 ## 🚀 Run it
 
@@ -131,6 +155,18 @@ schema, and hidden Unicode is stripped before the model reads it. Strict CSP wit
 script, no third-party hosts and Trusted Types; every CI Action is pinned to a commit. Every model answer is
 schema-constrained and re-validated; user text is fenced. Threats, controls and
 the tests that prove each one: [SECURITY.md](SECURITY.md).
+
+## 📌 Assumptions made
+
+- India's National AQI (CPCB, 2014) is the scale; WAQI's US EPA values are converted to it.
+- A station describes a family's air within 25 km and 3 hours; beyond that the answer says it is
+  forecast-based. The CAMS forecast is scaled to the station now and fades back over a day.
+- Light or moderate activity is fine up to Moderate, vigorous up to Satisfactory; one category
+  lower for children, older adults, pregnancy and anyone with a listed condition.
+- Outdoor windows are offered only between 06:00 and 20:00; families do not plan walks at night.
+- A closed car on recirculate is fine up to Poor for a healthy adult.
+
+Every assumption, with its source: [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md).
 
 ## ⚠️ Limits
 

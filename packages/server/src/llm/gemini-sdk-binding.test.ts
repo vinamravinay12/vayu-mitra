@@ -1,5 +1,5 @@
 /** Tests of createGeminiClientFromKey. */
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 
 const generateContent = vi.fn(() => Promise.resolve({ text: '{"bound":true}' }));
 
@@ -13,23 +13,21 @@ vi.mock(import('@google/genai'), async (importOriginal) => ({
 
 const { createGeminiClientFromKey } = await import('./gemini-client.js');
 
-describe('createGeminiClientFromKey', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
-  it('routes calls through the SDK’s generateContent', async () => {
-    vi.spyOn(console, 'log').mockImplementation(() => undefined);
-    const client = createGeminiClientFromKey('test-key', ['model-a']);
-    await expect(
-      client.generate({
-        purpose: 'guard',
-        systemInstruction: 's',
-        prompt: 'p',
-        schema: {},
-        temperature: 0,
-      }),
-    ).resolves.toBe('{"bound":true}');
-    expect(generateContent).toHaveBeenCalledOnce();
-  });
+it('createGeminiClientFromKey: routes calls through the SDK’s generateContent', async () => {
+  vi.spyOn(console, 'log').mockImplementation(() => undefined);
+  const client = createGeminiClientFromKey('test-key', ['model-a']);
+  await expect(
+    client.generate({
+      purpose: 'guard',
+      systemInstruction: 's',
+      prompt: 'p',
+      schema: {},
+      temperature: 0,
+    }),
+  ).resolves.toBe('{"bound":true}');
+  expect(generateContent).toHaveBeenCalledOnce();
 });

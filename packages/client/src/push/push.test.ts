@@ -1,5 +1,5 @@
 /** Tests of keyBytes, enablePush and disablePush. */
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import { disablePush, enablePush, keyBytes } from './push.js';
 import { SERVICE_WORKER_URL } from './worker-script.js';
 
@@ -35,51 +35,45 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('keyBytes', () => {
-  it('decodes base64url without padding', () => {
-    expect([...keyBytes('AQID')]).toEqual([1, 2, 3]);
-    expect([...keyBytes('-_8')]).toEqual([251, 255]);
-  });
+it('keyBytes: decodes base64url without padding', () => {
+  expect([...keyBytes('AQID')]).toEqual([1, 2, 3]);
+  expect([...keyBytes('-_8')]).toEqual([251, 255]);
 });
 
-describe('enablePush', () => {
-  it('asks permission, registers the worker, subscribes with the VAPID key and saves it', async () => {
-    const { register, pushManager } = browser('granted');
-    const save = vi.fn(() => Promise.resolve());
-    expect(await enablePush('AQID', save)).toBe('enabled');
-    expect(register).toHaveBeenCalledWith(SERVICE_WORKER_URL);
-    expect(pushManager.subscribe).toHaveBeenCalledWith({
-      userVisibleOnly: true,
-      applicationServerKey: keyBytes('AQID'),
-    });
-    expect(save).toHaveBeenCalledWith(JSON_SUBSCRIPTION);
+it('enablePush: asks permission, registers the worker, subscribes with the VAPID key and saves it', async () => {
+  const { register, pushManager } = browser('granted');
+  const save = vi.fn(() => Promise.resolve());
+  expect(await enablePush('AQID', save)).toBe('enabled');
+  expect(register).toHaveBeenCalledWith(SERVICE_WORKER_URL);
+  expect(pushManager.subscribe).toHaveBeenCalledWith({
+    userVisibleOnly: true,
+    applicationServerKey: keyBytes('AQID'),
   });
-
-  it('reports a refusal, a browser without push, or an incomplete subscription', async () => {
-    const save = vi.fn(() => Promise.resolve());
-    browser('denied');
-    expect(await enablePush('AQID', save)).toBe('denied');
-    browser('granted', { endpoint: 'https://fcm.googleapis.com/x', keys: {} });
-    expect(await enablePush('AQID', save)).toBe('unsupported');
-    browser('granted', {});
-    expect(await enablePush('AQID', save)).toBe('unsupported');
-    vi.stubGlobal('navigator', {});
-    expect(await enablePush('AQID', save)).toBe('unsupported');
-    expect(save).not.toHaveBeenCalled();
-  });
+  expect(save).toHaveBeenCalledWith(JSON_SUBSCRIPTION);
 });
 
-describe('disablePush', () => {
-  it('unsubscribes and tells the server, or does nothing without a subscription', async () => {
-    const { unsubscribe, pushManager, getRegistration } = browser('granted');
-    const forget = vi.fn(() => Promise.resolve());
-    await disablePush(forget);
-    expect(unsubscribe).toHaveBeenCalled();
-    expect(forget).toHaveBeenCalledWith(JSON_SUBSCRIPTION.endpoint);
-    pushManager.getSubscription.mockResolvedValueOnce(null as never);
-    await disablePush(forget);
-    getRegistration.mockResolvedValueOnce(undefined as never);
-    await disablePush(forget);
-    expect(forget).toHaveBeenCalledTimes(1);
-  });
+it('enablePush: reports a refusal, a browser without push, or an incomplete subscription', async () => {
+  const save = vi.fn(() => Promise.resolve());
+  browser('denied');
+  expect(await enablePush('AQID', save)).toBe('denied');
+  browser('granted', { endpoint: 'https://fcm.googleapis.com/x', keys: {} });
+  expect(await enablePush('AQID', save)).toBe('unsupported');
+  browser('granted', {});
+  expect(await enablePush('AQID', save)).toBe('unsupported');
+  vi.stubGlobal('navigator', {});
+  expect(await enablePush('AQID', save)).toBe('unsupported');
+  expect(save).not.toHaveBeenCalled();
+});
+
+it('disablePush: unsubscribes and tells the server, or does nothing without a subscription', async () => {
+  const { unsubscribe, pushManager, getRegistration } = browser('granted');
+  const forget = vi.fn(() => Promise.resolve());
+  await disablePush(forget);
+  expect(unsubscribe).toHaveBeenCalled();
+  expect(forget).toHaveBeenCalledWith(JSON_SUBSCRIPTION.endpoint);
+  pushManager.getSubscription.mockResolvedValueOnce(null as never);
+  await disablePush(forget);
+  getRegistration.mockResolvedValueOnce(undefined as never);
+  await disablePush(forget);
+  expect(forget).toHaveBeenCalledTimes(1);
 });

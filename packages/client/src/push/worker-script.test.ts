@@ -1,5 +1,5 @@
 /** Tests of workerScript. */
-import { describe, expect, it, vi } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { SERVICE_WORKER_URL, WORKER_POLICY, workerScript } from './worker-script.js';
 
 /** A Trusted Types factory that records the rules it was given and wraps URLs in a marker. */
@@ -16,25 +16,23 @@ function fakeFactory() {
   return { factory: { createPolicy }, createPolicy, rules };
 }
 
-describe('workerScript', () => {
-  it('is the plain URL where the browser has no Trusted Types', () => {
-    expect(workerScript(undefined)).toBe(SERVICE_WORKER_URL);
-    expect(workerScript()).toBe(SERVICE_WORKER_URL);
-  });
+it('workerScript: is the plain URL where the browser has no Trusted Types', () => {
+  expect(workerScript(undefined)).toBe(SERVICE_WORKER_URL);
+  expect(workerScript()).toBe(SERVICE_WORKER_URL);
+});
 
-  it('vouches for the worker through one named policy, created once', () => {
-    const { factory, createPolicy } = fakeFactory();
-    expect(String(workerScript(factory))).toBe(SERVICE_WORKER_URL);
-    expect(String(workerScript(factory))).toBe(SERVICE_WORKER_URL);
-    expect(createPolicy).toHaveBeenCalledTimes(1);
-    expect(createPolicy).toHaveBeenCalledWith(WORKER_POLICY, expect.any(Object));
-  });
+it('workerScript: vouches for the worker through one named policy, created once', () => {
+  const { factory, createPolicy } = fakeFactory();
+  expect(String(workerScript(factory))).toBe(SERVICE_WORKER_URL);
+  expect(String(workerScript(factory))).toBe(SERVICE_WORKER_URL);
+  expect(createPolicy).toHaveBeenCalledTimes(1);
+  expect(createPolicy).toHaveBeenCalledWith(WORKER_POLICY, expect.any(Object));
+});
 
-  it('refuses any other script URL', () => {
-    const { factory, rules } = fakeFactory();
-    workerScript(factory);
-    expect(() => rules.createScriptURL?.('https://evil.example.test/x.js')).toThrow(
-      'Refusing script URL',
-    );
-  });
+it('workerScript: refuses any other script URL', () => {
+  const { factory, rules } = fakeFactory();
+  workerScript(factory);
+  expect(() => rules.createScriptURL?.('https://evil.example.test/x.js')).toThrow(
+    'Refusing script URL',
+  );
 });

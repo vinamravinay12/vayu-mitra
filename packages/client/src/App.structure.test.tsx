@@ -1,7 +1,7 @@
 /** Tests of page structure. */
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { expect, it } from 'vitest';
 import { App } from './App.js';
 import { installFakeServer } from './test-utils/fake-server.js';
 import { DADI_MEMORY, DELHI, emptyHousehold, PASSWORD_CONFIG } from './test-utils/fixtures.js';
@@ -40,33 +40,31 @@ function expectSoundStructure(root: HTMLElement): void {
   expect(tabStops.filter((value) => value > 0)).toEqual([]);
 }
 
-describe('page structure', () => {
-  it('is sound on the sign-in screen', async () => {
-    installFakeServer({ config: PASSWORD_CONFIG });
-    const { container } = render(<App />);
-    await screen.findByRole('button', { name: 'Sign in' });
-    expectSoundStructure(container);
-  });
+it('page structure: is sound on the sign-in screen', async () => {
+  installFakeServer({ config: PASSWORD_CONFIG });
+  const { container } = render(<App />);
+  await screen.findByRole('button', { name: 'Sign in' });
+  expectSoundStructure(container);
+});
 
-  it('is sound when choosing a place', async () => {
-    installFakeServer();
-    const { container } = render(<App />);
-    await screen.findByRole('heading', { name: 'Where are you?' });
-    expectSoundStructure(container);
-  });
+it('page structure: is sound when choosing a place', async () => {
+  installFakeServer();
+  const { container } = render(<App />);
+  await screen.findByRole('heading', { name: 'Where are you?' });
+  expectSoundStructure(container);
+});
 
-  it('is sound with memory, advice and an open chip editor', async () => {
-    installFakeServer({ household: emptyHousehold({ place: DELHI, memory: DADI_MEMORY }) });
-    const user = userEvent.setup();
-    const { container } = render(<App />);
-    await user.click(await screen.findByRole('button', { name: /Is Dadi.s walk/ }));
-    await screen.findByRole('region', { name: /^Walk: / });
-    await user.click(screen.getByRole('button', { name: /^Edit Dadi/ }));
-    expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute(
-      'href',
-      '#main',
-    );
-    expect(screen.getByRole('main')).toHaveAttribute('tabindex', '-1');
-    expectSoundStructure(container);
-  });
+it('page structure: is sound with memory, advice and an open chip editor', async () => {
+  installFakeServer({ household: emptyHousehold({ place: DELHI, memory: DADI_MEMORY }) });
+  const user = userEvent.setup();
+  const { container } = render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Is Dadi.s walk/ }));
+  await screen.findByRole('region', { name: /^Walk: / });
+  await user.click(screen.getByRole('button', { name: /^Edit Dadi/ }));
+  expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute(
+    'href',
+    '#main',
+  );
+  expect(screen.getByRole('main')).toHaveAttribute('tabindex', '-1');
+  expectSoundStructure(container);
 });

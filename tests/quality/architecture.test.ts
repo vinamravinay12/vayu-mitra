@@ -6,7 +6,7 @@
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join, relative, resolve } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { expect, it } from 'vitest';
 
 const REPO_ROOT = join(import.meta.dirname, '..', '..');
 
@@ -77,56 +77,57 @@ const HTTP_EDGE = /\/server\/src\/(app\.ts|routes\/|security\/|static\/|auth\/re
 /** The composition root and the one adapter per vendor SDK. */
 const SDK_ADAPTERS = /\/server\/src\/(index\.ts|gcp\/bindings\.ts|llm\/gemini-client\.ts)$/;
 
-describe('architecture', () => {
-  it('finds the source it judges', () => {
-    expect([CORE.length, SERVER.length, CLIENT.length].every((count) => count > 10)).toBe(true);
-  });
-  it('keeps the engine pure: Zod only, no Node, no I/O, no clock, no randomness', () => {
-    expect(importing(CORE, /^(?!zod$|\.)/)).toEqual([]);
-    const impure = /\bfetch\(|\bprocess\.|Date\.now\(|new Date\(\)|Math\.random\(|console\./;
-    const offenders = CORE.filter((file) => impure.test(readFileSync(file, 'utf8')));
-    expect(offenders.map((file) => relative(REPO_ROOT, file))).toEqual([]);
-  });
-  it('lets the browser and the server meet only through the engine', () => {
-    expect(importing(CLIENT, /server|^node:|^express|^@google/)).toEqual([]);
-    expect(importing(CLIENT, /^(?!\.|react$|react-dom\/client$|zod$|@vayu\/core$)/)).toEqual([]);
-    expect(importing(SERVER, /packages\/client|@vayu\/client|^react/)).toEqual([]);
-    expect(importing([...CLIENT, ...SERVER], /^@vayu\/core\/|packages\/core/)).toEqual([]);
-  });
-  it('keeps each vendor SDK behind one adapter', () => {
-    const outside = SERVER.filter((file) => !SDK_ADAPTERS.test(file));
-    expect(
-      importing(outside, /^(@google-cloud\/|@google\/genai|google-auth-library|web-push)/),
-    ).toEqual([]);
-  });
-  it('keeps HTTP at the edge: the domain never sees Express, and only the app mounts routes', () => {
-    const domain = SERVER.filter((file) => !HTTP_EDGE.test(file));
-    expect(importing(domain, /^express$|^compression$/)).toEqual([]);
-    const mounting = SERVER.filter((file) => !file.endsWith('/server/src/app.ts'));
-    expect(importing(mounting, /\/routes\//)).toEqual([]);
-  });
+it('architecture: finds the source it judges', () => {
+  expect([CORE.length, SERVER.length, CLIENT.length].every((count) => count > 10)).toBe(true);
 });
 
-describe('architecture', () => {
-  it('has no import cycles in any package', () => {
-    for (const files of [CORE, SERVER, CLIENT]) {
-      expect(findCycle(files)).toBeNull();
-    }
-  });
-  it('would notice a cycle', () => {
-    const folder = mkdtempSync(join(tmpdir(), 'cycle-'));
-    writeFileSync(join(folder, 'a.ts'), "import { b } from './b.js';\nexport const a = b;\n");
-    writeFileSync(join(folder, 'b.ts'), "import { a } from './a.js';\nexport const b = a;\n");
-    writeFileSync(join(folder, 'c.ts'), "import { z } from 'zod';\nexport const c = z;\n");
-    try {
-      expect(findCycle([join(folder, 'c.ts')])).toBeNull();
-      expect(findCycle([join(folder, 'a.ts')])?.map((path) => basename(path))).toEqual([
-        'a.ts',
-        'b.ts',
-        'a.ts',
-      ]);
-    } finally {
-      rmSync(folder, { recursive: true });
-    }
-  });
+it('architecture: keeps the engine pure: Zod only, no Node, no I/O, no clock, no randomness', () => {
+  expect(importing(CORE, /^(?!zod$|\.)/)).toEqual([]);
+  const impure = /\bfetch\(|\bprocess\.|Date\.now\(|new Date\(\)|Math\.random\(|console\./;
+  const offenders = CORE.filter((file) => impure.test(readFileSync(file, 'utf8')));
+  expect(offenders.map((file) => relative(REPO_ROOT, file))).toEqual([]);
+});
+
+it('architecture: lets the browser and the server meet only through the engine', () => {
+  expect(importing(CLIENT, /server|^node:|^express|^@google/)).toEqual([]);
+  expect(importing(CLIENT, /^(?!\.|react$|react-dom\/client$|zod$|@vayu\/core$)/)).toEqual([]);
+  expect(importing(SERVER, /packages\/client|@vayu\/client|^react/)).toEqual([]);
+  expect(importing([...CLIENT, ...SERVER], /^@vayu\/core\/|packages\/core/)).toEqual([]);
+});
+
+it('architecture: keeps each vendor SDK behind one adapter', () => {
+  const outside = SERVER.filter((file) => !SDK_ADAPTERS.test(file));
+  expect(
+    importing(outside, /^(@google-cloud\/|@google\/genai|google-auth-library|web-push)/),
+  ).toEqual([]);
+});
+
+it('architecture: keeps HTTP at the edge: the domain never sees Express, and only the app mounts routes', () => {
+  const domain = SERVER.filter((file) => !HTTP_EDGE.test(file));
+  expect(importing(domain, /^express$|^compression$/)).toEqual([]);
+  const mounting = SERVER.filter((file) => !file.endsWith('/server/src/app.ts'));
+  expect(importing(mounting, /\/routes\//)).toEqual([]);
+});
+
+it('architecture: has no import cycles in any package', () => {
+  for (const files of [CORE, SERVER, CLIENT]) {
+    expect(findCycle(files)).toBeNull();
+  }
+});
+
+it('architecture: would notice a cycle', () => {
+  const folder = mkdtempSync(join(tmpdir(), 'cycle-'));
+  writeFileSync(join(folder, 'a.ts'), "import { b } from './b.js';\nexport const a = b;\n");
+  writeFileSync(join(folder, 'b.ts'), "import { a } from './a.js';\nexport const b = a;\n");
+  writeFileSync(join(folder, 'c.ts'), "import { z } from 'zod';\nexport const c = z;\n");
+  try {
+    expect(findCycle([join(folder, 'c.ts')])).toBeNull();
+    expect(findCycle([join(folder, 'a.ts')])?.map((path) => basename(path))).toEqual([
+      'a.ts',
+      'b.ts',
+      'a.ts',
+    ]);
+  } finally {
+    rmSync(folder, { recursive: true });
+  }
 });

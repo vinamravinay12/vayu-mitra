@@ -1,7 +1,7 @@
 /** Conventions every module follows, read from the repository: an opening comment and documented exports. */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { expect, it } from 'vitest';
 
 /** Repository root, two levels above this file. */
 const ROOT = join(import.meta.dirname, '..', '..');
@@ -48,28 +48,24 @@ function undocumentedExports(path: string): string[] {
   );
 }
 
-describe('module conventions', () => {
-  it('finds the modules it judges', () => {
-    expect(MODULES.length).toBeGreaterThan(150);
-    expect(FILES.length - MODULES.length).toBeGreaterThan(70);
-    expect(relative(ROOT, join(ROOT, MODULES[0] ?? ''))).not.toBe('');
-  });
+it('module conventions: finds the modules it judges', () => {
+  expect(MODULES.length).toBeGreaterThan(150);
+  expect(FILES.length - MODULES.length).toBeGreaterThan(70);
+  expect(relative(ROOT, join(ROOT, MODULES[0] ?? ''))).not.toBe('');
+});
 
-  it('opens every file, tests included, with a comment saying what it is for', () => {
-    const silent = FILES.filter(
-      (path) => !opensWithComment(readFileSync(join(ROOT, path), 'utf8')),
-    );
-    expect(silent).toEqual([]);
-  });
+it('module conventions: opens every file, tests included, with a comment saying what it is for', () => {
+  const silent = FILES.filter((path) => !opensWithComment(readFileSync(join(ROOT, path), 'utf8')));
+  expect(silent).toEqual([]);
+});
 
-  it('documents every export', () => {
-    expect(MODULES.flatMap(undocumentedExports)).toEqual([]);
-  });
+it('module conventions: documents every export', () => {
+  expect(MODULES.flatMap(undocumentedExports)).toEqual([]);
+});
 
-  it('tells a module comment from one that belongs to the first declaration', () => {
-    expect(opensWithComment('/** A module. */\n\nexport const a = 1;\n')).toBe(true);
-    expect(opensWithComment('/** A module. */\nimport { b } from "./b.js";\n')).toBe(true);
-    expect(opensWithComment('/** The constant. */\nexport const a = 1;\n')).toBe(false);
-    expect(opensWithComment('export const a = 1;\n')).toBe(false);
-  });
+it('module conventions: tells a module comment from one that belongs to the first declaration', () => {
+  expect(opensWithComment('/** A module. */\n\nexport const a = 1;\n')).toBe(true);
+  expect(opensWithComment('/** A module. */\nimport { b } from "./b.js";\n')).toBe(true);
+  expect(opensWithComment('/** The constant. */\nexport const a = 1;\n')).toBe(false);
+  expect(opensWithComment('export const a = 1;\n')).toBe(false);
 });
