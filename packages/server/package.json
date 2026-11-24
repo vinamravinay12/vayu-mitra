@@ -11,13 +11,13 @@
     "dev": "tsc -b && PORT=8099 node --env-file-if-exists=.env dist/index.js"
   },
   "dependencies": {
-    "@google-cloud/firestore": "9.4.0",
-    "@google/genai": "^2.31.0",
+    "@google-cloud/firestore": "9.4.1",
+    "@google/genai": "^3.6.1",
     "@vayu/core": "1.0.0",
     "compression": "^1.8.2",
     "express": "^5.3.0",
-    "google-auth-library": "11.3.2",
-    "web-push": "3.6.7",
+    "google-auth-library": "11.3.4",
+    "web-push": "4.0.0",
     "zod": "^4.6.7"
   }
 }
