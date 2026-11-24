@@ -35,7 +35,7 @@ export const PASSWORD = 'correct horse battery';
 export const newEmail = (): string =>
   `family-${String(Date.now())}-${String(Math.random()).slice(2, 8)}@example.test`;
 
-/** Fills the account form and submits it. */
+/** Fills the account form (the confirmation too, when creating an account) and submits it. */
 export async function submitCredentials(
   page: Page,
   email: string,
@@ -43,7 +43,9 @@ export async function submitCredentials(
   password = PASSWORD,
 ) {
   await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(password);
+  await page.getByLabel('Password', { exact: true }).fill(password);
+  const confirm = page.getByLabel('Confirm password');
+  if (await confirm.isVisible()) await confirm.fill(password);
   await page.getByRole('button', { name: button }).click();
 }
 

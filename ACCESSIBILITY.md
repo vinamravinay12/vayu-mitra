@@ -28,30 +28,30 @@ button's hover colour in dark mode left its text at 1.45:1; field borders were 1
 
 ## WCAG 2.2 AA, criterion by criterion
 
-| Criterion                         | How it is met                                                                                                 | Proved by                                          |
-| :-------------------------------- | :------------------------------------------------------------------------------------------------------------ | :------------------------------------------------- |
-| 1.1.1 Non-text content            | Logo `alt=""` beside the name; AQI bars `aria-hidden` with a text label per hour                              | axe (jsdom, browser)                               |
-| 1.3.1 Info and relationships      | Landmarks, labelled sections, lists, a definition list in the advice card, `fieldset`/`legend`                | `App.structure.test.tsx`, axe                      |
-| 1.3.5 Identify input purpose      | `autocomplete="email"`, `current-password`, `new-password`                                                    | `App.accounts.test.tsx`                            |
-| 1.4.1 Use of colour               | AQI number and category always in text; verdicts are words                                                    | `AirCard.test.tsx`, axe                            |
-| 1.4.3 Contrast (minimum)          | Every text token ≥ 4.5:1 on every ground, both themes (table below)                                           | `tests/quality/accessibility.test.ts`, axe         |
-| 1.4.4 Resize text                 | rem-based type; zoom never disabled in the viewport meta                                                      | `tests/quality/accessibility.test.ts`, e2e at 200% |
-| 1.4.10 Reflow                     | Single column at 375 px with no sideways scroll, also at 200% text                                            | `journey.spec.ts`, `accessibility.spec.ts`         |
-| 1.4.11 Non-text contrast          | Control boundaries (`edge`) ≥ 3:1, focus ring ≥ 3:1, both themes                                              | `tests/quality/accessibility.test.ts`              |
-| 1.4.12 Text spacing               | No fixed heights on text containers; strip and cards grow with their content                                  | e2e at 200%                                        |
-| 2.1.1 Keyboard                    | Native buttons, inputs, `select`, radios, `details`; no custom key handling to get wrong                      | jsx-a11y strict, journey tests with `userEvent`    |
-| 2.4.1 Bypass blocks               | Skip link to `main` (`tabindex="-1"`)                                                                         | `App.structure.test.tsx`                           |
-| 2.4.3 Focus order                 | DOM order is reading order; no positive `tabindex`                                                            | `App.structure.test.tsx`                           |
-| 2.4.6 Headings and labels         | One `h1`, sections labelled by their `h2`, no skipped levels                                                  | `App.structure.test.tsx`                           |
-| 2.4.7 / 2.4.13 Focus visible      | 3 px accent outline with offset; `Highlight` in forced colours                                                | `tests/quality/accessibility.test.ts`, e2e         |
-| 2.5.3 Label in name               | Accessible names start with the visible text (“Edit Dadi · older adult, asthma”)                              | `App.test.tsx`, `App.structure.test.tsx`           |
-| 2.5.8 Target size (and 2.5.5 AAA) | Every control at least 44 × 44 px                                                                             | `accessibility.spec.ts`                            |
-| 3.1.1 / 3.1.2 Language            | `lang="en-IN"`; replies follow the family's language and script                                               | `tests/quality/accessibility.test.ts`              |
-| 3.3.1 / 3.3.3 Errors              | Messages in `role="alert"`, saying what to do (“Enter a valid email and a password of 10 to 128 characters.”) | `App.accounts.test.tsx`, `App.failures.test.tsx`   |
-| 3.3.7 Redundant entry             | Place, people and routines are remembered and shown as chips, never asked again                               | `App.test.tsx`                                     |
-| 3.3.8 Accessible authentication   | Plain email and password, paste and password managers allowed; no puzzle                                      | `App.accounts.test.tsx`                            |
-| 4.1.2 Name, role, value           | Native elements first; every control named; ids unique and every reference resolves                           | `App.structure.test.tsx`, axe                      |
-| 4.1.3 Status messages             | `role="status"` while waiting, `role="alert"` on errors, the chat a polite live log                           | `App.test.tsx`, `App.failures.test.tsx`            |
+| Criterion                         | How it is met                                                                                                   | Proved by                                          |
+| :-------------------------------- | :-------------------------------------------------------------------------------------------------------------- | :------------------------------------------------- |
+| 1.1.1 Non-text content            | Logo `alt=""` beside the name; AQI bars `aria-hidden` with a text label per hour                                | axe (jsdom, browser)                               |
+| 1.3.1 Info and relationships      | Landmarks, labelled sections, lists, a definition list in the advice card, `fieldset`/`legend`                  | `App.structure.test.tsx`, axe                      |
+| 1.3.5 Identify input purpose      | `autocomplete="email"`, `current-password`, `new-password`                                                      | `App.accounts.test.tsx`                            |
+| 1.4.1 Use of colour               | AQI number and category always in text; verdicts are words                                                      | `AirCard.test.tsx`, axe                            |
+| 1.4.3 Contrast (minimum)          | Every text token ≥ 4.5:1 on every ground, both themes (table below)                                             | `tests/quality/accessibility.test.ts`, axe         |
+| 1.4.4 Resize text                 | rem-based type; zoom never disabled in the viewport meta                                                        | `tests/quality/accessibility.test.ts`, e2e at 200% |
+| 1.4.10 Reflow                     | Single column at 375 px with no sideways scroll, also at 200% text                                              | `journey.spec.ts`, `accessibility.spec.ts`         |
+| 1.4.11 Non-text contrast          | Control boundaries (`edge`) ≥ 3:1, focus ring ≥ 3:1, both themes                                                | `tests/quality/accessibility.test.ts`              |
+| 1.4.12 Text spacing               | No fixed heights on text containers; strip and cards grow with their content                                    | e2e at 200%                                        |
+| 2.1.1 Keyboard                    | Native buttons, inputs, `select`, radios, `details`; no custom key handling to get wrong                        | jsx-a11y strict, journey tests with `userEvent`    |
+| 2.4.1 Bypass blocks               | Skip link to `main` (`tabindex="-1"`)                                                                           | `App.structure.test.tsx`                           |
+| 2.4.3 Focus order                 | DOM order is reading order; no positive `tabindex`                                                              | `App.structure.test.tsx`                           |
+| 2.4.6 Headings and labels         | One `h1`, sections labelled by their `h2`, no skipped levels                                                    | `App.structure.test.tsx`                           |
+| 2.4.7 / 2.4.13 Focus visible      | 3 px accent outline with offset; `Highlight` in forced colours                                                  | `tests/quality/accessibility.test.ts`, e2e         |
+| 2.5.3 Label in name               | Accessible names start with the visible text (“Edit Dadi · older adult, asthma”)                                | `App.test.tsx`, `App.structure.test.tsx`           |
+| 2.5.8 Target size (and 2.5.5 AAA) | Every control at least 44 × 44 px                                                                               | `accessibility.spec.ts`                            |
+| 3.1.1 / 3.1.2 Language            | `lang="en-IN"`; replies follow the family's language and script                                                 | `tests/quality/accessibility.test.ts`              |
+| 3.3.1 / 3.3.3 Errors              | Messages in `role="alert"`, saying what to do (“Enter a valid email and a password of 10 to 128 characters.”)   | `App.accounts.test.tsx`, `App.failures.test.tsx`   |
+| 3.3.7 Redundant entry             | Place, people and routines are remembered and shown as chips, never asked again                                 | `App.test.tsx`                                     |
+| 3.3.8 Accessible authentication   | Plain email and password, paste and password managers allowed, a Show button to check what was typed; no puzzle | `App.accounts.test.tsx`                            |
+| 4.1.2 Name, role, value           | Native elements first; every control named; ids unique and every reference resolves                             | `App.structure.test.tsx`, axe                      |
+| 4.1.3 Status messages             | `role="status"` while waiting, `role="alert"` on errors, the chat a polite live log                             | `App.test.tsx`, `App.failures.test.tsx`            |
 
 ## Measured contrast (light / dark)
 
@@ -88,6 +88,10 @@ they keep their colours (`forced-color-adjust: none`) while every boundary turns
 - **Sign-in** is a plain form: labelled email and password fields with the right `autocomplete`
   (`email`, `current-password` or `new-password`), so password managers fill them; the length rule
   is linked to the password field with `aria-describedby`; errors are announced as alerts.
+- **Seeing the password.** A Show/Hide button beside the password (44 px, named “Show password” or
+  “Hide password” to match its word) reveals it, and on sign-up the confirmation too; a status
+  line tells screen-reader users which. Creating an account asks for the password twice; if the
+  two differ, nothing is sent, the alert says so and the confirmation is marked `aria-invalid`.
 - The theme choice is three radios (light, system, dark) in a `fieldset`; the first paint follows
   the system with no script, because the CSP forbids inline script.
 

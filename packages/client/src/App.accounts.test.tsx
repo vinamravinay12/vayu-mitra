@@ -8,7 +8,7 @@ import { DELHI, emptyHousehold, PASSWORD_CONFIG } from './test-utils/fixtures.js
 
 const PASSWORD = 'correct horse battery';
 
-/** Fills the account form and submits it. */
+/** Fills the account form (the confirmation too, when creating an account) and submits it. */
 async function submitCredentials(
   user: ReturnType<typeof userEvent.setup>,
   email: string,
@@ -19,6 +19,11 @@ async function submitCredentials(
   await user.type(screen.getByLabelText('Email'), email);
   await user.clear(screen.getByLabelText('Password'));
   await user.type(screen.getByLabelText('Password'), password);
+  const confirm = screen.queryByLabelText('Confirm password');
+  if (confirm !== null) {
+    await user.clear(confirm);
+    await user.type(confirm, password);
+  }
   await user.click(screen.getByRole('button', { name: button }));
 }
 
@@ -62,6 +67,41 @@ describe('with email and password accounts', () => {
     await user.click(screen.getByRole('button', { name: 'Already have an account? Sign in' }));
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toHaveAttribute('autocomplete', 'current-password');
+  });
+
+  it('shows and hides the passwords, and refuses two that differ without asking the server', async () => {
+    const server = installFakeServer({ config: PASSWORD_CONFIG });
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    const toggle = await screen.findByRole('button', { name: 'Show password' });
+    expect(screen.queryByLabelText('Confirm password')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
+    await user.click(toggle);
+    expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'text');
+    expect(screen.getByRole('button', { name: 'Hide password' })).toHaveTextContent('Hide');
+    expect(screen.getByText('Your password is shown.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'New here? Create an account' }));
+    const confirm = screen.getByLabelText('Confirm password');
+    expect(confirm).toHaveAttribute('type', 'text');
+    expect(confirm).toHaveAttribute('autocomplete', 'new-password');
+    await user.click(screen.getByRole('button', { name: 'Hide passwords' }));
+    expect(confirm).toHaveAttribute('type', 'password');
+    expect(screen.getByText('Your passwords are hidden.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
+    await expectNoViolations(container);
+
+    await user.type(screen.getByLabelText('Email'), 'asha@example.test');
+    await user.type(screen.getByLabelText('Password'), PASSWORD);
+    await user.type(confirm, `${PASSWORD}!`);
+    await user.click(screen.getByRole('button', { name: 'Create account' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('The two passwords do not match');
+    expect(confirm).toHaveAttribute('aria-invalid', 'true');
+    expect(server.requests.some((sent) => sent.path === '/api/auth/register')).toBe(false);
+
+    await user.click(screen.getByRole('button', { name: 'Already have an account? Sign in' }));
+    await user.click(screen.getByRole('button', { name: 'New here? Create an account' }));
+    expect(screen.getByLabelText('Confirm password')).toHaveValue('');
   });
 
   it('offers alerts when the server has a push key, and deleting the account signs out', async () => {
