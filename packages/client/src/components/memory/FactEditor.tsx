@@ -18,10 +18,10 @@ interface EditorProps<F> {
 function Actions({ onCancel }: { readonly onCancel: () => void }): React.JSX.Element {
   return (
     <div className="flex gap-2">
-      <button type="submit" className="btn-primary min-h-9 py-1 text-sm">
+      <button type="submit" className="btn-primary py-1 text-sm">
         Save
       </button>
-      <button type="button" className="btn-secondary min-h-9 py-1 text-sm" onClick={onCancel}>
+      <button type="button" className="btn-secondary py-1 text-sm" onClick={onCancel}>
         Cancel
       </button>
     </div>

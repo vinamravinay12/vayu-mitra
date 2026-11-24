@@ -17,9 +17,6 @@ export const AI_RATE_LIMIT: RateLimitOptions = {
   now: () => Date.now(),
 };
 
-/** Place search and forecasts are cached and cheap, so they allow more. */
-export const DATA_RATE_LIMIT: RateLimitOptions = { ...AI_RATE_LIMIT, max: 60 };
-
 /** One client's request count in the current fixed window. */
 interface ClientWindow {
   count: number;

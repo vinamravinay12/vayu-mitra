@@ -20,11 +20,7 @@ export function Header({ theme, onThemeChange, onSignOut }: HeaderProps): React.
         </a>
         <div className="flex flex-wrap items-center gap-2">
           {onSignOut !== null && (
-            <button
-              type="button"
-              className="btn-secondary min-h-9 py-1 text-sm"
-              onClick={onSignOut}
-            >
+            <button type="button" className="btn-secondary py-1 text-sm" onClick={onSignOut}>
               Sign out
             </button>
           )}

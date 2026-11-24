@@ -12,7 +12,7 @@ interface ChipProps {
 
 /** One remembered fact, with Edit (not for home features) and Forget. */
 function Chip({ chip, editing, onEdit, onForget, onSave }: ChipProps): React.JSX.Element {
-  const small = 'btn-secondary min-h-8 px-2 py-0.5 text-xs';
+  const small = 'btn-secondary px-3 py-1 text-sm';
   return (
     <li className="rounded-lg border border-line p-2">
       <div className="flex flex-wrap items-center justify-between gap-2">

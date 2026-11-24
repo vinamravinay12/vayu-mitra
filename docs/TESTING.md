@@ -5,7 +5,7 @@ npm run verify   # format → lint → typecheck → tests with 100% coverage �
 npm run e2e      # Playwright journeys against the production build
 ```
 
-**304 tests in 45 files, 100% statements, branches, functions and lines**, enforced by the
+**318 tests in 47 files, 100% statements, branches, functions and lines**, enforced by the
 coverage threshold in [`vitest.config.ts`](../vitest.config.ts). Only `server/src/index.ts` and
 `client/src/main.tsx`, which bind to a port and a DOM node, are excluded.
 
@@ -21,12 +21,14 @@ tests check is the advice the app gives.
 
 ## Browser journeys
 
-12 Playwright tests against the production build with production headers and real accounts, on
+18 Playwright tests (9 journeys × 2 viewports) against the production build with production headers and real accounts, on
 **desktop and at 375 px**, in **light and dark**: security headers, the session cookie's flags and
 the hidden scheduler route; signing out, a wrong password and signing back in; place → question
 → advice with axe (WCAG 2.2 AA, colour contrast included) at every step, no console errors or CSP
 violations, no sideways scroll; editing and forgetting chips and their effect on suggestions; and
-deleting the account. Each test creates its own account; they run serially against one server.
+deleting the account. [`accessibility.spec.ts`](../e2e/accessibility.spec.ts) adds what
+axe cannot see: every control measured at 44 × 44 px or more, the page under a forced
+(high-contrast) palette, and no sideways scroll with text at 200%. Each test creates its own account; they run serially against one server.
 
 ## What is not automated
 

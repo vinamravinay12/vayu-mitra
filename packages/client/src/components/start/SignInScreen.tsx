@@ -113,7 +113,7 @@ function CredentialsForm({
       </button>
       <button
         type="button"
-        className="w-full text-sm font-medium text-brand underline"
+        className="min-h-11 w-full text-sm font-medium text-brand underline"
         onClick={form.switchMode}
       >
         {copy.switchTo}

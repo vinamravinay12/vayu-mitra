@@ -28,7 +28,7 @@
     "start": "npm run start -w @vayu/server",
     "dev": "npm run dev:server & npm run dev:client",
     "e2e": "playwright test",
-    "start:e2e": "npm run build && cross-env AIR_DATA_MODE=fixture AI_REQUESTS_PER_MINUTE=1000 AUTH_REQUESTS_PER_MINUTE=1000 SESSION_SECRET=e2e-only-local-session-key-not-for-production STATIC_DIR=packages/client/dist node packages/server/dist/index.js",
+    "start:e2e": "npm run build && cross-env AIR_DATA_MODE=fixture AI_REQUESTS_PER_MINUTE=1000 AUTH_REQUESTS_PER_MINUTE=1000 DATA_REQUESTS_PER_MINUTE=5000 SESSION_SECRET=e2e-only-local-session-key-not-for-production STATIC_DIR=packages/client/dist node packages/server/dist/index.js",
     "deadcode": "knip --include-entry-exports"
   },
   "devDependencies": {

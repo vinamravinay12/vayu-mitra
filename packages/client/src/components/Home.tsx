@@ -37,7 +37,7 @@ function PlaceColumn({ api, air, place, onPick }: PlaceColumnProps): React.JSX.E
     <>
       <AirCard air={air} place={place} />
       <details className="card">
-        <summary className="cursor-pointer font-semibold">Change place</summary>
+        <summary className="cursor-pointer py-2.5 font-semibold">Change place</summary>
         <div className="mt-3">
           <PlacePicker api={api} onPick={onPick} embedded />
         </div>
@@ -69,7 +69,7 @@ function Loaded({ api, state, household, config, onDeleted }: LoadedProps): Reac
     api.deleteEverything().then(onDeleted, () => undefined);
   };
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
       <h1 className="sr-only">Vayu Mitra</h1>
       {state.error !== null && (
         <div className="lg:col-span-2">
