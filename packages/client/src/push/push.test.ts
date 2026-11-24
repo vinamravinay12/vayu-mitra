@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { disablePush, enablePush, keyBytes, SERVICE_WORKER_URL } from './push.js';
+import { disablePush, enablePush, keyBytes } from './push.js';
+import { SERVICE_WORKER_URL } from './worker-script.js';
 
 const JSON_SUBSCRIPTION = {
   endpoint: 'https://fcm.googleapis.com/fcm/send/x',

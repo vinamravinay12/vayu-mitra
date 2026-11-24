@@ -111,8 +111,8 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for what it creates.
 ## ✅ Quality gates
 
 ```bash
-npm run verify   # format → lint → typecheck → dead code (knip) → 326 tests at 100% coverage → build
-npm run e2e      # 18 browser runs: desktop + 375 px, light + dark + forced colours, axe, 44 px targets, 200% text
+npm run verify   # format → lint → typecheck → dead code (knip) → 329 tests at 100% coverage → build
+npm run e2e      # 20 browser runs: desktop + 375 px, light + dark + forced colours, axe, 44 px targets, 200% text, Trusted Types
 npm run profile  # engine and HTTP latency, heap growth, payload sizes
 ```
 

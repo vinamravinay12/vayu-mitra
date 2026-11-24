@@ -1,3 +1,5 @@
+import { SERVICE_WORKER_URL, workerScript } from './worker-script.js';
+
 /** How turning alerts on went. */
 export type PushOutcome = 'enabled' | 'denied' | 'unsupported';
 
@@ -6,9 +8,6 @@ export interface PushSubscriptionJson {
   readonly endpoint: string;
   readonly keys: { readonly p256dh: string; readonly auth: string };
 }
-
-/** The app's own service worker, which shows alerts while the tab is closed. */
-export const SERVICE_WORKER_URL = '/push-sw.js';
 
 /** A base64url VAPID key as the bytes `pushManager.subscribe` wants. */
 export function keyBytes(base64url: string): Uint8Array<ArrayBuffer> {
@@ -42,7 +41,7 @@ export async function enablePush(
   if ((await Notification.requestPermission()) !== 'granted') {
     return 'denied';
   }
-  const registration = await navigator.serviceWorker.register(SERVICE_WORKER_URL);
+  const registration = await navigator.serviceWorker.register(workerScript());
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
     applicationServerKey: keyBytes(vapidKey),

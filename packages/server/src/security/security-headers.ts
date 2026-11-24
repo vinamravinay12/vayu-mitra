@@ -25,7 +25,7 @@ export const APP_CSP = [
   "form-action 'self'",
   "frame-ancestors 'none'",
   "require-trusted-types-for 'script'",
-  "trusted-types 'none'",
+  'trusted-types vayu-push-worker',
   'upgrade-insecure-requests',
 ].join('; ');
 
@@ -33,7 +33,6 @@ export const APP_CSP = [
 const PERMISSIONS = [
   'accelerometer=()',
   'autoplay=()',
-  'bluetooth=()',
   'browsing-topics=()',
   'camera=()',
   'display-capture=()',

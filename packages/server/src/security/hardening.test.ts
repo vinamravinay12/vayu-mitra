@@ -126,12 +126,12 @@ describe('browser hardening headers', () => {
   it('isolates the page, forbids HTML sinks and switches off unused features', async () => {
     const page = await request(testApp().app).get('/');
     expect(page.headers['content-security-policy']).toContain(
-      "require-trusted-types-for 'script'; trusted-types 'none'",
+      "require-trusted-types-for 'script'; trusted-types vayu-push-worker",
     );
     expect(page.headers['cross-origin-embedder-policy']).toBe('require-corp');
     expect(page.headers['strict-transport-security']).toContain('preload');
     const features = String(page.headers['permissions-policy']).split(', ');
-    expect(features).toHaveLength(19);
+    expect(features).toHaveLength(18);
     expect(features.filter((feature) => !feature.endsWith('=()'))).toEqual(['geolocation=(self)']);
   });
 });
