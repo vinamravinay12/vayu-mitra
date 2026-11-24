@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest';
 
 /**
  * Supply-chain rules as tests: every GitHub Action is pinned to a full commit
- * SHA (a tag can be moved to other code; a SHA cannot), and Dependabot keeps
- * both the pins and the npm packages current.
+ * SHA (a tag can be moved to other code; a SHA cannot), installs come only
+ * from the lockfile, and every dependency is audited and reviewed in CI.
  */
 const ROOT = join(import.meta.dirname, '..', '..');
 const WORKFLOWS = join(ROOT, '.github', 'workflows');
@@ -25,9 +25,13 @@ describe('supply chain', () => {
     expect(references.filter((reference) => !/@[0-9a-f]{40}$/.test(reference))).toEqual([]);
   });
 
-  it('has Dependabot watch npm and the Actions', () => {
-    const config = readFileSync(join(ROOT, '.github', 'dependabot.yml'), 'utf8');
-    expect(config).toContain('package-ecosystem: npm');
-    expect(config).toContain('package-ecosystem: github-actions');
+  it('installs from the lockfile only, audits it, and reviews new dependencies', () => {
+    const workflows = readdirSync(WORKFLOWS)
+      .map((file) => readFileSync(join(WORKFLOWS, file), 'utf8'))
+      .join('\n');
+    expect(workflows).toContain('npm ci');
+    expect(workflows).not.toMatch(/npm (install|i)\b/);
+    expect(workflows).toContain('npm audit --audit-level=high');
+    expect(workflows).toContain('actions/dependency-review-action@');
   });
 });

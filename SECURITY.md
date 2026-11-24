@@ -42,7 +42,7 @@ Only the deployed `main` branch is supported.
   COOP and COEP isolation, CORP, HSTS with preload, `nosniff`, a Permissions-Policy that turns off
   every browser feature but geolocation; logs never contain user text or credentials.
 - **Supply chain.** `npm ci` from the lockfile, `npm audit` and gitleaks in CI, dependency review
-  on every pull request, Dependabot weekly, and every GitHub Action pinned to a commit SHA (a test
+  on every pull request, and every GitHub Action pinned to a commit SHA (a test
   fails on a tag).
 
 ## Threats, controls and the tests that prove them
@@ -69,7 +69,7 @@ Only the deployed `main` branch is supported.
 | Hidden instructions in text             | Zero-width, bidirectional and tag characters removed from the message and history before any check or the model reads them                      | `security/hardening.test.ts`                                           |
 | DOM XSS through script sinks            | Trusted Types required with no policy allowed, so `eval`, `innerHTML` and the like are blocked in the browser; Zod runs without `eval`          | `security/hardening.test.ts`, `jitless.test.ts`, e2e                   |
 | Cross-origin leaks, unused features     | COOP and COEP isolate the page; Permissions-Policy turns off 18 features and keeps geolocation for our own page; HSTS two years, preload        | `security/hardening.test.ts`, e2e                                      |
-| Compromised dependency or Action        | Lockfile `npm ci`, `npm audit`, dependency review on every PR, Dependabot weekly, every Action pinned to a commit SHA                           | `tests/quality/supply-chain.test.ts`, CI                               |
+| Compromised dependency or Action        | Lockfile `npm ci`, `npm audit`, dependency review on every PR, every Action pinned to a commit SHA                                              | `tests/quality/supply-chain.test.ts`, CI                               |
 | Location privacy                        | Coordinates rounded to ~1 km before any upstream call or storage; device location only on tap                                                   | `air/adapters.test.ts`, `PlacePicker.test.tsx`                         |
 
 ### Data kept
