@@ -42,19 +42,19 @@ function isPushServiceUrl(value: string): boolean {
 }
 
 /** A browser's push subscription, as `PushSubscription.toJSON()` gives it. */
-export const pushSubscriptionSchema = z.object({
+export const pushSubscriptionSchema = z.strictObject({
   endpoint: z.string().max(1024).refine(isPushServiceUrl, 'Not a known push service'),
-  keys: z.object({
+  keys: z.strictObject({
     p256dh: z.string().min(1).max(256),
     auth: z.string().min(1).max(64),
   }),
 });
 
 /** Removing a subscription needs only its endpoint. */
-export const pushEndpointSchema = z.object({ endpoint: z.string().max(1024) });
+export const pushEndpointSchema = z.strictObject({ endpoint: z.string().max(1024) });
 
 /** Email and password, for both signing up and signing in. */
-export const credentialsSchema = z.object({
+export const credentialsSchema = z.strictObject({
   // Trimmed first: phone keyboards often add a trailing space.
   email: z.string().trim().max(254).pipe(z.email()),
   password: z.string().min(10).max(128),

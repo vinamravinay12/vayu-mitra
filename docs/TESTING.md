@@ -5,7 +5,7 @@ npm run verify   # format → lint → typecheck → tests with 100% coverage �
 npm run e2e      # Playwright journeys against the production build
 ```
 
-**293 tests in 42 files, 100% statements, branches, functions and lines**, enforced by the
+**304 tests in 45 files, 100% statements, branches, functions and lines**, enforced by the
 coverage threshold in [`vitest.config.ts`](../vitest.config.ts). Only `server/src/index.ts` and
 `client/src/main.tsx`, which bind to a port and a DOM node, are excluded.
 

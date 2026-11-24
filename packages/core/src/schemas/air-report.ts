@@ -4,7 +4,7 @@ import { POLLUTANTS } from '../aqi/pollutants.js';
 import { MAX_CONCENTRATION, STATION_SOURCES } from '../stations/station.js';
 
 /** A place resolved by the geocoder; coordinates pick the station and forecast. */
-export const placeSchema = z.object({
+export const placeSchema = z.strictObject({
   name: z.string().trim().min(1).max(80),
   region: z.string().trim().max(80),
   country: z.string().trim().max(80),

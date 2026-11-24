@@ -18,7 +18,7 @@ export const MEMORY_LIMITS = {
 
 const label = z.string().trim().min(1).max(MEMORY_LIMITS.labelLength);
 
-const personFactSchema = z.object({
+const personFactSchema = z.strictObject({
   kind: z.literal('person'),
   id: z.string().min(1).max(80),
   /** How the family refers to them. */
@@ -27,7 +27,7 @@ const personFactSchema = z.object({
   conditions: z.array(z.enum(HEALTH_CONDITIONS)).max(HEALTH_CONDITIONS.length),
 });
 
-const routineFactSchema = z.object({
+const routineFactSchema = z.strictObject({
   kind: z.literal('routine'),
   id: z.string().min(1).max(80),
   activity: z.enum(ACTIVITIES),
@@ -38,13 +38,13 @@ const routineFactSchema = z.object({
   minutes: z.number().int().min(5).max(MEMORY_LIMITS.minutes),
 });
 
-const homeFactSchema = z.object({
+const homeFactSchema = z.strictObject({
   kind: z.literal('home'),
   id: z.string().min(1).max(80),
   feature: z.enum(HOME_FEATURES),
 });
 
-export const memorySchema = z.object({
+export const memorySchema = z.strictObject({
   people: z.array(personFactSchema).max(MEMORY_LIMITS.people),
   routines: z.array(routineFactSchema).max(MEMORY_LIMITS.routines),
   home: z.array(homeFactSchema).max(HOME_FEATURES.length),
@@ -55,13 +55,13 @@ export const memorySchema = z.object({
  * applies them, so the AI can never write arbitrary data into memory.
  */
 export const memoryChangeSchema = z.discriminatedUnion('op', [
-  z.object({
+  z.strictObject({
     op: z.literal('remember-person'),
     label,
     ageGroup: z.enum(AGE_GROUPS),
     conditions: z.array(z.enum(HEALTH_CONDITIONS)).max(HEALTH_CONDITIONS.length),
   }),
-  z.object({
+  z.strictObject({
     op: z.literal('remember-routine'),
     activity: z.enum(ACTIVITIES),
     /** The person's label as the family said it, or null for everyone. */
@@ -69,8 +69,8 @@ export const memoryChangeSchema = z.discriminatedUnion('op', [
     time: z.string().regex(TIME_OF_DAY_PATTERN).nullable(),
     minutes: z.number().int().min(5).max(MEMORY_LIMITS.minutes).nullable(),
   }),
-  z.object({ op: z.literal('remember-home'), feature: z.enum(HOME_FEATURES) }),
-  z.object({ op: z.literal('forget'), id: z.string().min(1).max(80) }),
+  z.strictObject({ op: z.literal('remember-home'), feature: z.enum(HOME_FEATURES) }),
+  z.strictObject({ op: z.literal('forget'), id: z.string().min(1).max(80) }),
 ]);
 
 export type PersonFact = z.infer<typeof personFactSchema>;

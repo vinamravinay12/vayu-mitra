@@ -7,7 +7,9 @@ export const API_CSP =
 /**
  * The web client's policy: same-origin scripts, styles, workers and API calls
  * only, no inline script, no framing. Sign-in and push need no third-party
- * hosts, so nothing is ever opened up.
+ * hosts, so nothing is ever opened up. Trusted Types with no policies makes
+ * the browser refuse every string-to-HTML sink such as `innerHTML`: the app
+ * renders text through React only, so no script may ever parse markup.
  */
 export const APP_CSP = [
   "default-src 'self'",
@@ -22,8 +24,33 @@ export const APP_CSP = [
   "base-uri 'none'",
   "form-action 'self'",
   "frame-ancestors 'none'",
+  "require-trusted-types-for 'script'",
+  "trusted-types 'none'",
   'upgrade-insecure-requests',
 ].join('; ');
+
+/** Browser features the app never uses, each switched off; location only for our own page. */
+const PERMISSIONS = [
+  'accelerometer=()',
+  'autoplay=()',
+  'bluetooth=()',
+  'browsing-topics=()',
+  'camera=()',
+  'display-capture=()',
+  'encrypted-media=()',
+  'geolocation=(self)',
+  'gyroscope=()',
+  'hid=()',
+  'idle-detection=()',
+  'magnetometer=()',
+  'microphone=()',
+  'midi=()',
+  'payment=()',
+  'screen-wake-lock=()',
+  'serial=()',
+  'usb=()',
+  'xr-spatial-tracking=()',
+].join(', ');
 
 const COMMON_HEADERS: readonly (readonly [string, string])[] = [
   ['X-Content-Type-Options', 'nosniff'],
@@ -31,11 +58,13 @@ const COMMON_HEADERS: readonly (readonly [string, string])[] = [
   ['Referrer-Policy', 'no-referrer'],
   ['Cross-Origin-Opener-Policy', 'same-origin'],
   ['Cross-Origin-Resource-Policy', 'same-origin'],
+  // Nothing is embedded from another origin, so cross-origin isolation costs nothing.
+  ['Cross-Origin-Embedder-Policy', 'require-corp'],
   ['Origin-Agent-Cluster', '?1'],
   ['X-Permitted-Cross-Domain-Policies', 'none'],
   // Location is the family's own choice, asked for only when they tap "Use my location".
-  ['Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=(), usb=()'],
-  ['Strict-Transport-Security', 'max-age=63072000; includeSubDomains'],
+  ['Permissions-Policy', PERMISSIONS],
+  ['Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload'],
 ];
 
 /**

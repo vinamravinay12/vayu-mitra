@@ -10,13 +10,13 @@ export const CHAT_LIMITS = {
   suggestions: 4,
 } as const;
 
-const chatTurnSchema = z.object({
+const chatTurnSchema = z.strictObject({
   role: z.enum(['user', 'assistant']),
   text: z.string().max(CHAT_LIMITS.reply),
 });
 
 /** What the browser sends: the new message, where the family is, recent turns. */
-export const chatRequestSchema = z.object({
+export const chatRequestSchema = z.strictObject({
   message: z.string().trim().min(1).max(CHAT_LIMITS.message),
   place: placeSchema,
   history: z.array(chatTurnSchema).max(CHAT_LIMITS.historyTurns),
