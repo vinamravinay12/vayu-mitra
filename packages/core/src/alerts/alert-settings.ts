@@ -4,7 +4,7 @@ import { TIME_OF_DAY_PATTERN } from '../time/local-clock.js';
 /** Categories a family can choose to be alerted at. */
 export const ALERT_THRESHOLDS = ['moderate', 'poor', 'very-poor', 'severe'] as const;
 
-export const alertSettingsSchema = z.object({
+export const alertSettingsSchema = z.strictObject({
   enabled: z.boolean(),
   threshold: z.enum(ALERT_THRESHOLDS),
   /** No notifications from quietStart to quietEnd, local time; may wrap past midnight. */

@@ -21,6 +21,7 @@ import {
   rateLimit,
   type RateLimitOptions,
 } from './security/rate-limit.js';
+import { admission } from './security/admission.js';
 import { securityHeaders } from './security/security-headers.js';
 import { serveClient } from './static/serve-client.js';
 import type { UserStore } from './store/user-store.js';
@@ -111,7 +112,8 @@ function rateLimits(app: Express, deps: AppDependencies): void {
 
 /**
  * Builds the Express app. Every dependency is passed in, so tests run it with
- * fakes. Order matters: headers, compression and the body cap, rate limits,
+ * fakes. Order matters: headers, compression, admission of writes, the body
+ * cap, rate limits,
  * public routes, then sign-in for personal routes, static files, errors last.
  */
 export function createApp(deps: AppDependencies): Express {
@@ -123,6 +125,7 @@ export function createApp(deps: AppDependencies): Express {
   app.set('trust proxy', config.trustProxyHops);
   app.use(securityHeaders(config.allowedOrigin));
   app.use(compression());
+  app.use('/api', admission(config.allowedOrigin));
   app.use('/api', express.json({ limit: BODY_LIMIT }));
   rateLimits(app, deps);
   app.use('/api', healthRouter(llm === null ? 'offline' : 'gemini', config));

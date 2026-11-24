@@ -108,7 +108,7 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for what it creates.
 ## ✅ Quality gates
 
 ```bash
-npm run verify   # format → lint → typecheck → dead code (knip) → 293 tests at 100% coverage → build
+npm run verify   # format → lint → typecheck → dead code (knip) → 304 tests at 100% coverage → build
 npm run e2e      # 12 browser journeys: desktop + 375 px, light + dark, axe at each step
 npm run profile  # engine and HTTP latency, heap growth, payload sizes
 ```
@@ -123,8 +123,9 @@ that the client bundle carries no key, and a container build. See [docs/TESTING.
 Every personal route needs a signed session cookie (HttpOnly, Secure, SameSite=Strict), and the
 user id comes only from it; passwords are hashed with scrypt. The
 alert route accepts only a Google-signed OIDC token from the scheduler’s own service account.
-Gemini, data.gov.in and WAQI keys live only on the server. Strict CSP with no inline script,
-with no third-party hosts at all. Every model answer is
+Gemini, data.gov.in and WAQI keys live only on the server. Writes are accepted only as JSON from our own page (no cross-site forms), every body is a strict
+schema, and hidden Unicode is stripped before the model reads it. Strict CSP with no inline
+script, no third-party hosts and Trusted Types; every CI Action is pinned to a commit. Every model answer is
 schema-constrained and re-validated; user text is fenced. Details in [SECURITY.md](SECURITY.md)
 and [docs/SECURITY.md](docs/SECURITY.md).
 
