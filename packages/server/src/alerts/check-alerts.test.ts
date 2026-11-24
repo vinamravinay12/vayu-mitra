@@ -36,7 +36,6 @@ describe('checkAlerts', () => {
     // The next run is inside the cooldown, so nothing is sent or saved.
     expect(await checkAlerts(deps)).toMatchObject({ sent: 0, skipped: 1 });
   });
-
   it('skips families with no place or no devices, and writes only on change', async () => {
     const deps = { ...testDeps(), messenger: messenger() };
     await deps.store.put('nowhere', subscribed({ place: null }));
@@ -50,7 +49,9 @@ describe('checkAlerts', () => {
     expect(deps.messenger.spy).not.toHaveBeenCalled();
     expect(put).not.toHaveBeenCalled();
   });
+});
 
+describe('checkAlerts', () => {
   it('carries on past one family’s failure', async () => {
     const deps = {
       ...testDeps(),
@@ -59,7 +60,6 @@ describe('checkAlerts', () => {
     await deps.store.put('u1', subscribed());
     expect(await checkAlerts(deps)).toEqual({ checked: 1, sent: 0, skipped: 0, failed: 1 });
   });
-
   it('works through many families in batches', async () => {
     const deps = { ...testDeps(), messenger: messenger() };
     await Promise.all(

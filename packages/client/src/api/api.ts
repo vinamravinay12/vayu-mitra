@@ -27,28 +27,33 @@ export type Household = z.infer<typeof householdSchema>;
 
 /** Every call the app makes, each re-validated before the UI sees it. */
 export function createApi() {
-  const household = async (path: string, method: 'PUT' | 'POST' | 'DELETE', body: unknown) =>
-    expectShape(householdSchema, await requestJson(path, { method, body }), 'household');
+  return { ...readCalls(), ...householdCalls(), chat: sendChat };
+}
+
+/** Place search and the air report: reads that need no account. */
+function readCalls() {
   return {
     async searchPlaces(query: string): Promise<readonly Place[]> {
       const path = `/api/places?${new URLSearchParams({ q: query }).toString()}`;
-      return expectShape(
-        z.object({ places: z.array(placeSchema) }),
-        await requestJson(path),
-        'place search',
-      ).places;
+      const answer = await requestJson(path);
+      return expectShape(z.object({ places: z.array(placeSchema) }), answer, 'place search').places;
     },
     async air(place: Place): Promise<AirReport> {
       const query = new URLSearchParams({
         lat: String(place.latitude),
         lon: String(place.longitude),
       });
-      return expectShape(
-        airReportSchema,
-        await requestJson(`/api/air?${query.toString()}`),
-        'air report',
-      );
+      const answer = await requestJson(`/api/air?${query.toString()}`);
+      return expectShape(airReportSchema, answer, 'air report');
     },
+  };
+}
+
+/** Reading and changing the signed-in family's record. */
+function householdCalls() {
+  const household = async (path: string, method: 'PUT' | 'POST' | 'DELETE', body: unknown) =>
+    expectShape(householdSchema, await requestJson(path, { method, body }), 'household');
+  return {
     async me(): Promise<Household> {
       return expectShape(householdSchema, await requestJson('/api/me'), 'household');
     },
@@ -62,14 +67,13 @@ export function createApi() {
     async deleteEverything(): Promise<void> {
       await requestJson('/api/me', { method: 'DELETE' });
     },
-    async chat(request: ChatRequest): Promise<ChatResponse> {
-      return expectShape(
-        chatResponseSchema,
-        await requestJson('/api/chat', { method: 'POST', body: request }),
-        'reply',
-      );
-    },
   };
+}
+
+/** One chat turn. */
+async function sendChat(request: ChatRequest): Promise<ChatResponse> {
+  const answer = await requestJson('/api/chat', { method: 'POST', body: request });
+  return expectShape(chatResponseSchema, answer, 'reply');
 }
 
 export type Api = ReturnType<typeof createApi>;

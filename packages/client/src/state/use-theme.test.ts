@@ -47,7 +47,6 @@ describe('useTheme', () => {
     // keeps the first paint correct without an inline script.
     expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
   });
-
   it('stamps an explicit choice onto the document', () => {
     const { result } = renderHook(() => useTheme());
     act(() => {
@@ -60,7 +59,6 @@ describe('useTheme', () => {
     });
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');
   });
-
   it('removes the attribute again when handed back to the system', () => {
     const { result } = renderHook(() => useTheme());
     act(() => {
@@ -71,7 +69,9 @@ describe('useTheme', () => {
     });
     expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
   });
+});
 
+describe('useTheme', () => {
   it('remembers the choice for next time', () => {
     const { result } = renderHook(() => useTheme());
     act(() => {
@@ -79,14 +79,15 @@ describe('useTheme', () => {
     });
     expect(globalThis.localStorage.getItem(KEY)).toBe('dark');
   });
-
   it('restores a stored choice on load', () => {
     globalThis.localStorage.setItem(KEY, 'light');
     const { result } = renderHook(() => useTheme());
     expect(result.current.preference).toBe('light');
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');
   });
+});
 
+describe('useTheme', () => {
   it('still applies the theme when the choice cannot be stored', () => {
     vi.stubGlobal('localStorage', {
       getItem: () => null,

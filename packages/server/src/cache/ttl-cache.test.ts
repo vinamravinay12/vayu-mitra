@@ -11,7 +11,6 @@ describe('createTtlCache', () => {
     expect(cache.get('a')).toBeUndefined();
     expect(cache.size).toBe(0);
   });
-
   it('evicts the least recently used entry when full', () => {
     const cache = createTtlCache<number>(2, 1000, () => 0);
     cache.set('a', 1);
@@ -22,7 +21,6 @@ describe('createTtlCache', () => {
     expect(cache.get('a')).toBe(1);
     expect(cache.get('c')).toBe(3);
   });
-
   it('replaces a key without evicting another', () => {
     const cache = createTtlCache<number>(2, 1000, () => 0);
     cache.set('a', 1);
@@ -31,7 +29,9 @@ describe('createTtlCache', () => {
     expect(cache.get('a')).toBe(10);
     expect(cache.get('b')).toBe(2);
   });
+});
 
+describe('createTtlCache', () => {
   it('tolerates a zero-size cache', () => {
     const cache = createTtlCache<number>(0, 1000);
     cache.set('a', 1);

@@ -67,13 +67,17 @@ const defaultMinutes = (activity: Activity): number => ACTIVITY_PROFILES[activit
 const ownerOf = (memory: Memory, label: string | null): string | null =>
   label === null ? null : (findPerson(memory, label)?.id ?? null);
 
+/** A routine's id: its activity and whose it is (`routine:walk:dadi`, `routine:walk:family`). */
+const routineId = (activity: Activity, owner: string | null): string =>
+  `routine:${activity}:${owner === null ? 'family' : owner.replace('person:', '')}`;
+
 /** The routine a change describes, keeping what it leaves out from the one it updates. */
 function routineFrom(
   memory: Memory,
   change: Extract<MemoryChange, { op: 'remember-routine' }>,
 ): RoutineFact {
   const owner = ownerOf(memory, change.person);
-  const id = `routine:${change.activity}:${owner?.replace('person:', '') ?? 'family'}`;
+  const id = routineId(change.activity, owner);
   const existing = memory.routines.find((routine) => routine.id === id);
   return {
     kind: 'routine',

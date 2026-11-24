@@ -73,18 +73,24 @@ export function webPushMessenger(
           sender.sendNotification(subscription, payload, options),
         ),
       );
-      return {
-        staleEndpoints: outcomes.flatMap((outcome, index) => {
-          if (outcome.status === 'fulfilled') return [];
-          const status = fieldOf(outcome.reason, 'statusCode');
-          logEvent('WARNING', 'push failed for one device', { status: String(status) });
-          return GONE_STATUSES.has(Number(status))
-            ? subscriptions.slice(index, index + 1).map((s) => s.endpoint)
-            : [];
-        }),
-      };
+      return { staleEndpoints: goneEndpoints(subscriptions, outcomes) };
     },
   };
+}
+
+/** The endpoints whose push service said the subscription is gone for good; other failures are logged. */
+function goneEndpoints(
+  subscriptions: readonly { readonly endpoint: string }[],
+  outcomes: readonly PromiseSettledResult<unknown>[],
+): string[] {
+  return outcomes.flatMap((outcome, index) => {
+    if (outcome.status === 'fulfilled') return [];
+    const status = fieldOf(outcome.reason, 'statusCode');
+    logEvent('WARNING', 'push failed for one device', { status: String(status) });
+    return GONE_STATUSES.has(Number(status))
+      ? subscriptions.slice(index, index + 1).map((s) => s.endpoint)
+      : [];
+  });
 }
 
 /** Google OIDC → SchedulerVerifier: signed by Google, for our audience, from the scheduler's account. */

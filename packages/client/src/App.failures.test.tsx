@@ -11,25 +11,23 @@ describe('when something fails', () => {
     render(<App />);
     expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong');
   });
-
   it('shows when the household cannot load', async () => {
     const server = installFakeServer();
     server.failures.set('GET /api/me', 500);
     render(<App />);
     expect(await screen.findByRole('alert')).toHaveTextContent('Failed with 500.');
   });
+});
 
+/** A household in Delhi that has said only that it has a car. */
+const WITH_A_CAR = emptyHousehold({
+  place: DELHI,
+  memory: { people: [], routines: [], home: [{ kind: 'home', id: 'home:car', feature: 'car' }] },
+});
+
+describe('when something fails', () => {
   it('shows failures of the air, a chat turn, a save and a delete', async () => {
-    const server = installFakeServer({
-      household: emptyHousehold({
-        place: DELHI,
-        memory: {
-          people: [],
-          routines: [],
-          home: [{ kind: 'home', id: 'home:car', feature: 'car' }],
-        },
-      }),
-    });
+    const server = installFakeServer({ household: WITH_A_CAR });
     server.failures.set('GET /api/air', 502);
     server.failures.set('POST /api/chat', 502);
     server.failures.set('PUT /api/me/memory', 400);

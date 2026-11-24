@@ -17,7 +17,9 @@ function sourcesOf(packageName: string): string[] {
     readdirSync(folder, { withFileTypes: true }).flatMap((entry) => {
       const path = join(folder, entry.name);
       if (entry.isDirectory()) return entry.name === 'test-utils' ? [] : walk(path);
-      return /\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name) ? [path] : [];
+      return /\.tsx?$/.test(entry.name) && !/\.(test|fixtures)\.tsx?$/.test(entry.name)
+        ? [path]
+        : [];
     });
   return walk(join(REPO_ROOT, 'packages', packageName, 'src'));
 }
@@ -80,41 +82,38 @@ describe('architecture', () => {
   it('finds the source it judges', () => {
     expect([CORE.length, SERVER.length, CLIENT.length].every((count) => count > 10)).toBe(true);
   });
-
   it('keeps the engine pure: Zod only, no Node, no I/O, no clock, no randomness', () => {
     expect(importing(CORE, /^(?!zod$|\.)/)).toEqual([]);
     const impure = /\bfetch\(|\bprocess\.|Date\.now\(|new Date\(\)|Math\.random\(|console\./;
     const offenders = CORE.filter((file) => impure.test(readFileSync(file, 'utf8')));
     expect(offenders.map((file) => relative(REPO_ROOT, file))).toEqual([]);
   });
-
   it('lets the browser and the server meet only through the engine', () => {
     expect(importing(CLIENT, /server|^node:|^express|^@google/)).toEqual([]);
     expect(importing(CLIENT, /^(?!\.|react$|react-dom\/client$|zod$|@vayu\/core$)/)).toEqual([]);
     expect(importing(SERVER, /packages\/client|@vayu\/client|^react/)).toEqual([]);
     expect(importing([...CLIENT, ...SERVER], /^@vayu\/core\/|packages\/core/)).toEqual([]);
   });
-
   it('keeps each vendor SDK behind one adapter', () => {
     const outside = SERVER.filter((file) => !SDK_ADAPTERS.test(file));
     expect(
       importing(outside, /^(@google-cloud\/|@google\/genai|google-auth-library|web-push)/),
     ).toEqual([]);
   });
-
   it('keeps HTTP at the edge: the domain never sees Express, and only the app mounts routes', () => {
     const domain = SERVER.filter((file) => !HTTP_EDGE.test(file));
     expect(importing(domain, /^express$|^compression$/)).toEqual([]);
     const mounting = SERVER.filter((file) => !file.endsWith('/server/src/app.ts'));
     expect(importing(mounting, /\/routes\//)).toEqual([]);
   });
+});
 
+describe('architecture', () => {
   it('has no import cycles in any package', () => {
     for (const files of [CORE, SERVER, CLIENT]) {
       expect(findCycle(files)).toBeNull();
     }
   });
-
   it('would notice a cycle', () => {
     const folder = mkdtempSync(join(tmpdir(), 'cycle-'));
     writeFileSync(join(folder, 'a.ts'), "import { b } from './b.js';\nexport const a = b;\n");

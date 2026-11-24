@@ -32,7 +32,10 @@ export function testApp(
     accounts:
       config.authMode === 'none'
         ? null
-        : createAccountStore(createMemoryCollection(), createMemoryCollection(), deps.now),
+        : createAccountStore(
+            { accounts: createMemoryCollection(), emails: createMemoryCollection() },
+            deps.now,
+          ),
     messenger: createLogMessenger(),
     verifyScheduler: null,
     now: deps.now,

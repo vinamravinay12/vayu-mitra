@@ -26,11 +26,12 @@ export default defineConfig([
     },
     rules: {
       // Small modules with one concern each. Enforced, not aspired to.
-      'max-lines': ['error', { max: 150, skipBlankLines: true, skipComments: true }],
-      'max-lines-per-function': ['error', { max: 60, skipBlankLines: true, skipComments: true }],
-      complexity: ['error', 10],
+      'max-lines': ['error', { max: 110, skipBlankLines: true, skipComments: true }],
+      'max-lines-per-function': ['error', { max: 30, skipBlankLines: true, skipComments: true }],
+      complexity: ['error', 8],
       'max-depth': ['error', 3],
-      'max-params': ['error', 4],
+      'max-params': ['error', 3],
+      'no-warning-comments': ['error', { terms: ['todo', 'fixme', 'xxx', 'hack'] }],
       eqeqeq: ['error', 'always'],
       'no-console': 'error',
       // Express identifies an error handler by its 4-argument shape, so unused
@@ -53,10 +54,16 @@ export default defineConfig([
     // Production code proves types instead of asserting them: narrowing, Zod,
     // or a typed declaration. Only `as const` remains, which asserts nothing.
     files: ['packages/*/src/**/*.{ts,tsx}'],
-    ignores: ['**/*.test.{ts,tsx}', '**/test-utils/**'],
+    ignores: ['**/*.test.{ts,tsx}', '**/*.fixtures.{ts,tsx}', '**/test-utils/**'],
     rules: {
       '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
     },
+  },
+  {
+    // Express recognises an error handler by its four parameters, so the one
+    // error handler may take four; every other function stays at three.
+    files: ['packages/server/src/routes/errors.ts'],
+    rules: { 'max-params': ['error', 4] },
   },
   {
     // The structured logger is the one module that writes to stdio.
@@ -69,19 +76,13 @@ export default defineConfig([
     rules: { '@typescript-eslint/no-unsafe-member-access': 'off' },
   },
   {
-    // Catalogue files are declarative data — one list per file — so they get
-    // a larger, but still enforced, ceiling. Never 'off'.
-    files: ['packages/core/src/catalog/**/*.ts'],
-    rules: { 'max-lines': ['error', { max: 250, skipBlankLines: true, skipComments: true }] },
-  },
-  {
     // Plain-JavaScript tooling scripts: no types to check, Node globals, console output is the point.
     files: ['scripts/**/*.mjs'],
     extends: [tseslint.configs.disableTypeChecked],
     languageOptions: {
       globals: { Buffer: 'readonly', console: 'readonly', fetch: 'readonly', process: 'readonly' },
     },
-    rules: { 'no-console': 'off', 'max-lines-per-function': 'off', complexity: 'off' },
+    rules: { 'no-console': 'off' },
   },
   {
     // The push service worker is served as is, outside the bundle: plain JavaScript in a worker.
@@ -92,10 +93,8 @@ export default defineConfig([
     },
   },
   {
-    files: ['**/*.test.ts', '**/*.test.tsx'],
+    files: ['**/*.test.ts', '**/*.test.tsx', '**/*.fixtures.ts', '**/*.fixtures.tsx'],
     rules: {
-      'max-lines': 'off',
-      'max-lines-per-function': 'off',
       // supertest types `response.body` as `any` by design; asserting on it is
       // the point of an HTTP test.
       '@typescript-eslint/no-unsafe-assignment': 'off',

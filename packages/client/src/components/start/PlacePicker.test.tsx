@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { createApi } from '../../api/api.js';
 import { installFakeServer } from '../../test-utils/fake-server.js';
-import { currentPlace, PlacePicker } from './PlacePicker.js';
+import { PlacePicker } from './PlacePicker.js';
+import { currentPlace } from './use-place-search.js';
 
 const api = createApi();
 

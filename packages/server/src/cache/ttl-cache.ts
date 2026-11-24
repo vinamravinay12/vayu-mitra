@@ -27,26 +27,9 @@ export function createTtlCache<V>(
 ): TtlCache<V> {
   const entries = new Map<string, Entry<V>>();
   return {
-    get(key) {
-      const entry = entries.get(key);
-      if (entry === undefined) {
-        return undefined;
-      }
-      entries.delete(key);
-      if (entry.expiresAt <= now()) {
-        return undefined;
-      }
-      entries.set(key, entry);
-      return entry.value;
-    },
+    get: (key) => readFresh(entries, key, now()),
     set(key, value) {
-      entries.delete(key);
-      if (entries.size >= maxEntries) {
-        const oldest = entries.keys().next();
-        if (oldest.done !== true) {
-          entries.delete(oldest.value);
-        }
-      }
+      makeRoom(entries, key, maxEntries);
       entries.set(key, { value, expiresAt: now() + ttlMs });
     },
     delete(key) {
@@ -56,6 +39,31 @@ export function createTtlCache<V>(
       return entries.size;
     },
   };
+}
+
+/** The value if present and fresh, moved to the most-recently-used end; expired entries are dropped. */
+function readFresh<V>(entries: Map<string, Entry<V>>, key: string, at: number): V | undefined {
+  const entry = entries.get(key);
+  if (entry === undefined) {
+    return undefined;
+  }
+  entries.delete(key);
+  if (entry.expiresAt <= at) {
+    return undefined;
+  }
+  entries.set(key, entry);
+  return entry.value;
+}
+
+/** Removes the key (it is about to be re-added) and, when full, the least recently used entry. */
+function makeRoom<V>(entries: Map<string, Entry<V>>, key: string, maxEntries: number): void {
+  entries.delete(key);
+  if (entries.size >= maxEntries) {
+    const oldest = entries.keys().next();
+    if (oldest.done !== true) {
+      entries.delete(oldest.value);
+    }
+  }
 }
 
 /** A fixed-length key that never stores the user's text in memory as-is. */

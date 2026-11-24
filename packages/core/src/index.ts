@@ -29,6 +29,7 @@ export * from './alerts/alert-settings.js';
 export * from './alerts/decide-alert.js';
 
 export * from './chat/chat-schema.js';
+export * from './chat/detect.js';
 export * from './chat/read-request.js';
 export * from './chat/describe.js';
 export * from './chat/suggest-questions.js';

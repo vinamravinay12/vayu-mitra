@@ -37,6 +37,17 @@ function MessageLog({
   );
 }
 
+/** The message being typed, and sending it, which clears the box. */
+function useDraft(onSend: (text: string) => void) {
+  const [draft, setDraft] = useState('');
+  const submit = (event: React.SubmitEvent): void => {
+    event.preventDefault();
+    onSend(draft);
+    setDraft('');
+  };
+  return { draft, setDraft, submit };
+}
+
 /** The message box. */
 function Composer({
   pending,
@@ -45,12 +56,7 @@ function Composer({
   readonly pending: boolean;
   readonly onSend: (text: string) => void;
 }): React.JSX.Element {
-  const [draft, setDraft] = useState('');
-  const submit = (event: React.SubmitEvent): void => {
-    event.preventDefault();
-    onSend(draft);
-    setDraft('');
-  };
+  const { draft, setDraft, submit } = useDraft(onSend);
   return (
     <form className="flex gap-2" onSubmit={submit}>
       <label htmlFor="chat-message" className="sr-only">

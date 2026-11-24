@@ -1,4 +1,4 @@
-import { Router, type Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import type { AccountSession, AccountStore } from '../auth/accounts.js';
 import { currentAccount, type SessionResolver } from '../auth/require-user.js';
 import { clearSessionCookie, setSessionCookie, type Sessions } from '../auth/sessions.js';
@@ -15,6 +15,9 @@ export interface AuthDependencies {
 /** One message for both a wrong email and a wrong password, so neither can be probed. */
 const WRONG_CREDENTIALS = 'That email and password do not match an account.';
 
+/** The account store and session signer, when sign-in is on. */
+type SignIn = NonNullable<AuthDependencies['signIn']>;
+
 /**
  * Email-and-password accounts: sign up, sign in, sign out, and who is signed
  * in. The session is an HttpOnly, Secure, SameSite=Strict cookie, so page
@@ -22,7 +25,22 @@ const WRONG_CREDENTIALS = 'That email and password do not match an account.';
  */
 export function authRouter({ mode, resolve, signIn }: AuthDependencies): Router {
   const router = Router();
-  router.get('/auth/session', async (request, response) => {
+  router.get('/auth/session', sessionHandler(mode, resolve));
+  if (signIn !== null) {
+    router.post('/auth/register', registerHandler(signIn));
+    router.post('/auth/login', loginHandler(signIn));
+    router.post('/auth/logout', (_request, response) => {
+      response.setHeader('Set-Cookie', clearSessionCookie());
+      response.status(204).end();
+    });
+  }
+  return router;
+}
+
+/** Who is signed in: always the one local household with sign-in off. */
+const sessionHandler =
+  (mode: AuthMode, resolve: SessionResolver | null) =>
+  async (request: Request, response: Response): Promise<void> => {
     response.setHeader('Cache-Control', 'no-store');
     if (mode === 'none') {
       response.json({ signedIn: true, email: null });
@@ -34,20 +52,22 @@ export function authRouter({ mode, resolve, signIn }: AuthDependencies): Router 
         ? { signedIn: false, email: null }
         : { signedIn: true, email: account.email },
     );
-  });
-  if (signIn === null) {
-    return router;
-  }
-  const { accounts, sessions } = signIn;
-  /** Starts a session for the account and answers with who is signed in. */
-  const signedIn = (response: Response, account: AccountSession, status: number): void => {
-    response.setHeader(
-      'Set-Cookie',
-      setSessionCookie(sessions.issue(account.uid, account.version)),
-    );
-    response.status(status).json({ email: account.email });
   };
-  router.post('/auth/register', async (request, response) => {
+
+/** Starts a session for the account and answers with who is signed in. */
+function startSession(
+  { sessions }: SignIn,
+  response: Response,
+  { account, status }: { readonly account: AccountSession; readonly status: number },
+): void {
+  response.setHeader('Set-Cookie', setSessionCookie(sessions.issue(account.uid, account.version)));
+  response.status(status).json({ email: account.email });
+}
+
+/** Creates an account and signs it in; 409 when the email is taken. */
+const registerHandler =
+  (signIn: SignIn) =>
+  async (request: Request, response: Response): Promise<void> => {
     const parsed = credentialsSchema.safeParse(request.body);
     if (!parsed.success) {
       response
@@ -55,27 +75,25 @@ export function authRouter({ mode, resolve, signIn }: AuthDependencies): Router 
         .json({ error: 'Enter a valid email and a password of 10 to 128 characters.' });
       return;
     }
-    const account = await accounts.register(parsed.data.email, parsed.data.password);
+    const account = await signIn.accounts.register(parsed.data.email, parsed.data.password);
     if (account === 'taken') {
       response.status(409).json({ error: 'That email already has an account. Sign in instead.' });
       return;
     }
-    signedIn(response, account, 201);
-  });
-  router.post('/auth/login', async (request, response) => {
+    startSession(signIn, response, { account, status: 201 });
+  };
+
+/** Signs in with a correct email and password; one 401 for anything else. */
+const loginHandler =
+  (signIn: SignIn) =>
+  async (request: Request, response: Response): Promise<void> => {
     const parsed = credentialsSchema.safeParse(request.body);
     const account = parsed.success
-      ? await accounts.authenticate(parsed.data.email, parsed.data.password)
+      ? await signIn.accounts.authenticate(parsed.data.email, parsed.data.password)
       : null;
     if (account === null) {
       response.status(401).json({ error: WRONG_CREDENTIALS });
       return;
     }
-    signedIn(response, account, 200);
-  });
-  router.post('/auth/logout', (_request, response) => {
-    response.setHeader('Set-Cookie', clearSessionCookie());
-    response.status(204).end();
-  });
-  return router;
-}
+    startSession(signIn, response, { account, status: 200 });
+  };

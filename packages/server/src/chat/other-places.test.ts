@@ -30,7 +30,9 @@ describe('airElsewhere', () => {
     expect(found[0]?.report.current.aqi).toBeGreaterThan(0);
     expect(lookUp).toHaveBeenCalledWith('Lucknow');
   });
+});
 
+describe('airElsewhere', () => {
   it('skips places it cannot find or fetch, duplicates and blanks, and caps the count', async () => {
     const fixtureAir = testDeps().air;
     const air: AirService = {
@@ -65,7 +67,9 @@ describe('a question about other places', () => {
     expect(response.reply).toMatch(/^Lucknow: .*New Delhi: .* has the cleaner air right now\.$/);
     expect(response.advice).toBeNull();
   });
+});
 
+describe('a question about other places', () => {
   it('tells the model about the other places and that the question is on topic', async () => {
     const understood = JSON.stringify({
       ...JSON.parse(NOTHING_UNDERSTOOD),

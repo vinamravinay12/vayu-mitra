@@ -23,6 +23,26 @@ function SourceLine({ report }: { readonly report: AirReport }): React.JSX.Eleme
   );
 }
 
+/** The index now with its category and guidance, where it comes from, and the hours ahead. */
+function AirNow({ report }: { readonly report: AirReport }): React.JSX.Element {
+  const { aqi, category } = report.current;
+  return (
+    <>
+      <div className="flex items-center gap-4">
+        <span aria-hidden="true" className={`aqi-${category} h-16 w-4 rounded-full`} />
+        <p>
+          <span className="block text-4xl font-bold tabular-nums">{aqi}</span>
+          <span className="text-lg font-semibold">{CATEGORY_LABELS[category]}</span>
+          <span className="sr-only"> on India’s National Air Quality Index</span>
+        </p>
+      </div>
+      <p className="text-ink-soft">{CATEGORY_GUIDANCE[category]}</p>
+      <SourceLine report={report} />
+      <HourStrip hours={report.hours} />
+    </>
+  );
+}
+
 /** The air now, on India's scale, and the next twelve hours. */
 export function AirCard({
   air,
@@ -40,28 +60,7 @@ export function AirCard({
       {(air.status === 'loading' || air.status === 'idle') && (
         <Alert kind="status">Checking the air…</Alert>
       )}
-      {air.status === 'ready' && (
-        <>
-          <div className="flex items-center gap-4">
-            <span
-              aria-hidden="true"
-              className={`aqi-${air.report.current.category} h-16 w-4 rounded-full`}
-            />
-            <p>
-              <span className="block text-4xl font-bold tabular-nums">
-                {air.report.current.aqi}
-              </span>
-              <span className="text-lg font-semibold">
-                {CATEGORY_LABELS[air.report.current.category]}
-              </span>
-              <span className="sr-only"> on India’s National Air Quality Index</span>
-            </p>
-          </div>
-          <p className="text-ink-soft">{CATEGORY_GUIDANCE[air.report.current.category]}</p>
-          <SourceLine report={air.report} />
-          <HourStrip hours={air.report.hours} />
-        </>
-      )}
+      {air.status === 'ready' && <AirNow report={air.report} />}
     </section>
   );
 }

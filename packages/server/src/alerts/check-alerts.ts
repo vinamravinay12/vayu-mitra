@@ -1,4 +1,4 @@
-import { decideAlert } from '@vayu/core';
+import { decideAlert, type AlertDecision } from '@vayu/core';
 import type { AirService } from '../air/air-service.js';
 import { describeCause, logEvent } from '../logging/log.js';
 import type { Messenger } from '../push/messenger.js';
@@ -23,6 +23,17 @@ export interface AlertRunSummary {
 /** Families checked at once: the air report cache absorbs most of the upstream load. */
 const BATCH_SIZE = 20;
 
+/** Sends the alert when the decision says so; returns the devices still subscribed afterwards. */
+async function deliver(
+  messenger: Messenger,
+  subscriptions: UserRecord['pushSubscriptions'],
+  decision: AlertDecision,
+): Promise<UserRecord['pushSubscriptions']> {
+  if (!decision.send) return subscriptions;
+  const { staleEndpoints } = await messenger.send(subscriptions, decision);
+  return subscriptions.filter((subscription) => !staleEndpoints.includes(subscription.endpoint));
+}
+
 /** Checks one family; returns whether an alert went out. Saves only what changed. */
 async function checkOne(
   deps: AlertJobDependencies,
@@ -42,13 +53,7 @@ async function checkOne(
     placeName: record.place.name,
     now,
   });
-  let pushSubscriptions = record.pushSubscriptions;
-  if (decision.send) {
-    const { staleEndpoints } = await deps.messenger.send(pushSubscriptions, decision);
-    pushSubscriptions = pushSubscriptions.filter(
-      (subscription) => !staleEndpoints.includes(subscription.endpoint),
-    );
-  }
+  const pushSubscriptions = await deliver(deps.messenger, record.pushSubscriptions, decision);
   const changed =
     pushSubscriptions.length !== record.pushSubscriptions.length ||
     JSON.stringify(decision.state) !== JSON.stringify(record.alertState);

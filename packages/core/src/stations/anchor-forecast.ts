@@ -75,41 +75,49 @@ export function anchorForecast(
     return null;
   }
   const ratio = correctionRatio(station, modelNow);
-  const anchor = (hour: ForecastHour, ahead: number): ReportHour => {
-    const factor = 1 + (ratio - 1) * Math.max(0, 1 - ahead / ANCHOR_FADE_HOURS);
-    const pm25 = clamp(round1(hour.pm25 * factor), 0, MAX_CONCENTRATION);
-    const pm10 = clamp(round1(hour.pm10 * factor), 0, MAX_CONCENTRATION);
-    const reading = computeAqi(pm25, pm10);
-    return { time: hour.time, pm25, pm10, aqi: reading.value, category: reading.category };
-  };
-  const first = anchor(modelNow, 0);
+  const first = anchorHour(modelNow, { ratio, ahead: 0 });
   const later = forecast.hours
     .slice(start + 1, start + OUTLOOK_HOURS)
-    .map((hour, index) => anchor(hour, index + 1));
-  const current =
-    station === null
-      ? { ...computeAqi(first.pm25, first.pm10), basis: 'forecast' as const }
-      : { ...station.aqi, basis: 'station' as const };
+    .map((hour, index) => anchorHour(hour, { ratio, ahead: index + 1 }));
   return {
     timezone: forecast.timezone,
     utcOffsetSeconds: forecast.utcOffsetSeconds,
     fetchedAt: now.toISOString(),
-    current: {
-      aqi: current.value,
-      category: current.category,
-      dominant: current.dominant,
-      basis: current.basis,
-    },
-    station:
-      station === null
-        ? null
-        : {
-            name: station.station.name,
-            source: station.station.source,
-            distanceKm: station.distanceKm,
-            observedAt: station.station.observedAt,
-          },
+    current: currentReading(station, first),
+    station: stationSummary(station),
     hours: [first, ...later],
     forecastSource: forecast.source,
   };
+}
+
+/** One model hour scaled by the correction, which fades to nothing `ANCHOR_FADE_HOURS` ahead. */
+function anchorHour(hour: ForecastHour, at: { ratio: number; ahead: number }): ReportHour {
+  const factor = 1 + (at.ratio - 1) * Math.max(0, 1 - at.ahead / ANCHOR_FADE_HOURS);
+  const pm25 = clamp(round1(hour.pm25 * factor), 0, MAX_CONCENTRATION);
+  const pm10 = clamp(round1(hour.pm10 * factor), 0, MAX_CONCENTRATION);
+  const reading = computeAqi(pm25, pm10);
+  return { time: hour.time, pm25, pm10, aqi: reading.value, category: reading.category };
+}
+
+/** The air now: the station's own index when there is one, else the anchored model's. */
+function currentReading(station: NearestStation | null, first: ReportHour): AirReport['current'] {
+  const reading = station === null ? computeAqi(first.pm25, first.pm10) : station.aqi;
+  return {
+    aqi: reading.value,
+    category: reading.category,
+    dominant: reading.dominant,
+    basis: station === null ? 'forecast' : 'station',
+  };
+}
+
+/** Which station the reading came from, as the report names it. */
+function stationSummary(station: NearestStation | null): AirReport['station'] {
+  return station === null
+    ? null
+    : {
+        name: station.station.name,
+        source: station.station.source,
+        distanceKm: station.distanceKm,
+        observedAt: station.station.observedAt,
+      };
 }

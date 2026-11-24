@@ -29,64 +29,96 @@ export interface AccountSession {
   readonly version: number;
 }
 
+/** The two collections accounts live in. */
+export interface AccountCollections {
+  readonly accounts: DocumentCollection;
+  readonly emails: DocumentCollection;
+}
+
+/** What every account operation works with: the collections, the clock and an id source. */
+interface Context extends AccountCollections {
+  readonly now: () => Date;
+  readonly newId: () => string;
+}
+
+/** The stored account, or null when it is missing or does not parse. */
+async function readAccount({ accounts }: Context, uid: string) {
+  const parsed = accountSchema.safeParse(await accounts.get(uid));
+  return parsed.success ? parsed.data : null;
+}
+
+/** A new account, or `taken` when the email is in use. */
+async function register(
+  context: Context,
+  email: string,
+  password: string,
+): Promise<AccountSession | 'taken'> {
+  const uid = context.newId();
+  const passwordHash = await hashPassword(password);
+  try {
+    await context.emails.create(emailKey(email), { uid });
+  } catch (cause) {
+    if (cause instanceof AlreadyExistsError) return 'taken';
+    throw cause;
+  }
+  const record = {
+    email: normalizeEmail(email),
+    passwordHash,
+    sessionVersion: 0,
+    createdAt: context.now().toISOString(),
+  };
+  await context.accounts.set(uid, record);
+  return { uid, email: record.email, version: 0 };
+}
+
+/** The account for a correct email and password, or null; the same time either way. */
+async function authenticate(
+  context: Context,
+  email: string,
+  password: string,
+): Promise<AccountSession | null> {
+  const entry = emailEntrySchema.safeParse(await context.emails.get(emailKey(email)));
+  const found = entry.success ? await readAccount(context, entry.data.uid) : null;
+  const matches = await verifyPassword(password, found?.passwordHash ?? (await decoyHash));
+  return found !== null && entry.success && matches
+    ? { uid: entry.data.uid, email: found.email, version: found.sessionVersion }
+    : null;
+}
+
+/** The account a session belongs to, if it still exists and the session is current. */
+async function session(context: Context, uid: string, version: number) {
+  const found = await readAccount(context, uid);
+  return found !== null && found.sessionVersion === version
+    ? { uid, email: found.email, version }
+    : null;
+}
+
+/** Removes the account and its email, which ends every session. */
+async function remove(context: Context, uid: string): Promise<void> {
+  const found = await readAccount(context, uid);
+  if (found !== null) await context.emails.delete(emailKey(found.email));
+  await context.accounts.delete(uid);
+}
+
 /**
  * Accounts in two collections: `accounts/{uid}` and an index
  * `account-emails/{sha256(email)}` whose create-if-absent makes each email
  * unique even when two sign-ups race.
  */
 export function createAccountStore(
-  accounts: DocumentCollection,
-  emails: DocumentCollection,
+  collections: AccountCollections,
   now: () => Date,
   newId: () => string = randomUUID,
 ) {
-  const account = async (uid: string) => {
-    const parsed = accountSchema.safeParse(await accounts.get(uid));
-    return parsed.success ? parsed.data : null;
-  };
+  const context: Context = { ...collections, now, newId };
   return {
-    /** A new account, or `taken` when the email is in use. */
-    async register(email: string, password: string): Promise<AccountSession | 'taken'> {
-      const uid = newId();
-      const passwordHash = await hashPassword(password);
-      try {
-        await emails.create(emailKey(email), { uid });
-      } catch (cause) {
-        if (cause instanceof AlreadyExistsError) return 'taken';
-        throw cause;
-      }
-      const record = {
-        email: normalizeEmail(email),
-        passwordHash,
-        sessionVersion: 0,
-        createdAt: now().toISOString(),
-      };
-      await accounts.set(uid, record);
-      return { uid, email: record.email, version: 0 };
-    },
-    /** The account for a correct email and password, or null; the same time either way. */
-    async authenticate(email: string, password: string): Promise<AccountSession | null> {
-      const entry = emailEntrySchema.safeParse(await emails.get(emailKey(email)));
-      const found = entry.success ? await account(entry.data.uid) : null;
-      const matches = await verifyPassword(password, found?.passwordHash ?? (await decoyHash));
-      return found !== null && entry.success && matches
-        ? { uid: entry.data.uid, email: found.email, version: found.sessionVersion }
-        : null;
-    },
-    /** The account a session belongs to, if it still exists and the session is current. */
-    async session(uid: string, version: number): Promise<AccountSession | null> {
-      const found = await account(uid);
-      return found !== null && found.sessionVersion === version
-        ? { uid, email: found.email, version }
-        : null;
-    },
-    /** Removes the account and its email, which ends every session. */
-    async delete(uid: string): Promise<void> {
-      const found = await account(uid);
-      if (found !== null) await emails.delete(emailKey(found.email));
-      await accounts.delete(uid);
-    },
+    register: (email: string, password: string) => register(context, email, password),
+    authenticate: (email: string, password: string) => authenticate(context, email, password),
+    session: (uid: string, version: number): Promise<AccountSession | null> =>
+      session(context, uid, version),
+    delete: (uid: string) => remove(context, uid),
   };
 }
 
+/** The account operations the routes use. */
 export type AccountStore = ReturnType<typeof createAccountStore>;

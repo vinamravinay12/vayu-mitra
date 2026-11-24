@@ -16,7 +16,6 @@ describe('createGeminiClient', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
-
   it('sends a schema-constrained, time-limited JSON request', async () => {
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
     const generate = vi.fn<GenerateContent>(() => Promise.resolve({ text: '{"ok":true}' }));
@@ -37,13 +36,17 @@ describe('createGeminiClient', () => {
     });
     expect(call?.config?.abortSignal).toBeInstanceOf(AbortSignal);
   });
+});
 
+describe('createGeminiClient', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
   it('treats an empty response as an empty string', async () => {
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
     const client = createGeminiClient(() => Promise.resolve({}), ['model-a'], noWait);
     await expect(client.generate(request)).resolves.toBe('');
   });
-
   it('falls through to the next model when one fails', async () => {
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
     const generate = vi.fn<GenerateContent>(({ model }) =>
@@ -60,7 +63,12 @@ describe('createGeminiClient', () => {
       'free',
     ]);
   });
+});
 
+describe('createGeminiClient', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
   it('reports quota exhaustion distinctly from unavailability', async () => {
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
     const quota = createGeminiClient(

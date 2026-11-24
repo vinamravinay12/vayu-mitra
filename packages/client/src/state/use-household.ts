@@ -14,11 +14,8 @@ export interface HouseholdState {
   readonly saveWith: (save: () => Promise<Household>) => void;
 }
 
-/**
- * The family's record. Changes show at once and are saved; the server's answer
- * replaces the local copy, and a failed save brings the error into view.
- */
-export function useHousehold(api: Api): HouseholdState {
+/** The record as loaded from the server, the last error, and saving a change. */
+function useRecord(api: Api) {
   const [household, setHousehold] = useState<Household | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
@@ -32,6 +29,15 @@ export function useHousehold(api: Api): HouseholdState {
       setError(messageOf(cause));
     });
   }, []);
+  return { household, setHousehold, error, saveWith };
+}
+
+/**
+ * The family's record. Changes show at once and are saved; the server's answer
+ * replaces the local copy, and a failed save brings the error into view.
+ */
+export function useHousehold(api: Api): HouseholdState {
+  const { household, setHousehold, error, saveWith } = useRecord(api);
   const change = useCallback(
     <K extends 'memory' | 'place' | 'alerts'>(
       key: K,

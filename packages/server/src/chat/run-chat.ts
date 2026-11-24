@@ -1,11 +1,6 @@
 import {
   adviseActivity,
   applyChanges,
-  comparePlaces,
-  describeAdvice,
-  describeAir,
-  describePlace,
-  memoryChips,
   readIntent,
   suggestQuestions,
   type ActivityAdvice,
@@ -20,9 +15,8 @@ import { logEvent } from '../logging/log.js';
 import type { LlmClient } from '../llm/llm-client.js';
 import { newUserRecord } from '../store/user-record.js';
 import type { UserStore } from '../store/user-store.js';
-import { airElsewhere } from './other-places.js';
+import { answer } from './answer.js';
 import { understand, type Understood } from './understand.js';
-import { writeReply, type WrittenReply } from './write-reply.js';
 
 export interface ChatDependencies {
   readonly llm: LlmClient | null;
@@ -54,45 +48,6 @@ const screen = (llm: LlmClient | null, message: string): Promise<ScreenResult> =
     ? Promise.resolve({ safe: true, judgedBy: 'heuristic' })
     : judgeWithLlm(llm, message);
 
-/** What the reply is built from. */
-interface AnswerParts {
-  readonly report: AirReport;
-  readonly advice: ActivityAdvice | null;
-  readonly understood: Understood;
-  readonly before: Memory;
-  readonly memory: Memory;
-}
-
-/**
- * The reply: the advice, else other places asked about, else the air here,
- * worded by the model within the engine's facts, or by the engine itself.
- */
-async function answer(
-  deps: ChatDependencies,
-  request: ChatRequest,
-  { report, advice, understood, before, memory }: AnswerParts,
-): Promise<WrittenReply> {
-  const elsewhere = await airElsewhere(deps.air, understood.places);
-  const engineText =
-    advice !== null
-      ? describeAdvice(advice, report)
-      : elsewhere.length > 0
-        ? comparePlaces(elsewhere)
-        : describeAir(report);
-  const known = new Set(memoryChips(before).map((chip) => chip.label));
-  const chips = memoryChips(memory).map((chip) => chip.label);
-  const newlyRemembered = chips.filter((label) => !known.has(label));
-  const facts = {
-    air: describeAir(report),
-    otherPlaces: elsewhere.map(describePlace),
-    advice: advice === null ? null : describeAdvice(advice, report),
-    newlyRemembered,
-    alreadyKnown: chips.filter((label) => known.has(label)),
-    onTopic: understood.onTopic || advice !== null || elsewhere.length > 0,
-  };
-  return writeReply(deps.llm, request, facts, engineText);
-}
-
 /**
  * One turn of the conversation.
  *
@@ -108,37 +63,13 @@ export async function runChat(
 ): Promise<ChatResponse> {
   const now = deps.now();
   const record = (await deps.store.get(uid)) ?? newUserRecord(now);
-  if (!screenHeuristic(request.message).safe) {
-    logEvent('WARNING', 'chat message refused', { judgedBy: 'heuristic' });
-    return refusal(record.memory);
-  }
-  const [verdict, report, understood] = await Promise.all([
-    screen(deps.llm, request.message),
-    deps.air.report(request.place.latitude, request.place.longitude),
-    understand(deps.llm, request.message, request.history, record.memory),
-  ]);
-  if (!verdict.safe) {
-    logEvent('WARNING', 'chat message refused', { judgedBy: verdict.judgedBy });
-    return refusal(record.memory);
-  }
+  const gathered = await gather(deps, request, record.memory);
+  if (gathered === null) return refusal(record.memory);
+  const { report, understood } = gathered;
   const memory = applyChanges(record.memory, understood.changes);
-  const intent = readIntent(request.message, memory, understood.hints, previousQuestion(request));
-  const advice =
-    intent === null
-      ? null
-      : adviseActivity({
-          ...intent,
-          report,
-          now,
-          home: memory.home.map((fact) => fact.feature),
-        });
-  const reply = await answer(deps, request, {
-    report,
-    advice,
-    understood,
-    before: record.memory,
-    memory,
-  });
+  const advice = adviceFor({ request, memory, understood }, report, now);
+  const parts = { report, advice, understood, before: record.memory, memory };
+  const reply = await answer(deps, request, parts);
   await deps.store.put(uid, {
     ...record,
     memory,
@@ -152,4 +83,44 @@ export async function runChat(
     suggestions: suggestQuestions(memory),
     source: reply.source,
   };
+}
+
+/**
+ * Screens the message and, in parallel with the judge, fetches the air and
+ * reads the message. Null when either screen refuses it.
+ */
+async function gather(
+  deps: ChatDependencies,
+  request: ChatRequest,
+  memory: Memory,
+): Promise<{ report: AirReport; understood: Understood } | null> {
+  if (!screenHeuristic(request.message).safe) {
+    logEvent('WARNING', 'chat message refused', { judgedBy: 'heuristic' });
+    return null;
+  }
+  const [verdict, report, understood] = await Promise.all([
+    screen(deps.llm, request.message),
+    deps.air.report(request.place.latitude, request.place.longitude),
+    understand(deps.llm, request, memory),
+  ]);
+  if (!verdict.safe) {
+    logEvent('WARNING', 'chat message refused', { judgedBy: verdict.judgedBy });
+    return null;
+  }
+  return { report, understood };
+}
+
+/** The engine's advice for what the message asks, or null when it names no activity. */
+function adviceFor(
+  turn: { readonly request: ChatRequest; readonly memory: Memory; readonly understood: Understood },
+  report: AirReport,
+  now: Date,
+): ActivityAdvice | null {
+  const { request, memory, understood } = turn;
+  const intent = readIntent(request.message, memory, {
+    hints: understood.hints,
+    previous: previousQuestion(request),
+  });
+  const home = memory.home.map((fact) => fact.feature);
+  return intent === null ? null : adviseActivity({ ...intent, report, now, home });
 }

@@ -1,11 +1,8 @@
-import { ALERT_THRESHOLDS, CATEGORY_LABELS, type AlertSettings as Settings } from '@vayu/core';
+import type { AlertSettings as Settings } from '@vayu/core';
 import { useState } from 'react';
-import { z } from 'zod';
 import type { PushControls } from '../../state/use-push.js';
 import { Alert } from '../ui/Alert.js';
-
-/** The select's value, read back as the option it must be; a value outside the list throws. */
-const THRESHOLD = z.enum(ALERT_THRESHOLDS);
+import { AlertOptions } from './AlertOptions.js';
 
 const OUTCOME_MESSAGES = {
   denied:
@@ -19,54 +16,8 @@ interface AlertSettingsProps {
   readonly onChange: (settings: Settings) => void;
 }
 
-/** Threshold and quiet hours. */
-function AlertOptions({ settings, onChange }: Omit<AlertSettingsProps, 'push'>): React.JSX.Element {
-  const time = (field: 'quietStart' | 'quietEnd', id: string, label: string): React.JSX.Element => (
-    <div>
-      <label className="label" htmlFor={id}>
-        {label}
-      </label>
-      <input
-        id={id}
-        type="time"
-        className="field"
-        value={settings[field]}
-        required
-        onChange={(event) => {
-          onChange({ ...settings, [field]: event.target.value });
-        }}
-      />
-    </div>
-  );
-  return (
-    <div className="grid gap-3 sm:grid-cols-3">
-      <div>
-        <label className="label" htmlFor="alert-threshold">
-          From
-        </label>
-        <select
-          id="alert-threshold"
-          className="field"
-          value={settings.threshold}
-          onChange={(event) => {
-            onChange({ ...settings, threshold: THRESHOLD.parse(event.target.value) });
-          }}
-        >
-          {ALERT_THRESHOLDS.map((threshold) => (
-            <option key={threshold} value={threshold}>
-              {CATEGORY_LABELS[threshold]}
-            </option>
-          ))}
-        </select>
-      </div>
-      {time('quietStart', 'quiet-start', 'Quiet from')}
-      {time('quietEnd', 'quiet-end', 'Quiet until')}
-    </div>
-  );
-}
-
-/** Background alerts: on or off, from which category, and quiet hours. */
-export function AlertSettings({ settings, push, onChange }: AlertSettingsProps): React.JSX.Element {
+/** Switching alerts on (asking for permission) or off; a notice says why it could not turn on. */
+function useAlertToggle({ settings, push, onChange }: AlertSettingsProps) {
   const [notice, setNotice] = useState<string | null>(null);
   const toggle = async (enabled: boolean): Promise<void> => {
     setNotice(null);
@@ -79,6 +30,12 @@ export function AlertSettings({ settings, push, onChange }: AlertSettingsProps):
     if (outcome === 'enabled') onChange({ ...settings, enabled: true });
     else setNotice(OUTCOME_MESSAGES[outcome]);
   };
+  return { notice, toggle };
+}
+
+/** Background alerts: on or off, from which category, and quiet hours. */
+export function AlertSettings({ settings, push, onChange }: AlertSettingsProps): React.JSX.Element {
+  const { notice, toggle } = useAlertToggle({ settings, push, onChange });
   return (
     <section className="card space-y-3" aria-labelledby="alerts-heading">
       <h2 id="alerts-heading" className="text-lg font-bold">

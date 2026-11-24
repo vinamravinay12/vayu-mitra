@@ -1,48 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { adviseActivity } from '../advice/advise-activity.js';
-import { EMPTY_MEMORY, type Memory } from '../memory/memory-schema.js';
-import { DADI, makeReport, NOW, PAPA } from '../test-utils/fixtures.js';
-import { chatRequestSchema, chatResponseSchema } from './chat-schema.js';
-import {
-  comparePlaces,
-  describeAdvice,
-  describeAir,
-  describeSource,
-  describeTime,
-} from './describe.js';
-import { detectActivity, detectDay, detectPeriod, detectTime, readIntent } from './read-request.js';
-import { STARTER_QUESTIONS, suggestQuestions } from './suggest-questions.js';
-
-const memory: Memory = {
-  people: [DADI, PAPA],
-  routines: [
-    {
-      kind: 'routine',
-      id: 'routine:walk:dadi',
-      activity: 'walk',
-      personId: DADI.id,
-      time: '06:30',
-      minutes: 30,
-    },
-    {
-      kind: 'routine',
-      id: 'routine:walk:papa',
-      activity: 'walk',
-      personId: PAPA.id,
-      time: '19:00',
-      minutes: 40,
-    },
-    {
-      kind: 'routine',
-      id: 'routine:open-windows:family',
-      activity: 'open-windows',
-      personId: null,
-      time: null,
-      minutes: 15,
-    },
-  ],
-  home: [],
-};
+import { EMPTY_MEMORY } from '../memory/memory-schema.js';
+import { DADI, PAPA } from '../test-utils/fixtures.js';
+import { detectActivity, detectDay, detectPeriod, detectTime } from './detect.js';
+import { readIntent } from './read-request.js';
+import { memory } from './chat.fixtures.js';
 
 describe('detectActivity', () => {
   it('matches whole words and prefers the longest keyword', () => {
@@ -107,13 +68,13 @@ describe('days and follow-ups', () => {
   it('reads a car trip, and keeps it for a follow-up that only changes when', () => {
     expect(detectActivity('I want to go to Delhi by my car')).toBe('car-trip');
     const previous = 'Can I drive to Delhi at 6 pm?';
-    const intent = readIntent('But I am asking about tomorrow', memory, undefined, previous);
+    const intent = readIntent('But I am asking about tomorrow', memory, { previous });
     expect(intent).toMatchObject({ activity: 'car-trip', day: 'tomorrow', time: '18:00' });
-    expect(readIntent('and at 9 am?', memory, undefined, previous)?.time).toBe('09:00');
+    expect(readIntent('and at 9 am?', memory, { previous })?.time).toBe('09:00');
     // A new question is not a follow-up, and no previous question means no guess.
-    expect(readIntent('How is the air tomorrow?', memory, undefined, null)).toBeNull();
-    expect(readIntent('How is the air?', memory, undefined, previous)).toBeNull();
-    expect(readIntent('Can I walk tomorrow?', memory, undefined, previous)?.activity).toBe('walk');
+    expect(readIntent('How is the air tomorrow?', memory, { previous: null })).toBeNull();
+    expect(readIntent('How is the air?', memory, { previous })).toBeNull();
+    expect(readIntent('Can I walk tomorrow?', memory, { previous })?.activity).toBe('walk');
   });
 });
 
@@ -125,163 +86,5 @@ describe('parts of the day', () => {
     expect(detectPeriod('shaam ko walk')).toBe('evening');
     expect(detectPeriod('Is it OK tonight?')).toBe('night');
     expect(detectPeriod('Can I run?')).toBeNull();
-  });
-
-  it('carries the day across a follow-up about the same activity, as in the reported chat', () => {
-    const previous = 'And can I go out for a run tomorrow morning';
-    expect(readIntent(previous, memory)).toMatchObject({
-      activity: 'run',
-      day: 'tomorrow',
-      period: 'morning',
-      time: null,
-    });
-    const followUp = readIntent(
-      'but is it advisable to run in morning or not',
-      memory,
-      undefined,
-      previous,
-    );
-    expect(followUp).toMatchObject({
-      activity: 'run',
-      day: 'tomorrow',
-      period: 'morning',
-      time: null,
-    });
-    // A different activity is a new question: nothing is carried over.
-    const walk = readIntent('Can I walk?', memory, undefined, previous);
-    expect(walk).toMatchObject({ activity: 'walk', day: null, period: null });
-  });
-
-  it('lets a clock time beat a part of the day, and a part of the day replace an earlier time', () => {
-    expect(readIntent('Can I run at 7 am in the morning?', memory)).toMatchObject({
-      time: '07:00',
-      period: null,
-    });
-    const previous = 'Can I run at 9 pm?';
-    expect(readIntent('what about in the morning?', memory, undefined, previous)).toMatchObject({
-      activity: 'run',
-      time: null,
-      period: 'morning',
-    });
-    expect(
-      readIntent('and at 6 am?', memory, undefined, 'Can I run in the evening?'),
-    ).toMatchObject({
-      time: '06:00',
-      period: null,
-    });
-  });
-});
-
-describe('readIntent with hints', () => {
-  it('lets the AI reading override keywords', () => {
-    const intent = readIntent('क्या माँ टहल सकती हैं?', memory, {
-      activity: 'walk',
-      person: 'Papa',
-      time: '08:00',
-      day: 'tomorrow',
-      period: null,
-    });
-    expect(intent?.day).toBe('tomorrow');
-    expect(intent?.activity).toBe('walk');
-    expect(intent?.people).toEqual([PAPA]);
-    expect(intent?.time).toBe('08:00');
-    expect(readIntent('क्या माँ टहल सकती हैं?', memory)).toBeNull();
-  });
-});
-
-describe('describe', () => {
-  const report = makeReport([340, 320, 300, 250, 190, 200, 260]);
-
-  it('describes times, sources and the air', () => {
-    expect(describeTime('2026-11-22T14:00', report)).toBe('at 2 pm');
-    expect(describeTime('2026-11-23T06:00', report)).toBe('tomorrow at 6 am');
-    expect(describeSource(report)).toBe('measured at ITO, Delhi - CPCB, 2.1 km away (CPCB)');
-    expect(describeSource({ ...report, station: null })).toMatch(/^from the forecast model/);
-    expect(describeAir(report)).toBe(
-      'Right now the air is Very poor (AQI 340), measured at ITO, Delhi - CPCB, 2.1 km away (CPCB). The cleanest daylight hours ahead start at 2 pm: Moderate (AQI 190).',
-    );
-    expect(describeAir(makeReport([100, 200, 300]))).toMatch(/not expected to get cleaner/);
-    expect(describeAir(makeReport([100]))).toMatch(/not expected to get cleaner/);
-  });
-
-  it('describes each verdict with who it is careful for and the tips', () => {
-    const at = (aqis: number[], people = [PAPA]) =>
-      describeAdvice(
-        adviseActivity({
-          activity: 'walk',
-          report: makeReport(aqis),
-          now: NOW,
-          people,
-          home: [],
-          time: null,
-          day: null,
-          period: null,
-          minutes: null,
-        }),
-        makeReport(aqis),
-      );
-    expect(at([150])).toMatch(/^At 10 am it is Moderate \(AQI 150\), which is fine for the walk\./);
-    expect(at([250, 180])).toMatch(
-      /It looks better at 11 am: Moderate \(AQI 180\), so move the walk to then\./,
-    );
-    expect(at([250])).toMatch(/OK if you keep it short/);
-    expect(at([380])).toMatch(/Skip the walk; try a brisk walk indoors/);
-    expect(at([150], [DADI])).toMatch(/Dadi is more sensitive to smog/);
-    expect(at([150], [DADI, { ...DADI, id: 'x', label: 'Nana' }])).toMatch(
-      /Dadi and Nana are more sensitive/,
-    );
-    expect(at([40])).toBe('At 10 am it is Good (AQI 40), which is fine for the walk.');
-  });
-});
-
-describe('other places', () => {
-  const gurgaon = { name: 'Gurgaon', report: makeReport([210]) };
-  const ghaziabad = { name: 'Ghaziabad', report: makeReport([342]) };
-
-  it('describes one place, and compares several by their air now', () => {
-    expect(comparePlaces([gurgaon])).toBe(
-      'Gurgaon: Poor (AQI 210), measured at ITO, Delhi - CPCB, 2.1 km away (CPCB).',
-    );
-    expect(comparePlaces([ghaziabad, gurgaon])).toMatch(
-      /^Ghaziabad: Very poor \(AQI 342\).*Gurgaon: Poor \(AQI 210\).* Gurgaon has the cleaner air right now\.$/,
-    );
-    const twin = { name: 'Noida', report: makeReport([210]) };
-    expect(comparePlaces([gurgaon, twin])).toMatch(/about the same in both right now\.$/);
-    expect(comparePlaces([])).toBe('.');
-  });
-});
-
-describe('suggestQuestions', () => {
-  it('offers routine questions first, then starters, up to four', () => {
-    expect(suggestQuestions(memory)).toEqual([
-      "Is Dadi's walk at 6:30 am OK today?",
-      "Is Papa's walk at 7 pm OK today?",
-      'When is the best time for our airing the home today?',
-      STARTER_QUESTIONS[0],
-    ]);
-    expect(suggestQuestions(EMPTY_MEMORY)).toEqual(STARTER_QUESTIONS);
-  });
-});
-
-describe('chat schemas', () => {
-  const place = {
-    name: 'Delhi',
-    region: 'Delhi',
-    country: 'India',
-    latitude: 28.6,
-    longitude: 77.2,
-  };
-  it('bound requests and responses', () => {
-    expect(chatRequestSchema.safeParse({ message: ' hi ', place, history: [] }).success).toBe(true);
-    expect(chatRequestSchema.safeParse({ message: '   ', place, history: [] }).success).toBe(false);
-    expect(
-      chatResponseSchema.safeParse({
-        reply: 'ok',
-        advice: null,
-        memory: EMPTY_MEMORY,
-        suggestions: [],
-        source: 'ai',
-      }).success,
-    ).toBe(true);
   });
 });

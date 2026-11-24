@@ -62,51 +62,59 @@ export function createGeminiClient(
 ): LlmClient {
   const callModel = (model: string, request: LlmRequest): Promise<string> =>
     withRetry(async () => {
-      const response = await generateContent({
-        model,
-        contents: [{ role: 'user', parts: [{ text: request.prompt }] }],
-        config: {
-          systemInstruction: request.systemInstruction,
-          temperature: request.temperature,
-          maxOutputTokens: MAX_OUTPUT_TOKENS[request.purpose],
-          thinkingConfig: { thinkingLevel: THINKING_LEVEL[request.purpose] },
-          responseMimeType: 'application/json',
-          responseJsonSchema: request.schema,
-          abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-        },
-      });
+      const response = await generateContent({ model, ...toSdkRequest(request) });
       return response.text ?? '';
     }, retry);
-
-  return {
-    async generate(request: LlmRequest): Promise<string> {
-      let lastError: unknown = new Error('No models configured');
-      for (const model of models) {
-        const started = Date.now();
-        try {
-          const text = await callModel(model, request);
-          logEvent('INFO', 'gemini call', {
-            model,
-            purpose: request.purpose,
-            ms: Date.now() - started,
-          });
-          return text;
-        } catch (cause) {
-          lastError = cause;
-          logEvent('WARNING', 'gemini call failed', {
-            model,
-            purpose: request.purpose,
-            cause: describeCause(cause),
-          });
-        }
-      }
-      const message = describeCause(lastError);
-      throw isQuotaExceeded(lastError)
-        ? new LlmQuotaExceededError(message)
-        : new LlmUnavailableError(message);
-    },
-  };
+  return { generate: (request) => firstAnswer(callModel, models, request) };
 }
+
+/** Tries each model in order and returns the first answer, logging each call; throws once all fail. */
+async function firstAnswer(
+  callModel: (model: string, request: LlmRequest) => Promise<string>,
+  models: readonly string[],
+  request: LlmRequest,
+): Promise<string> {
+  let lastError: unknown = new Error('No models configured');
+  for (const model of models) {
+    const started = Date.now();
+    try {
+      const text = await callModel(model, request);
+      logEvent('INFO', 'gemini call', {
+        model,
+        purpose: request.purpose,
+        ms: Date.now() - started,
+      });
+      return text;
+    } catch (cause) {
+      lastError = cause;
+      const failure = { model, purpose: request.purpose, cause: describeCause(cause) };
+      logEvent('WARNING', 'gemini call failed', failure);
+    }
+  }
+  throw finalError(lastError);
+}
+
+/** The SDK request for one call: the prompt, schema-constrained JSON, a token budget and a timeout. */
+const toSdkRequest = (request: LlmRequest) => ({
+  contents: [{ role: 'user', parts: [{ text: request.prompt }] }],
+  config: {
+    systemInstruction: request.systemInstruction,
+    temperature: request.temperature,
+    maxOutputTokens: MAX_OUTPUT_TOKENS[request.purpose],
+    thinkingConfig: { thinkingLevel: THINKING_LEVEL[request.purpose] },
+    responseMimeType: 'application/json',
+    responseJsonSchema: request.schema,
+    abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  },
+});
+
+/** What to throw once every model has failed: quota spent, or the service unavailable. */
+const finalError = (lastError: unknown): Error => {
+  const message = describeCause(lastError);
+  return isQuotaExceeded(lastError)
+    ? new LlmQuotaExceededError(message)
+    : new LlmUnavailableError(message);
+};
 
 /** Binds the adapter to the real SDK. */
 export function createGeminiClientFromKey(apiKey: string, models: readonly string[]): LlmClient {

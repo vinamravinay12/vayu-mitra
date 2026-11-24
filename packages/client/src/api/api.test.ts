@@ -24,7 +24,6 @@ describe('requestJson', () => {
     await api.deleteEverything();
     expect(server.requests.at(-1)?.method).toBe('DELETE');
   });
-
   it('turns network failures and error answers into readable errors', async () => {
     const server = installFakeServer();
     server.failures.set('GET /api/me', 'network');
@@ -32,7 +31,6 @@ describe('requestJson', () => {
     server.failures.set('GET /api/me', 503);
     await expect(api.me()).rejects.toMatchObject({ message: 'Failed with 503.', status: 503 });
   });
-
   it('falls back to a generic message when the error body is not usable', async () => {
     const answer = (body: string) => {
       vi.stubGlobal('fetch', () => Promise.resolve(new Response(body, { status: 500 })));
@@ -42,7 +40,9 @@ describe('requestJson', () => {
     await expect(answer('{"error":7}')).rejects.toThrow('Something went wrong');
     await expect(answer('null')).rejects.toThrow('Something went wrong');
   });
+});
 
+describe('requestJson', () => {
   it('refuses answers of the wrong shape', async () => {
     vi.stubGlobal('fetch', () => Promise.resolve(new Response('{"places":"no"}', { status: 200 })));
     await expect(api.searchPlaces('x')).rejects.toThrow('The place search came back incomplete');
@@ -77,7 +77,6 @@ describe('config and accounts', () => {
     expect(readConfig({ auth: 'none', vapidKey: null }).auth).toBe('none');
     expect(readSession({ signedIn: true, email: 'a@b.test' }).email).toBe('a@b.test');
   });
-
   it('signs up, signs out, signs in, and reports a wrong password', async () => {
     const server = installFakeServer({ config: PASSWORD_CONFIG });
     expect(await signIn('register', 'a@b.test', 'long password')).toEqual({ email: 'a@b.test' });
@@ -94,7 +93,9 @@ describe('config and accounts', () => {
       'sign-in came back incomplete',
     );
   });
+});
 
+describe('config and accounts', () => {
   it('refuses malformed config and session answers', () => {
     for (const bad of [
       null,

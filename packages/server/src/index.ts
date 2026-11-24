@@ -28,7 +28,9 @@ const llm =
   config.geminiApiKey === null
     ? null
     : createGeminiClientFromKey(config.geminiApiKey, config.models);
-const air = createAirService(airSources(config.airDataMode, fetchJsonOverNetwork, config, now));
+const air = createAirService(
+  airSources(config.airDataMode, { fetchJson: fetchJsonOverNetwork, keys: config, now }),
+);
 // On Cloud Run, Firestore finds the project and authenticates as the service's own account.
 const firestore =
   config.store === 'firestore' ? new Firestore({ ignoreUndefinedProperties: true }) : null;
@@ -38,7 +40,10 @@ const collection = (name: string): DocumentCollection =>
 const accounts =
   config.authMode === 'none'
     ? null
-    : createAccountStore(collection('accounts'), collection('account-emails'), now);
+    : createAccountStore(
+        { accounts: collection('accounts'), emails: collection('account-emails') },
+        now,
+      );
 const verifyScheduler =
   config.scheduler === null ? null : oidcSchedulerVerifier(new OAuth2Client(), config.scheduler);
 

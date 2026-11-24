@@ -1,21 +1,11 @@
 import { computeNaqi } from '@vayu/core';
 import { describe, expect, it } from 'vitest';
 import { airResponse, GEOCODE_RESPONSE } from '../test-utils/open-meteo-samples.js';
-import { cpcbRows, WAQI_FEED } from '../test-utils/station-samples.js';
+import { cpcbRows } from '../test-utils/station-samples.js';
 import { fetchCpcbStations, parseCpcbRecords, parseCpcbTime } from './cpcb.js';
-import { fetchJsonOverNetwork, UpstreamError, type FetchJson } from './fetch-json.js';
+import { UpstreamError } from './fetch-json.js';
 import { fetchAirForecast, MAX_PLACES, roundCoordinate, searchPlaces } from './open-meteo.js';
-import { fetchWaqiStations } from './waqi.js';
-
-/** A fetcher that records URLs and answers with `body`. */
-function answering(body: unknown): FetchJson & { urls: string[] } {
-  const urls: string[] = [];
-  const fetcher = (url: string) => {
-    urls.push(url);
-    return Promise.resolve(body);
-  };
-  return Object.assign(fetcher, { urls });
-}
+import { answering } from './adapters.fixtures.js';
 
 describe('Open-Meteo forecast', () => {
   it('normalises hours, drops PM2.5 gaps and estimates missing PM10', async () => {
@@ -59,7 +49,6 @@ describe('CPCB feed', () => {
     expect(parseCpcbTime('2026-11-22 10:00')).toBeNull();
     expect(parseCpcbTime('32-13-2026 10:00:00')).toBeNull();
   });
-
   it('groups rows into stations and turns sub-indices back into concentrations', () => {
     const [station] = parseCpcbRecords(cpcbRows());
     expect(station).toMatchObject({
@@ -73,7 +62,6 @@ describe('CPCB feed', () => {
     // The round trip gives CPCB's own index back.
     expect(computeNaqi(station?.pollutants ?? {})?.value).toBe(350);
   });
-
   it('drops rows and stations that do not parse', () => {
     const records = [
       ...cpcbRows({ station: 'No place', latitude: 'NA' }),
@@ -84,7 +72,9 @@ describe('CPCB feed', () => {
     ];
     expect(parseCpcbRecords(records).map((station) => station.name)).toEqual(['Good']);
   });
+});
 
+describe('CPCB feed', () => {
   it('fetches the national feed in one request', async () => {
     const fetchJson = answering({ records: cpcbRows() });
     expect(await fetchCpcbStations(fetchJson, 'key')).toHaveLength(1);
@@ -93,45 +83,5 @@ describe('CPCB feed', () => {
     await expect(fetchCpcbStations(answering({ message: 'bad key' }), 'k')).rejects.toThrow(
       'shape',
     );
-  });
-});
-
-describe('WAQI feed', () => {
-  it('converts EPA indices to concentrations', async () => {
-    const fetchJson = answering(WAQI_FEED);
-    const [station] = await fetchWaqiStations(fetchJson, 'token', 28.6139, 77.209);
-    expect(fetchJson.urls[0]).toBe('https://api.waqi.info/feed/geo:28.61;77.21/?token=token');
-    expect(station).toEqual({
-      id: '2556',
-      name: 'Major Dhyan Chand National Stadium, Delhi',
-      latitude: 28.6139,
-      longitude: 77.209,
-      source: 'waqi',
-      observedAt: '2026-11-22T10:00:00+05:30',
-      pollutants: { pm25: 161.6, pm10: 233.8 },
-    });
-  });
-
-  it('handles no station, missing pollutants and odd shapes', async () => {
-    expect(await fetchWaqiStations(answering({ status: 'error' }), 't', 1, 1)).toEqual([]);
-    const bare = { ...WAQI_FEED, data: { ...WAQI_FEED.data, iaqi: {} } };
-    expect((await fetchWaqiStations(answering(bare), 't', 1, 1))[0]?.pollutants).toEqual({});
-    await expect(fetchWaqiStations(answering({ status: 'ok' }), 't', 1, 1)).rejects.toThrow(
-      'shape',
-    );
-  });
-});
-
-describe('fetchJsonOverNetwork', () => {
-  it('returns JSON and turns non-2xx answers into UpstreamError', async () => {
-    const realFetch = globalThis.fetch;
-    try {
-      globalThis.fetch = () => Promise.resolve(new Response('{"ok":true}', { status: 200 }));
-      expect(await fetchJsonOverNetwork('https://example.test')).toEqual({ ok: true });
-      globalThis.fetch = () => Promise.resolve(new Response('', { status: 503 }));
-      await expect(fetchJsonOverNetwork('https://example.test')).rejects.toThrow('answered 503');
-    } finally {
-      globalThis.fetch = realFetch;
-    }
   });
 });

@@ -1,4 +1,3 @@
-import { createHmac } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { createMemoryCollection } from '../store/user-store.js';
 import { NOW } from '../test-utils/fake-llm.js';
@@ -11,8 +10,7 @@ import {
   sessionCookie,
   setSessionCookie,
 } from './sessions.js';
-
-const SECRET = 'a-session-secret-of-at-least-32-chars';
+import { SECRET, signed } from './auth.fixtures.js';
 
 describe('passwords', () => {
   it('hashes with a fresh salt and verifies only the right password', async () => {
@@ -34,10 +32,6 @@ describe('passwords', () => {
     expect(await verifyPassword('anything', await decoyHash)).toBe(false);
   });
 });
-
-/** A token signed with the real secret around an arbitrary payload. */
-const signed = (payload: string): string =>
-  `${payload}.${createHmac('sha256', SECRET).update(payload).digest('base64url')}`;
 
 describe('sessions', () => {
   it('round-trips claims and rejects edits, other keys and expiry', () => {
@@ -74,8 +68,11 @@ describe('sessions', () => {
 
 describe('account store', () => {
   const store = () =>
-    createAccountStore(createMemoryCollection(), createMemoryCollection(), NOW, () => 'u1');
-
+    createAccountStore(
+      { accounts: createMemoryCollection(), emails: createMemoryCollection() },
+      NOW,
+      () => 'u1',
+    );
   it('registers once per email, case-insensitively', async () => {
     const accounts = store();
     expect(await accounts.register('Asha@Example.test', 'correct horse battery')).toEqual({
@@ -86,31 +83,5 @@ describe('account store', () => {
     expect(await accounts.register('asha@example.TEST ', 'another password')).toBe('taken');
     expect(normalizeEmail(' A@B.C ')).toBe('a@b.c');
     expect(emailKey('A@b.c')).toBe(emailKey('a@B.c '));
-  });
-
-  it('authenticates, checks session generations, and deletes', async () => {
-    const accounts = store();
-    await accounts.register('asha@example.test', 'correct horse battery');
-    expect(await accounts.authenticate('ASHA@example.test', 'correct horse battery')).toMatchObject(
-      {
-        uid: 'u1',
-      },
-    );
-    expect(await accounts.authenticate('asha@example.test', 'wrong password')).toBeNull();
-    expect(await accounts.authenticate('nobody@example.test', 'correct horse battery')).toBeNull();
-    expect(await accounts.session('u1', 0)).toMatchObject({ email: 'asha@example.test' });
-    expect(await accounts.session('u1', 1)).toBeNull();
-    await accounts.delete('u1');
-    expect(await accounts.session('u1', 0)).toBeNull();
-    await accounts.delete('u1');
-  });
-
-  it('passes on storage failures other than a taken email', async () => {
-    const emails = createMemoryCollection();
-    emails.create = () => Promise.reject(new Error('firestore down'));
-    const accounts = createAccountStore(createMemoryCollection(), emails, NOW);
-    await expect(accounts.register('a@b.test', 'correct horse battery')).rejects.toThrow(
-      'firestore down',
-    );
   });
 });

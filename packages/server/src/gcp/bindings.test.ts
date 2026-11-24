@@ -28,7 +28,9 @@ describe('firestoreCollection', () => {
     ]);
     expect(collection.where).toHaveBeenCalledWith('alerts.enabled', '==', true);
   });
+});
 
+describe('firestoreCollection', () => {
   it('turns "already exists" into AlreadyExistsError and passes other failures on', async () => {
     const failing = (error: Error) =>
       firestoreCollection({

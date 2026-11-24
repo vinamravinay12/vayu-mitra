@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import {
+  MEMORY,
   collectPageErrors,
   expectNoAxeViolations,
   freshStart,
@@ -15,30 +16,6 @@ import {
  * production security headers, email-and-password accounts, no Gemini key
  * (the engine answers) and fixture air data. Each test creates its own account.
  */
-
-/** What the household remembers in the memory journey. */
-const MEMORY = {
-  people: [
-    {
-      kind: 'person',
-      id: 'person:dadi',
-      label: 'Dadi',
-      ageGroup: 'senior',
-      conditions: ['asthma'],
-    },
-  ],
-  routines: [
-    {
-      kind: 'routine',
-      id: 'routine:walk:dadi',
-      activity: 'walk',
-      personId: 'person:dadi',
-      time: '06:30',
-      minutes: 30,
-    },
-  ],
-  home: [{ kind: 'home', id: 'home:n95-masks', feature: 'n95-masks' }],
-};
 
 test.describe.configure({ mode: 'serial' });
 
@@ -68,9 +45,9 @@ test('signs out, refuses a wrong password, and signs back in to the same househo
   await page.getByRole('button', { name: 'Sign out' }).click();
   await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
   await expectNoAxeViolations(page);
-  await submitCredentials(page, email, 'Sign in', 'not the password');
+  await submitCredentials(page, 'Sign in', { email, password: 'not the password' });
   await expect(page.getByRole('alert')).toContainText('do not match an account');
-  await submitCredentials(page, email, 'Sign in');
+  await submitCredentials(page, 'Sign in', { email });
   await expect(page.getByRole('heading', { name: 'Air in New Delhi' })).toBeVisible();
 });
 
@@ -126,6 +103,6 @@ test('deleting the data deletes the account and signs out', async ({ page }) => 
   await page.getByRole('button', { name: 'Delete my data' }).click();
   await page.getByRole('button', { name: 'Yes, delete everything' }).click();
   await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
-  await submitCredentials(page, email, 'Sign in');
+  await submitCredentials(page, 'Sign in', { email });
   await expect(page.getByRole('alert')).toContainText('do not match an account');
 });

@@ -32,12 +32,14 @@ const feedSchema = z.discriminatedUnion('status', [
   z.object({ status: z.literal('error') }),
 ]);
 
+/** One station as the WAQI feed describes it. */
+type WaqiStation = Extract<z.infer<typeof feedSchema>, { status: 'ok' }>['data'];
+
 /** The station WAQI considers nearest a point, or none. */
 export async function fetchWaqiStations(
   fetchJson: FetchJson,
   token: string,
-  latitude: number,
-  longitude: number,
+  { latitude, longitude }: { readonly latitude: number; readonly longitude: number },
 ): Promise<StationReading[]> {
   const point = `geo:${String(roundCoordinate(latitude))};${String(roundCoordinate(longitude))}`;
   const parsed = feedSchema.safeParse(
@@ -49,7 +51,11 @@ export async function fetchWaqiStations(
   if (parsed.data.status === 'error') {
     return [];
   }
-  const { idx, time, city, iaqi } = parsed.data.data;
+  return [toReading(parsed.data.data)];
+}
+
+/** One WAQI feed entry as a station reading, its US AQI sub-indices turned back into concentrations. */
+function toReading({ idx, time, city, iaqi }: WaqiStation): StationReading {
   const pollutants = {
     ...(iaqi.pm25 === undefined
       ? {}
@@ -58,15 +64,13 @@ export async function fetchWaqiStations(
       ? {}
       : { pm10: epaIndexToConcentration(iaqi.pm10.v, EPA_PM10_BANDS) }),
   };
-  return [
-    {
-      id: String(idx),
-      name: city.name.slice(0, 160),
-      latitude: city.geo[0],
-      longitude: city.geo[1],
-      source: 'waqi',
-      observedAt: time.iso,
-      pollutants,
-    },
-  ];
+  return {
+    id: String(idx),
+    name: city.name.slice(0, 160),
+    latitude: city.geo[0],
+    longitude: city.geo[1],
+    source: 'waqi',
+    observedAt: time.iso,
+    pollutants,
+  };
 }

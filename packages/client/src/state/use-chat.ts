@@ -1,4 +1,10 @@
-import { CHAT_LIMITS, type ActivityAdvice, type ChatResponse, type Place } from '@vayu/core';
+import {
+  CHAT_LIMITS,
+  type ActivityAdvice,
+  type ChatRequest,
+  type ChatResponse,
+  type Place,
+} from '@vayu/core';
 import { useCallback, useRef, useState } from 'react';
 import type { Api } from '../api/api.js';
 import { messageOf } from './use-startup.js';
@@ -19,6 +25,63 @@ export interface ChatState {
   readonly send: (text: string) => void;
 }
 
+/** The last few turns, as the server takes them, so a follow-up makes sense. */
+const historyOf = (messages: readonly ChatMessage[]) =>
+  messages.slice(-CHAT_LIMITS.historyTurns).map(({ role, text }) => ({ role, text }));
+
+/** The reply as a message on screen, with its advice card. */
+const assistantMessage = (id: number, reply: ChatResponse): ChatMessage => ({
+  id,
+  role: 'assistant',
+  text: reply.reply,
+  advice: reply.advice,
+  source: reply.source,
+});
+
+/** Sends one turn and reports the answer or a readable error, then that it is done. */
+function ask(
+  api: Api,
+  request: ChatRequest,
+  on: {
+    readonly onAnswer: (reply: ChatResponse) => void;
+    readonly onError: (message: string) => void;
+    readonly onDone: () => void;
+  },
+): void {
+  api
+    .chat(request)
+    .then(on.onAnswer)
+    .catch((cause: unknown) => {
+      on.onError(messageOf(cause));
+    })
+    .finally(on.onDone);
+}
+
+/** The messages on screen, adding one, and ids for a new turn (two per turn: question and reply). */
+function useMessages() {
+  const [messages, setMessages] = useState<readonly ChatMessage[]>([]);
+  const lastId = useRef(0);
+  const append = useCallback((message: ChatMessage) => {
+    setMessages((current) => [...current, message]);
+  }, []);
+  const nextId = useCallback(() => (lastId.current += 2), []);
+  return { messages, append, nextId };
+}
+
+/** Whether a turn is under way and the last error: a turn starts clean and finishes either way. */
+function useTurnStatus() {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const start = useCallback(() => {
+    setPending(true);
+    setError(null);
+  }, []);
+  const finish = useCallback(() => {
+    setPending(false);
+  }, []);
+  return { pending, error, start, fail: setError, finish };
+}
+
 /**
  * The conversation. It lives only in this tab: the server keeps what was
  * learnt (the memory chips), never the transcript. The last few turns go with
@@ -29,44 +92,26 @@ export function useChat(
   place: Place | null,
   onReply: (reply: ChatResponse) => void,
 ): ChatState {
-  const [messages, setMessages] = useState<readonly ChatMessage[]>([]);
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const nextId = useRef(0);
+  const { messages, append, nextId } = useMessages();
+  const { pending, error, start, fail, finish } = useTurnStatus();
   const send = useCallback(
     (text: string) => {
       const message = text.trim();
       if (place === null || message === '' || pending) return;
-      const id = (nextId.current += 2);
-      const history = messages
-        .slice(-CHAT_LIMITS.historyTurns)
-        .map(({ role, text: turn }) => ({ role, text: turn }));
-      setMessages((current) => [...current, { id, role: 'user', text: message }]);
-      setPending(true);
-      setError(null);
-      api
-        .chat({ message, place, history })
-        .then((reply) => {
-          setMessages((current) => [
-            ...current,
-            {
-              id: id + 1,
-              role: 'assistant',
-              text: reply.reply,
-              advice: reply.advice,
-              source: reply.source,
-            },
-          ]);
+      const id = nextId();
+      const request = { message, place, history: historyOf(messages) };
+      append({ id, role: 'user', text: message });
+      start();
+      ask(api, request, {
+        onAnswer: (reply) => {
+          append(assistantMessage(id + 1, reply));
           onReply(reply);
-        })
-        .catch((cause: unknown) => {
-          setError(messageOf(cause));
-        })
-        .finally(() => {
-          setPending(false);
-        });
+        },
+        onError: fail,
+        onDone: finish,
+      });
     },
-    [api, messages, onReply, pending, place],
+    [api, append, fail, finish, messages, nextId, onReply, pending, place, start],
   );
   return { messages, pending, error, send };
 }

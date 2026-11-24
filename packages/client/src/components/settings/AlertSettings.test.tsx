@@ -39,7 +39,9 @@ describe('AlertSettings', () => {
     });
     expect(push.disable).toHaveBeenCalled();
   });
+});
 
+describe('AlertSettings', () => {
   it('explains a refusal and an unsupported browser without saving', async () => {
     const onChange = vi.fn();
     const { rerender } = render(
@@ -62,7 +64,9 @@ describe('AlertSettings', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('cannot show background alerts');
     expect(onChange).not.toHaveBeenCalled();
   });
+});
 
+describe('AlertSettings', () => {
   it('changes the threshold and quiet hours', async () => {
     const onChange = vi.fn();
     render(

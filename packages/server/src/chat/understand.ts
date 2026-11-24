@@ -29,8 +29,7 @@ export const NOT_UNDERSTOOD: Understood = {
  */
 export async function understand(
   llm: LlmClient | null,
-  message: string,
-  history: readonly ChatTurn[],
+  { message, history }: { readonly message: string; readonly history: readonly ChatTurn[] },
   memory: Memory,
 ): Promise<Understood> {
   if (llm === null) {

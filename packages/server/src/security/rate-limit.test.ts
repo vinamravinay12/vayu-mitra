@@ -47,7 +47,6 @@ describe('rateLimit', () => {
     expect(blocked.response.statusCode).toBe(429);
     expect(blocked.response.headers['retry-after']).toBe('1');
   });
-
   it('counts clients separately and resets when the window rolls over', () => {
     let clock = 0;
     const limiter = rateLimit(options(() => clock));
@@ -58,7 +57,9 @@ describe('rateLimit', () => {
     clock = 1000;
     expect(send(limiter, 'a').allowed).toBe(true);
   });
+});
 
+describe('rateLimit', () => {
   it('evicts expired windows first, then the oldest, when the table is full', () => {
     let clock = 0;
     const limiter = rateLimit(options(() => clock, { maxClients: 2, max: 1 }));
@@ -72,12 +73,10 @@ describe('rateLimit', () => {
     // Both expired now: they are swept, and 'd' is admitted.
     expect(send(limiter, 'd').allowed).toBe(true);
   });
-
   it('copes with a zero-size table', () => {
     const limiter = rateLimit(options(() => 0, { maxClients: 0 }));
     expect(send(limiter, 'a').allowed).toBe(true);
   });
-
   it('uses the default options', () => {
     expect(send(rateLimit(), 'a').allowed).toBe(true);
   });

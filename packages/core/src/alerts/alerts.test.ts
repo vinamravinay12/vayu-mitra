@@ -26,13 +26,11 @@ describe('decideAlert', () => {
       reason: 'disabled',
     });
   });
-
   it('alerts once the air reaches the threshold and records it', () => {
     const decision = decideAlert(base);
     expect(decision).toMatchObject({ send: true, title: 'Very poor air in Delhi: AQI 340' });
     expect(decision.state).toEqual({ lastSentAt: NOW.toISOString(), lastSentRank: 4 });
   });
-
   it('resets below the threshold so the next rise is announced', () => {
     const decision = decideAlert({
       ...base,
@@ -42,14 +40,15 @@ describe('decideAlert', () => {
     expect(decision).toMatchObject({ send: false, reason: 'below-threshold' });
     expect(decision.state.lastSentRank).toBeNull();
   });
-
   it('respects quiet hours, including ones that wrap midnight', () => {
     const late = new Date('2026-11-22T17:30:00Z'); // 23:00 IST
     expect(decideAlert({ ...base, now: late })).toMatchObject({ reason: 'quiet-hours' });
     const daytime = { ...settings, quietStart: '09:00', quietEnd: '11:00' };
     expect(decideAlert({ ...base, settings: daytime })).toMatchObject({ reason: 'quiet-hours' });
   });
+});
 
+describe('decideAlert', () => {
   it('waits out the cooldown unless the air gets a category worse', () => {
     const sent = { lastSentAt: new Date(NOW.getTime() - 60_000).toISOString(), lastSentRank: 4 };
     expect(decideAlert({ ...base, state: sent })).toMatchObject({ reason: 'cooldown' });

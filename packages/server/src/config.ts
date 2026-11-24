@@ -6,6 +6,7 @@ import {
   type PushSettings,
   type SchedulerSettings,
 } from './settings.js';
+import { parseInteger, readRateLimits } from './rate-limit-config.js';
 
 /** Where air data and place search come from. */
 export type AirDataMode = 'live' | 'fixture';
@@ -50,15 +51,6 @@ export interface ServerConfig {
   readonly dataRequestsPerMinute: number;
 }
 
-/** AI requests per client per minute unless configured: enough for a family, not for a script. */
-const DEFAULT_AI_REQUESTS_PER_MINUTE = 10;
-
-/** Sign-in attempts per client per minute unless configured. */
-const DEFAULT_AUTH_REQUESTS_PER_MINUTE = 10;
-
-/** Requests to the cached, cheap data routes per client per minute unless configured. */
-const DEFAULT_DATA_REQUESTS_PER_MINUTE = 60;
-
 /**
  * Gemini 3.8 Flash first, then 3.6 Flash, then 3.5 Flash-Lite. The Flash
  * models read and write better; under load they have been seen to answer 503
@@ -90,12 +82,6 @@ export function parseModels(env: Env): readonly string[] {
     ? DEFAULT_MODELS
     : [primary, ...DEFAULT_MODELS.filter((model) => model !== primary)];
 }
-
-/** A whole number within [0, max], or the fallback. */
-const parseInteger = (value: string | undefined, fallback: number, max: number): number => {
-  const parsed = Number(value);
-  return Number.isInteger(parsed) && parsed >= 0 && parsed <= max ? parsed : fallback;
-};
 
 /**
  * Reads configuration from the environment.
@@ -129,18 +115,7 @@ export function loadConfig(env: Env): ServerConfig {
     store,
     push: loadPush(env),
     scheduler: loadScheduler(env),
-    aiRequestsPerMinute: Math.max(
-      1,
-      parseInteger(env.AI_REQUESTS_PER_MINUTE, DEFAULT_AI_REQUESTS_PER_MINUTE, 1000),
-    ),
-    authRequestsPerMinute: Math.max(
-      1,
-      parseInteger(env.AUTH_REQUESTS_PER_MINUTE, DEFAULT_AUTH_REQUESTS_PER_MINUTE, 1000),
-    ),
-    dataRequestsPerMinute: Math.max(
-      1,
-      parseInteger(env.DATA_REQUESTS_PER_MINUTE, DEFAULT_DATA_REQUESTS_PER_MINUTE, 5000),
-    ),
+    ...readRateLimits(env),
   };
 }
 

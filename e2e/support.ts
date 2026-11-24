@@ -38,9 +38,8 @@ export const newEmail = (): string =>
 /** Fills the account form (the confirmation too, when creating an account) and submits it. */
 export async function submitCredentials(
   page: Page,
-  email: string,
   button: string,
-  password = PASSWORD,
+  { email, password = PASSWORD }: { readonly email: string; readonly password?: string },
 ) {
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
@@ -54,7 +53,7 @@ export async function freshStart(page: Page): Promise<string> {
   await page.goto('/');
   await page.getByRole('button', { name: 'New here? Create an account' }).click();
   const email = newEmail();
-  await submitCredentials(page, email, 'Create account');
+  await submitCredentials(page, 'Create account', { email });
   await expect(page.getByRole('heading', { name: 'Where are you?' })).toBeVisible();
   return email;
 }
@@ -67,3 +66,27 @@ export async function pickDelhi(page: Page): Promise<void> {
   await expect(page.getByRole('heading', { name: 'Air in New Delhi' })).toBeVisible();
   await expect(page.getByText(/^Measured at New Delhi \(sample station\)/)).toBeVisible();
 }
+
+/** What the household remembers in the memory journey. */
+export const MEMORY = {
+  people: [
+    {
+      kind: 'person',
+      id: 'person:dadi',
+      label: 'Dadi',
+      ageGroup: 'senior',
+      conditions: ['asthma'],
+    },
+  ],
+  routines: [
+    {
+      kind: 'routine',
+      id: 'routine:walk:dadi',
+      activity: 'walk',
+      personId: 'person:dadi',
+      time: '06:30',
+      minutes: 30,
+    },
+  ],
+  home: [{ kind: 'home', id: 'home:n95-masks', feature: 'n95-masks' }],
+};

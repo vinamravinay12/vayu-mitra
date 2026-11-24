@@ -46,19 +46,31 @@ export function alertMessage(
  * the air gets a category worse. When the air drops back below the threshold
  * the state resets, so the next rise is announced.
  */
-export function decideAlert(input: {
+export function decideAlert(input: AlertInput): AlertDecision {
+  const rank = categoryRank(input.report.current.category);
+  return (
+    holdBack(input, rank) ?? {
+      send: true,
+      ...alertMessage(input.report, input.memory, input.placeName),
+      state: { lastSentAt: input.now.toISOString(), lastSentRank: rank },
+    }
+  );
+}
+
+/** What one alert decision reads: the family's settings and history, the air, and the time. */
+export interface AlertInput {
   readonly settings: AlertSettings;
   readonly state: AlertState;
   readonly report: AirReport;
   readonly memory: Memory;
   readonly placeName: string;
   readonly now: Date;
-}): AlertDecision {
+}
+
+/** The reason not to send now, with the state to keep; null when the alert should go. */
+function holdBack(input: AlertInput, rank: number): Extract<AlertDecision, { send: false }> | null {
   const { settings, state, report, now } = input;
-  const rank = categoryRank(report.current.category);
-  if (!settings.enabled) {
-    return { send: false, reason: 'disabled', state };
-  }
+  if (!settings.enabled) return { send: false, reason: 'disabled', state };
   if (rank < categoryRank(settings.threshold)) {
     return { send: false, reason: 'below-threshold', state: { ...state, lastSentRank: null } };
   }
@@ -66,15 +78,13 @@ export function decideAlert(input: {
   if (isWithinWindow(clock.hour * 60 + clock.minute, settings.quietStart, settings.quietEnd)) {
     return { send: false, reason: 'quiet-hours', state };
   }
+  return coolingDown(state, rank, now) ? { send: false, reason: 'cooldown', state } : null;
+}
+
+/** True when the family was told recently and the air has not got a category worse since. */
+function coolingDown(state: AlertState, rank: number, now: Date): boolean {
   const worse = state.lastSentRank === null || rank > state.lastSentRank;
   const recent =
     state.lastSentAt !== null && now.getTime() - Date.parse(state.lastSentAt) < ALERT_COOLDOWN_MS;
-  if (!worse && recent) {
-    return { send: false, reason: 'cooldown', state };
-  }
-  return {
-    send: true,
-    ...alertMessage(report, input.memory, input.placeName),
-    state: { lastSentAt: now.toISOString(), lastSentRank: rank },
-  };
+  return !worse && recent;
 }

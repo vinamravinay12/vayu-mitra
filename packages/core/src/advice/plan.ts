@@ -50,17 +50,19 @@ export function cleanestWindow(
   length: number,
   bounds: { readonly first: number; readonly last: number } = DAYLIGHT,
 ): ReportHour | null {
-  let best: { hour: ReportHour; mean: number } | null = null;
-  for (const [start, hour] of hours.entries()) {
+  const windows = hours.flatMap((hour, start) => {
     const window = hours.slice(start, start + length);
     const startHour = hourOf(hour);
-    const inDaylight = startHour >= bounds.first && startHour + length - 1 <= bounds.last;
-    const mean = window.reduce((sum, next) => sum + next.aqi, 0) / length;
-    if (window.length === length && inDaylight && (best === null || mean < best.mean)) {
-      best = { hour, mean };
-    }
-  }
-  return best?.hour ?? null;
+    const inside = startHour >= bounds.first && startHour + length - 1 <= bounds.last;
+    return window.length === length && inside
+      ? [{ hour, mean: window.reduce((sum, next) => sum + next.aqi, 0) / length }]
+      : [];
+  });
+  const best = windows.reduce<(typeof windows)[number] | null>(
+    (lowest, next) => (lowest === null || next.mean < lowest.mean ? next : lowest),
+    null,
+  );
+  return best === null ? null : best.hour;
 }
 
 /** What the plan depends on: the outlook, now, and when the question said. */

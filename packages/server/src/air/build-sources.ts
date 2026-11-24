@@ -33,7 +33,8 @@ export function liveSources(fetchJson: FetchJson, keys: StationKeys, now: () => 
   if (waqiToken !== null) {
     stations.push({
       name: 'waqi',
-      near: (latitude, longitude) => fetchWaqiStations(fetchJson, waqiToken, latitude, longitude),
+      near: (latitude, longitude) =>
+        fetchWaqiStations(fetchJson, waqiToken, { latitude, longitude }),
     });
   }
   return {
@@ -55,10 +56,15 @@ export function fixtureSources(now: () => Date): AirSources {
   };
 }
 
+/** What the live sources need: a way to fetch, the station keys, and the clock. */
+export interface SourceInputs {
+  readonly fetchJson: FetchJson;
+  readonly keys: StationKeys;
+  readonly now: () => Date;
+}
+
 /** Sources for the configured mode. */
 export const airSources = (
   mode: AirDataMode,
-  fetchJson: FetchJson,
-  keys: StationKeys,
-  now: () => Date,
+  { fetchJson, keys, now }: SourceInputs,
 ): AirSources => (mode === 'fixture' ? fixtureSources(now) : liveSources(fetchJson, keys, now));

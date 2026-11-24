@@ -47,8 +47,7 @@ function limits(profile: ActivityProfile, sensitive: boolean): { go: number; car
 
 /** The verdict and the hour it is for, from the planned hour, a better window if any, and the limits. */
 function decideVerdict(
-  planned: ReportHour,
-  better: ReportHour | null,
+  { planned, better }: { readonly planned: ReportHour; readonly better: ReportHour | null },
   bar: { go: number; care: number },
   airing: boolean,
 ): { verdict: Verdict; chosen: ReportHour } {
@@ -94,8 +93,7 @@ export function adviseActivity(input: AdviceInput): ActivityAdvice {
   const better =
     best !== null && best.aqi < planned.aqi && best.time !== planned.time ? best : null;
   const { verdict, chosen } = decideVerdict(
-    planned,
-    better,
+    { planned, better },
     limits(profile, sensitiveFor.length > 0),
     airing,
   );

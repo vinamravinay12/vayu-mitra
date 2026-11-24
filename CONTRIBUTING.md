@@ -36,7 +36,7 @@ that the client bundle carries no credentials.
 
 ## Standards
 
-- Files ≤ 150 lines (data ≤ 250), functions ≤ 60 lines, complexity ≤ 10 — lint errors.
+- Files ≤ 110 lines, functions ≤ 30 lines, complexity ≤ 8, at most 3 parameters — lint errors, tests included. Test helpers live in a `*.fixtures.ts` beside the tests or in `test-utils/`.
 - A one-line doc comment on every function; names that say what a value is for.
 - Every feature ships with tests and the matching doc update in the same commit.
 - Conventional commits: `feat(core):`, `fix(server):`, `test:`, `a11y:`, `perf:`, `docs:`, `ci:`.

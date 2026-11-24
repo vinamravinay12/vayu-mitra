@@ -1,4 +1,4 @@
-import { Router, type Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import type { AirService } from '../air/air-service.js';
 import { UpstreamError } from '../air/fetch-json.js';
 import { describeCause, logEvent } from '../logging/log.js';
@@ -22,34 +22,40 @@ export function respondToUpstreamError(cause: unknown, response: Response): bool
 /** GET /api/places and GET /api/air — place search and the station-anchored air report. */
 export function airRouter(air: AirService): Router {
   const router = Router();
-  router.get('/places', async (request, response) => {
-    const parsed = placesQuerySchema.safeParse(request.query);
-    if (!parsed.success) {
-      response.status(400).json({
-        error: `Type ${String(TEXT_LIMITS.placeQueryMin)} to ${String(TEXT_LIMITS.placeQueryMax)} characters of a place name.`,
-      });
-      return;
-    }
-    try {
-      response.setHeader('Cache-Control', 'public, max-age=86400');
-      response.json({ places: await air.places(parsed.data.q) });
-    } catch (cause) {
-      if (!respondToUpstreamError(cause, response)) throw cause;
-    }
-  });
-  router.get('/air', async (request, response) => {
-    const parsed = airQuerySchema.safeParse(request.query);
-    if (!parsed.success) {
-      response.status(400).json({ error: 'Latitude and longitude are required.' });
-      return;
-    }
-    try {
-      const report = await air.report(parsed.data.lat, parsed.data.lon);
-      response.setHeader('Cache-Control', 'public, max-age=300');
-      response.json(report);
-    } catch (cause) {
-      if (!respondToUpstreamError(cause, response)) throw cause;
-    }
-  });
+  router.get('/places', placesHandler(air));
+  router.get('/air', reportHandler(air));
   return router;
 }
+
+/** Place search by name; cached a day, since places do not move. */
+const placesHandler = (air: AirService) => async (request: Request, response: Response) => {
+  const parsed = placesQuerySchema.safeParse(request.query);
+  if (!parsed.success) {
+    response.status(400).json({
+      error: `Type ${String(TEXT_LIMITS.placeQueryMin)} to ${String(TEXT_LIMITS.placeQueryMax)} characters of a place name.`,
+    });
+    return;
+  }
+  try {
+    response.setHeader('Cache-Control', 'public, max-age=86400');
+    response.json({ places: await air.places(parsed.data.q) });
+  } catch (cause) {
+    if (!respondToUpstreamError(cause, response)) throw cause;
+  }
+};
+
+/** The air report for a point; cached five minutes, as stations report hourly. */
+const reportHandler = (air: AirService) => async (request: Request, response: Response) => {
+  const parsed = airQuerySchema.safeParse(request.query);
+  if (!parsed.success) {
+    response.status(400).json({ error: 'Latitude and longitude are required.' });
+    return;
+  }
+  try {
+    const report = await air.report(parsed.data.lat, parsed.data.lon);
+    response.setHeader('Cache-Control', 'public, max-age=300');
+    response.json(report);
+  } catch (cause) {
+    if (!respondToUpstreamError(cause, response)) throw cause;
+  }
+};

@@ -38,6 +38,8 @@ export default defineConfig({
       // outside world (a port, a DOM node). Everything they wire up is tested.
       exclude: [
         '**/*.test.{ts,tsx}',
+        // Test helpers, kept beside the tests they serve.
+        '**/*.fixtures.{ts,tsx}',
         '**/types/**',
         'packages/server/src/index.ts',
         'packages/client/src/main.tsx',

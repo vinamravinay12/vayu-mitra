@@ -1,6 +1,6 @@
 import { Alert } from '../ui/Alert.js';
 import { CredentialFields } from './CredentialFields.js';
-import { useCredentials, type Mode } from './use-credentials.js';
+import { useCredentials, type CredentialsState, type Mode } from './use-credentials.js';
 
 const COPY: Readonly<Record<Mode, { heading: string; submit: string; switchTo: string }>> = {
   login: { heading: 'Sign in', submit: 'Sign in', switchTo: 'New here? Create an account' },
@@ -11,25 +11,11 @@ const COPY: Readonly<Record<Mode, { heading: string; submit: string; switchTo: s
   },
 };
 
-/** Email and password, to sign in or to create an account. */
-function CredentialsForm({
-  onSignedIn,
-}: {
-  readonly onSignedIn: (email: string) => void;
-}): React.JSX.Element {
-  const form = useCredentials(onSignedIn);
+/** Submit, and the switch between signing in and creating an account. */
+function FormButtons({ form }: { readonly form: CredentialsState }): React.JSX.Element {
   const copy = COPY[form.mode];
   return (
-    <form
-      className="card mx-auto max-w-sm space-y-4 text-left"
-      onSubmit={form.submit}
-      aria-labelledby="account-heading"
-    >
-      <h2 id="account-heading" className="text-xl font-bold">
-        {copy.heading}
-      </h2>
-      <CredentialFields form={form} />
-      {form.error !== null && <Alert>{form.error}</Alert>}
+    <>
       <button type="submit" className="btn-primary w-full" disabled={form.pending}>
         {form.pending ? 'Please wait…' : copy.submit}
       </button>
@@ -40,6 +26,29 @@ function CredentialsForm({
       >
         {copy.switchTo}
       </button>
+    </>
+  );
+}
+
+/** Email and password, to sign in or to create an account. */
+function CredentialsForm({
+  onSignedIn,
+}: {
+  readonly onSignedIn: (email: string) => void;
+}): React.JSX.Element {
+  const form = useCredentials(onSignedIn);
+  return (
+    <form
+      className="card mx-auto max-w-sm space-y-4 text-left"
+      onSubmit={form.submit}
+      aria-labelledby="account-heading"
+    >
+      <h2 id="account-heading" className="text-xl font-bold">
+        {COPY[form.mode].heading}
+      </h2>
+      <CredentialFields form={form} />
+      {form.error !== null && <Alert>{form.error}</Alert>}
+      <FormButtons form={form} />
     </form>
   );
 }

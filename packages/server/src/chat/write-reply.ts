@@ -20,8 +20,7 @@ export interface WrittenReply {
 export async function writeReply(
   llm: LlmClient | null,
   turn: { readonly message: string; readonly history: readonly ChatTurn[] },
-  facts: ReplyFacts,
-  engineText: string,
+  { facts, engineText }: { readonly facts: ReplyFacts; readonly engineText: string },
 ): Promise<WrittenReply> {
   const fallback: WrittenReply = { text: engineText, source: 'engine' };
   if (llm === null) {

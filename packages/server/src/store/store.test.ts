@@ -16,7 +16,6 @@ describe('user store', () => {
     await store.delete('u1');
     expect(await store.get('u1')).toBeNull();
   });
-
   it('refuses to write an invalid record and ignores a corrupt one', async () => {
     const collection = createMemoryCollection();
     const store = createUserStore(collection);
@@ -31,7 +30,9 @@ describe('user store', () => {
     await collection.set('u2', { memory: 'garbage' });
     expect(await store.get('u2')).toBeNull();
   });
+});
 
+describe('user store', () => {
   it('lists only valid records with alerts on', async () => {
     const collection = createMemoryCollection();
     const store = createUserStore(collection);
@@ -44,7 +45,6 @@ describe('user store', () => {
     await collection.set('corrupt', { alerts: { enabled: true } });
     expect(await store.alertSubscribers()).toEqual([{ uid: 'on', record: on }]);
   });
-
   it('never shows push addresses to the browser', () => {
     const view = publicView({ ...newUserRecord(NOW()), pushSubscriptions: [subscription('a')] });
     expect(view).not.toHaveProperty('pushSubscriptions');
