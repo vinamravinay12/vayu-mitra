@@ -1,3 +1,4 @@
+/** Background smog alerts: switching them on with permission, and their options. */
 import type { AlertSettings as Settings } from '@vayu/core';
 import { useState } from 'react';
 import type { PushControls } from '../../state/use-push.js';

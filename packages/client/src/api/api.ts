@@ -1,3 +1,4 @@
+/** Every call the signed-in app makes, each answer re-validated before the UI sees it. */
 import {
   airReportSchema,
   alertSettingsSchema,
@@ -23,6 +24,7 @@ const householdSchema = z.object({
   pushEnabled: z.boolean(),
 });
 
+/** The family’s record as the server shows it to the browser. */
 export type Household = z.infer<typeof householdSchema>;
 
 /** Every call the app makes, each re-validated before the UI sees it. */
@@ -76,4 +78,5 @@ async function sendChat(request: ChatRequest): Promise<ChatResponse> {
   return expectShape(chatResponseSchema, answer, 'reply');
 }
 
+/** Every call the app makes, as `createApi` builds them. */
 export type Api = ReturnType<typeof createApi>;

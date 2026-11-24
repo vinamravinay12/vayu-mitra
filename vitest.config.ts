@@ -1,3 +1,4 @@
+/** Test configuration: engine and server in Node, the client in jsdom, 100% coverage required. */
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 

@@ -1,3 +1,4 @@
+/** Tests of checkAlerts. */
 import { DEFAULT_ALERT_SETTINGS } from '@vayu/core';
 import { describe, expect, it, vi } from 'vitest';
 import type { Messenger } from '../push/messenger.js';

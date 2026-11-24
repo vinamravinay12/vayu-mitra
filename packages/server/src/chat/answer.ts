@@ -1,3 +1,4 @@
+/** The reply to a turn: its facts from the engine, worded by the model or the engine. */
 import {
   comparePlaces,
   describeAdvice,

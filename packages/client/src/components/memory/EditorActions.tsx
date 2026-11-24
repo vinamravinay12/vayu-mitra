@@ -1,3 +1,5 @@
+/** Save and Cancel, and the props both fact editors share. */
+
 /** What both fact editors take: the fact, and what to do on Save or Cancel. */
 export interface EditorProps<F> {
   readonly fact: F;

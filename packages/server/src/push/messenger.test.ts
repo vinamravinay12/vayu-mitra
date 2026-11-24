@@ -1,3 +1,4 @@
+/** Tests of createLogMessenger. */
 import { describe, expect, it } from 'vitest';
 import { subscription } from '../test-utils/app.js';
 import { createLogMessenger } from './messenger.js';

@@ -1,3 +1,5 @@
+/** Push and scheduler settings, read from the environment. */
+
 /** Web Push (VAPID) keys. The public key is shared with browsers; the private key is a secret. */
 export interface PushSettings {
   readonly publicKey: string;

@@ -1,3 +1,4 @@
+/** The first model call: a message read into memory changes and hints. */
 import type { ChatTurn, IntentHints, Memory, MemoryChange } from '@vayu/core';
 import { describeCause, logEvent } from '../logging/log.js';
 import type { LlmClient } from '../llm/llm-client.js';

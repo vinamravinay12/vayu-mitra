@@ -1,3 +1,4 @@
+/** Tests of Open-Meteo forecast, Open-Meteo places and CPCB feed. */
 import { computeNaqi } from '@vayu/core';
 import { describe, expect, it } from 'vitest';
 import { airResponse, GEOCODE_RESPONSE } from '../test-utils/open-meteo-samples.js';

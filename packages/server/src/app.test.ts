@@ -1,3 +1,4 @@
+/** Tests of public routes. */
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { UpstreamError } from './air/fetch-json.js';

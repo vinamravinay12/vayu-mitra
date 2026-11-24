@@ -1,14 +1,14 @@
-import { z } from 'zod';
-import { ACTIVITIES, AGE_GROUPS, HEALTH_CONDITIONS, HOME_FEATURES } from '../catalog/vocabulary.js';
-import { TIME_OF_DAY_PATTERN } from '../time/local-clock.js';
-
 /**
  * What Vayu Mitra remembers about a household. It is built up from the
  * conversation, shown back as chips the family can edit or forget, and kept
  * deliberately small: no names are needed, only how someone is referred to
  * ("Dadi", "my son"), their life stage and conditions that change the advice.
  */
+import { z } from 'zod';
+import { ACTIVITIES, AGE_GROUPS, HEALTH_CONDITIONS, HOME_FEATURES } from '../catalog/vocabulary.js';
+import { TIME_OF_DAY_PATTERN } from '../time/local-clock.js';
 
+/** How much a household’s memory may hold. */
 export const MEMORY_LIMITS = {
   people: 8,
   routines: 12,
@@ -44,6 +44,7 @@ const homeFactSchema = z.strictObject({
   feature: z.enum(HOME_FEATURES),
 });
 
+/** A household’s memory: people, routines and home features. */
 export const memorySchema = z.strictObject({
   people: z.array(personFactSchema).max(MEMORY_LIMITS.people),
   routines: z.array(routineFactSchema).max(MEMORY_LIMITS.routines),
@@ -73,11 +74,16 @@ export const memoryChangeSchema = z.discriminatedUnion('op', [
   z.strictObject({ op: z.literal('forget'), id: z.string().min(1).max(80) }),
 ]);
 
+/** A remembered person: how the family refers to them, life stage and conditions. */
 export type PersonFact = z.infer<typeof personFactSchema>;
+/** A remembered routine: the activity, whose, its usual time and length. */
 export type RoutineFact = z.infer<typeof routineFactSchema>;
 /** Any one remembered fact. */
 export type MemoryFact = PersonFact | RoutineFact | z.infer<typeof homeFactSchema>;
+/** A household’s memory. */
 export type Memory = z.infer<typeof memorySchema>;
+/** One change the conversation proposes to the memory. */
 export type MemoryChange = z.infer<typeof memoryChangeSchema>;
 
+/** A household Vayu Mitra knows nothing about yet. */
 export const EMPTY_MEMORY: Memory = { people: [], routines: [], home: [] };

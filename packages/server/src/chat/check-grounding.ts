@@ -1,11 +1,10 @@
-import { detectInjection } from '../guard/detect-injection.js';
-
 /**
  * Output checks for AI-written text. The engine owns every number; the model
  * only words them. So an answer is accepted only when every number in it can
  * be found in the facts it was given, it carries no links or contact details,
  * and it does not read like instructions to another AI.
  */
+import { detectInjection } from '../guard/detect-injection.js';
 
 /** Names and units that contain digits but are not quantities. */
 const DIGIT_BEARING_TERMS = /PM\s?2\.5|PM\s?10|CO[2₂]|N95|FFP2|MERV[- ]?13|µg\/m³|m³|₹/gi;

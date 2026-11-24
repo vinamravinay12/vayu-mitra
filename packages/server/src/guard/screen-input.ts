@@ -1,3 +1,4 @@
+/** Screening a message: patterns first, then an independent model judge. */
 import { describeCause, logEvent } from '../logging/log.js';
 import type { LlmClient } from '../llm/llm-client.js';
 import { buildGuardRequest } from '../prompts/build-guard-prompt.js';
@@ -5,6 +6,7 @@ import { parseJson } from '../prompts/parse-json.js';
 import { guardVerdictSchema } from '../validation/model-schemas.js';
 import { detectInjection } from './detect-injection.js';
 
+/** Whether a message is safe to answer, and which layer decided. */
 export type ScreenResult =
   | { readonly safe: true; readonly judgedBy: 'heuristic' | 'llm' }
   | { readonly safe: false; readonly judgedBy: 'heuristic' | 'llm'; readonly reason: string };

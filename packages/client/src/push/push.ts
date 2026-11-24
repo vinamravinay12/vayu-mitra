@@ -1,3 +1,4 @@
+/** Web Push in the browser: subscribing this device to alerts and unsubscribing it. */
 import { SERVICE_WORKER_URL, workerScript } from './worker-script.js';
 
 /** How turning alerts on went. */

@@ -1,3 +1,4 @@
+/** Tests of local clock helpers and labelHour and capitalise. */
 import { describe, expect, it } from 'vitest';
 import {
   capitalise,

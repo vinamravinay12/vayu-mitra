@@ -1,3 +1,5 @@
+/** One JSON request to our own API, with failures turned into errors written for people. */
+
 /** A failure with a message written for people, safe to show as is. */
 export class ApiError extends Error {
   constructor(

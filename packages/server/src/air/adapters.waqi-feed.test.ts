@@ -1,3 +1,4 @@
+/** Tests of WAQI feed and fetchJsonOverNetwork. */
 import { describe, expect, it } from 'vitest';
 import { WAQI_FEED } from '../test-utils/station-samples.js';
 import { fetchJsonOverNetwork } from './fetch-json.js';

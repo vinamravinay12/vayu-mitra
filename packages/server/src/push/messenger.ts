@@ -1,3 +1,4 @@
+/** The interface for sending notifications, and a logging stand-in. */
 import { logEvent } from '../logging/log.js';
 import type { PushSubscriptionJson } from '../validation/request-schemas.js';
 

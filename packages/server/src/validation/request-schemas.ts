@@ -1,8 +1,10 @@
+/** Schemas for what the browser sends, and the text limits. */
 import { z } from 'zod';
 
 /** Accepted lengths, in characters, for free text from the browser. */
 export const TEXT_LIMITS = { placeQueryMin: 2, placeQueryMax: 80 } as const;
 
+/** GET /api/places: a place name to search. */
 export const placesQuerySchema = z.object({
   q: z.string().trim().min(TEXT_LIMITS.placeQueryMin).max(TEXT_LIMITS.placeQueryMax),
 });
@@ -60,4 +62,5 @@ export const credentialsSchema = z.strictObject({
   password: z.string().min(10).max(128),
 });
 
+/** A browser push subscription, as the server stores it. */
 export type PushSubscriptionJson = z.infer<typeof pushSubscriptionSchema>;

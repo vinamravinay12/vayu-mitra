@@ -1,3 +1,7 @@
+/**
+ * Plain-language sentences built from the engine's facts. They are the reply
+ * when the AI is unavailable, and the facts the AI is told to stay within.
+ */
 import { ACTIVITY_PROFILES } from '../catalog/activities.js';
 import { CATEGORY_LABELS } from '../catalog/aqi-bands.js';
 import { cleanestWindow } from '../advice/advise-activity.js';
@@ -6,11 +10,6 @@ import { ADVICE_TIPS } from '../advice/tips.js';
 import type { AirReport } from '../schemas/air-report.js';
 import { STATION_SOURCE_LABELS } from '../stations/station.js';
 import { capitalise, labelHour } from '../time/local-clock.js';
-
-/**
- * Plain-language sentences built from the engine's facts. They are the reply
- * when the AI is unavailable, and the facts the AI is told to stay within.
- */
 
 /** "at 7 am", or "tomorrow at 7 am" when the hour is not on the outlook's first day. */
 export const describeTime = (time: string, report: AirReport): string =>

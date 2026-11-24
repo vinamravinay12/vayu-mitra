@@ -1,3 +1,4 @@
+/** The header: the name, sign-out when signed in, and the theme choice. */
 import type { ThemePreference } from '../../state/use-theme.js';
 import { ThemeToggle } from './ThemeToggle.js';
 

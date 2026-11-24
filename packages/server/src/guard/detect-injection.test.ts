@@ -1,3 +1,4 @@
+/** Tests of detectInjection. */
 import { describe, expect, it } from 'vitest';
 import { detectInjection } from './detect-injection.js';
 

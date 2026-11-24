@@ -1,3 +1,4 @@
+/** The side column: the place and its air, then what is remembered, alerts and privacy. */
 import type { Api, Household } from '../api/api.js';
 import type { AirState } from '../state/use-air.js';
 import type { HouseholdState } from '../state/use-household.js';

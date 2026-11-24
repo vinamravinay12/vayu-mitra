@@ -1,3 +1,4 @@
+/** Tests of parts of the day, readIntent with hints and describe. */
 import { describe, expect, it } from 'vitest';
 import { makeReport, PAPA } from '../test-utils/fixtures.js';
 import { describeAir, describeSource, describeTime } from './describe.js';

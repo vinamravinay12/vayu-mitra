@@ -1,3 +1,4 @@
+/** The family’s stored record, and the view of it the browser gets. */
 import {
   alertSettingsSchema,
   alertStateSchema,
@@ -27,6 +28,7 @@ export const userRecordSchema = z.object({
   updatedAt: z.iso.datetime(),
 });
 
+/** A family’s stored record. */
 export type UserRecord = z.infer<typeof userRecordSchema>;
 
 /** A family the app has not seen before. */

@@ -1,3 +1,4 @@
+/** The server’s composition root: binds the app to the environment, network, Firestore, Web Push and the port. */
 import { Firestore } from '@google-cloud/firestore';
 import { OAuth2Client } from 'google-auth-library';
 import webpush from 'web-push';

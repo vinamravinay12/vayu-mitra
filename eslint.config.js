@@ -1,3 +1,8 @@
+/**
+ * Lint configuration: typescript-eslint's strict type-checked rules, jsx-a11y
+ * strict, and the size and safety limits CODE_QUALITY.md states, applied to
+ * source, tests, browser tests and scripts alike, with inline suppressions off.
+ */
 import js from '@eslint/js';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import reactHooks from 'eslint-plugin-react-hooks';

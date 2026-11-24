@@ -1,3 +1,4 @@
+/** Chooses the editor for a remembered fact: a person or a routine. */
 import type { PersonFact, RoutineFact } from '@vayu/core';
 import type { EditorProps } from './EditorActions.js';
 import { PersonEditor } from './PersonEditor.js';

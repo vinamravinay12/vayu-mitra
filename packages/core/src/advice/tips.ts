@@ -1,3 +1,5 @@
+/** The precautions the engine can give, each with the words the app shows. */
+
 /** Precautions the engine can attach to advice. */
 export const ADVICE_TIP_IDS = [
   'wear-n95',
@@ -12,6 +14,7 @@ export const ADVICE_TIP_IDS = [
   'avoid-rush-hour',
 ] as const;
 
+/** One precaution the engine can give. */
 export type AdviceTip = (typeof ADVICE_TIP_IDS)[number];
 
 /** The words the app shows for each precaution; the type makes every id have exactly one. */

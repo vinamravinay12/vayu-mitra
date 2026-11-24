@@ -1,3 +1,5 @@
+/** Local time at a place, and hours in the words people use. */
+
 /** A wall-clock time of day, `HH:MM`. */
 export const TIME_OF_DAY_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 

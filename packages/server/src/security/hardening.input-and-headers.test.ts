@@ -1,3 +1,4 @@
+/** Tests of strict request schemas, invisible characters and browser hardening headers. */
 import { EMPTY_MEMORY } from '@vayu/core';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';

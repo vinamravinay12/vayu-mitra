@@ -1,3 +1,4 @@
+/** One remembered fact as a chip, with Edit and Forget. */
 import type { MemoryChip } from '@vayu/core';
 import { FactEditor } from './FactEditor.js';
 

@@ -1,3 +1,4 @@
+/** Remembered facts as the chips the family sees. */
 import { ACTIVITY_PROFILES } from '../catalog/activities.js';
 import { AGE_LABELS, CONDITION_LABELS, HOME_FEATURE_LABELS } from '../catalog/vocabulary.js';
 import { capitalise, formatHour, minutesOfDay } from '../time/local-clock.js';

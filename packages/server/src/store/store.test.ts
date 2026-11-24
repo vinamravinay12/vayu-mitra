@@ -1,3 +1,4 @@
+/** Tests of user store. */
 import { describe, expect, it } from 'vitest';
 import { subscription } from '../test-utils/app.js';
 import { NOW } from '../test-utils/fake-llm.js';

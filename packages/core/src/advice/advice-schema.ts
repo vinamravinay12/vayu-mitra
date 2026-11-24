@@ -1,3 +1,4 @@
+/** The shape of a piece of advice: the verdict, the hours compared, and the precautions. */
 import { z } from 'zod';
 import { AQI_CATEGORIES } from '../catalog/aqi-bands.js';
 import { ACTIVITIES } from '../catalog/vocabulary.js';
@@ -29,6 +30,9 @@ export const activityAdviceSchema = z.object({
   indoorAlternative: z.string().max(200),
 });
 
+/** Go, shift to a better hour, go with care, or skip. */
 export type Verdict = (typeof VERDICTS)[number];
+/** One hour the advice compares: its time, index and category. */
 export type AdviceHour = z.infer<typeof adviceHourSchema>;
+/** One piece of advice, as the engine decides it and the card shows it. */
 export type ActivityAdvice = z.infer<typeof activityAdviceSchema>;

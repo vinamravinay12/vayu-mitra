@@ -1,3 +1,5 @@
+/** Structured logs, one JSON line each, for Cloud Logging. */
+
 /**
  * Structured server logs. Cloud Logging parses one JSON object per line and
  * picks up `severity`, so warnings are filterable without a logging library.

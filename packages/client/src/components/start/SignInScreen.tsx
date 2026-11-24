@@ -1,3 +1,4 @@
+/** The signed-out screen: what the app is, and the sign-in or sign-up form. */
 import { Alert } from '../ui/Alert.js';
 import { CredentialFields } from './CredentialFields.js';
 import { useCredentials, type CredentialsState, type Mode } from './use-credentials.js';

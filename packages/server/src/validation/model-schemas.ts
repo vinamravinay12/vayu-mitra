@@ -1,3 +1,8 @@
+/**
+ * What the model may answer, as Zod schemas that double as the JSON Schema
+ * Gemini decodes against. A model cannot produce a field the server does not
+ * know, and every vocabulary is the engine's own closed list.
+ */
 import {
   ACTIVITIES,
   AGE_GROUPS,
@@ -11,12 +16,6 @@ import {
   type MemoryChange,
 } from '@vayu/core';
 import { z } from 'zod';
-
-/**
- * What the model may answer, as Zod schemas that double as the JSON Schema
- * Gemini decodes against. A model cannot produce a field the server does not
- * know, and every vocabulary is the engine's own closed list.
- */
 
 /** The injection judge's answer. */
 export const guardVerdictSchema = z.object({

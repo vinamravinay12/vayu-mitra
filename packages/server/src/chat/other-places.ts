@@ -1,3 +1,4 @@
+/** The air in other places a message asks about. */
 import type { PlaceAir } from '@vayu/core';
 import type { AirService } from '../air/air-service.js';
 import { describeCause, logEvent } from '../logging/log.js';

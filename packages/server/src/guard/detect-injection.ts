@@ -1,3 +1,6 @@
+/** Pattern checks for text that tries to instruct the assistant. */
+
+/** Which pattern matched, and a short excerpt of the text. */
 export interface InjectionFinding {
   readonly rule: string;
   readonly excerpt: string;

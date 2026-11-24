@@ -1,3 +1,4 @@
+/** Server configuration from the environment, refusing unsafe settings in production. */
 import {
   loadPush,
   loadScheduler,
@@ -20,6 +21,7 @@ export type AuthMode = 'password' | 'none';
 /** Where families' records live: Firestore in production, process memory in development. */
 type StoreMode = 'firestore' | 'memory';
 
+/** The server’s configuration, as read from the environment. */
 export interface ServerConfig {
   readonly port: number;
   /** Null answers from the engine's own sentences — used by tests and keyless local runs. */

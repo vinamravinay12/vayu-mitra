@@ -1,10 +1,9 @@
-import { expect, test, type Page } from '@playwright/test';
-
 /**
  * Trusted Types under the real CSP: the push service worker registers through
  * the one policy the page allows, while a plain string, another policy name
  * and any other script URL are all refused by the browser.
  */
+import { expect, test, type Page } from '@playwright/test';
 
 /** The subset of the Trusted Types API the check calls in the page. */
 interface PageTrustedTypes {

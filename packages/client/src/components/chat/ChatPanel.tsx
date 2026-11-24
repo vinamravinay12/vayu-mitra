@@ -1,3 +1,4 @@
+/** The conversation: the live message log, one-tap questions and the message box. */
 import { useState } from 'react';
 import type { ChatMessage, ChatState } from '../../state/use-chat.js';
 import { Alert } from '../ui/Alert.js';

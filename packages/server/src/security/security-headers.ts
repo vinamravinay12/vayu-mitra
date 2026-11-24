@@ -1,3 +1,4 @@
+/** Security headers: the CSPs, isolation, Permissions-Policy and HSTS. */
 import type { NextFunction, Request, Response } from 'express';
 
 /** The API returns JSON only, so its policy forbids everything. */

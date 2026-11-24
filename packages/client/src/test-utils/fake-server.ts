@@ -1,8 +1,10 @@
+/** Installs an in-memory fake of the API as `fetch` for one test. */
 import { vi } from 'vitest';
 import { route } from './fake-routes.js';
 import { json, type FakeServer } from './fake-state.js';
 import { emptyHousehold, LOCAL_CONFIG } from './fixtures.js';
 
+/** The fake server’s state, which tests read and set. */
 export type { FakeServer } from './fake-state.js';
 
 /** Installs the fake as `fetch` for one test. */

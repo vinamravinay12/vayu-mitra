@@ -1,3 +1,4 @@
+/** Tests of errors and static files. */
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

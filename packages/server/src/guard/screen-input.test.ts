@@ -1,3 +1,4 @@
+/** Tests of screenHeuristic and judgeWithLlm. */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fakeLlm } from '../test-utils/fake-llm.js';
 import { judgeWithLlm, screenHeuristic } from './screen-input.js';

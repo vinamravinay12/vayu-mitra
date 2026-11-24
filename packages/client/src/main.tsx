@@ -1,3 +1,4 @@
+/** The browser entry point: configures Zod for the CSP, then mounts the app. */
 import './jitless.js';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';

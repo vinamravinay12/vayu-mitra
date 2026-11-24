@@ -1,3 +1,4 @@
+/** Tests of detectActivity, detectTime, readIntent, days and follow-ups and parts of the day. */
 import { describe, expect, it } from 'vitest';
 import { EMPTY_MEMORY } from '../memory/memory-schema.js';
 import { DADI, PAPA } from '../test-utils/fixtures.js';

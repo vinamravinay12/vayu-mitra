@@ -1,3 +1,4 @@
+/** The air service: station-anchored reports and place search, cached and shared. */
 import {
   anchorForecast,
   nearestStation,

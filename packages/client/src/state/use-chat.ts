@@ -1,3 +1,4 @@
+/** The conversation in this tab: messages, the turn under way, and sending one. */
 import {
   CHAT_LIMITS,
   type ActivityAdvice,
@@ -18,6 +19,7 @@ export interface ChatMessage {
   readonly source?: ChatResponse['source'];
 }
 
+/** The conversation as the chat panel uses it. */
 export interface ChatState {
   readonly messages: readonly ChatMessage[];
   readonly pending: boolean;

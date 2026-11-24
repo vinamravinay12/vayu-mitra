@@ -1,3 +1,4 @@
+/** The family’s own record: read it, change one part, or delete it all. */
 import { alertSettingsSchema, memorySchema, placeSchema } from '@vayu/core';
 import { Router, type Request, type Response } from 'express';
 import type { z } from 'zod';

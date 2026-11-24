@@ -1,3 +1,4 @@
+/** Client-test data: Delhi, the configs, a winter day’s report and households. */
 import {
   categoryOf,
   DEFAULT_ALERT_SETTINGS,
@@ -9,6 +10,7 @@ import {
 import type { Household } from '../api/api.js';
 import type { ClientConfig } from '../api/config.js';
 
+/** New Delhi, as the place search returns it. */
 export const DELHI: Place = {
   name: 'New Delhi',
   region: 'Delhi',
@@ -17,6 +19,7 @@ export const DELHI: Place = {
   longitude: 77.21,
 };
 
+/** Development config: sign-in off, no push key. */
 export const LOCAL_CONFIG: ClientConfig = { auth: 'none', vapidKey: null };
 
 /** Accounts on, and alerts set up. */
@@ -86,6 +89,7 @@ export const DADI_MEMORY: Memory = {
   home: [{ kind: 'home', id: 'home:n95-masks', feature: 'n95-masks' }],
 };
 
+/** A household with nothing remembered and default settings, with any fields given. */
 export const emptyHousehold = (overrides: Partial<Household> = {}): Household => ({
   memory: EMPTY_MEMORY,
   place: null,

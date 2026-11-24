@@ -1,3 +1,5 @@
+/** CPCB rows and a WAQI feed as the adapters receive them. */
+
 /** data.gov.in rows for one Delhi station, as the CPCB feed publishes them (values are sub-indices). */
 export function cpcbRows(overrides: Record<string, string> = {}): Record<string, string>[] {
   const base = {

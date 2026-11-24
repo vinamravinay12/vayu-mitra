@@ -1,3 +1,4 @@
+/** The fake server’s chat turn, answered by the real engine over the fixture report. */
 import {
   adviseActivity,
   applyChanges,

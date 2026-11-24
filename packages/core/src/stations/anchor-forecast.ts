@@ -1,3 +1,4 @@
+/** Anchoring the model forecast to the nearest station’s reading, fading over a day. */
 import { computeAqi } from '../aqi/compute-aqi.js';
 import type { AirReport, ForecastSource, ReportHour } from '../schemas/air-report.js';
 import { hourKey, localClock } from '../time/local-clock.js';

@@ -1,6 +1,9 @@
+/** The model interface the server depends on, and its errors. */
+
 /** What a model call is for; used in logs and to pick a token ceiling. */
 export type LlmPurpose = 'guard' | 'understand' | 'reply';
 
+/** One model call: the prompt, the instruction, the response schema and its purpose. */
 export interface LlmRequest {
   readonly purpose: LlmPurpose;
   readonly systemInstruction: string;

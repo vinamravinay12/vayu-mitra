@@ -1,3 +1,4 @@
+/** Tests of grounding. */
 import { describe, expect, it } from 'vitest';
 import {
   allowedNumbers,

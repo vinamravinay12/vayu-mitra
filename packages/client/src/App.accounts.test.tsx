@@ -1,3 +1,4 @@
+/** Tests of with email and password accounts, showing the password and confirming the password. */
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';

@@ -1,3 +1,4 @@
+/** Tests of sensitivePeople, plannedHour and advice for another day. */
 import { describe, expect, it } from 'vitest';
 import { DADI, makeReport, NOW, PAPA } from '../test-utils/fixtures.js';
 import { adviseActivity, dateFor, plannedHour, sensitivePeople } from './advise-activity.js';

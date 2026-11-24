@@ -1,3 +1,4 @@
+/** The fake server’s routes, answering as the real API would. */
 import type { ChatRequest } from '@vayu/core';
 import type { Household } from '../api/api.js';
 import { chat } from './fake-chat.js';

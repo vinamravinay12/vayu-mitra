@@ -1,3 +1,4 @@
+/** Choosing the nearest fresh official station, and its index. */
 import { computeNaqi, particulateAqi, type AqiReading } from '../aqi/compute-aqi.js';
 import type { StationReading } from './station.js';
 

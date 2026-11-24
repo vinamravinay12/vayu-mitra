@@ -1,3 +1,4 @@
+/** Tests of useAir and useChat. */
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { installFakeServer } from '../test-utils/fake-server.js';

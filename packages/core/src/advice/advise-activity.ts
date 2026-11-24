@@ -1,3 +1,4 @@
+/** Deciding an activity: go, better later, OK with care, or skip, for who is involved. */
 import { ACTIVITY_PROFILES, type ActivityProfile, type Intensity } from '../catalog/activities.js';
 import { categoryRank } from '../aqi/compute-aqi.js';
 import {

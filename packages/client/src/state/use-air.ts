@@ -1,3 +1,4 @@
+/** The air report for the chosen place, refreshed while the page is open. */
 import type { AirReport, Place } from '@vayu/core';
 import { useEffect, useState } from 'react';
 import type { Api } from '../api/api.js';
@@ -6,6 +7,7 @@ import { messageOf } from './use-startup.js';
 /** Stations publish hourly; refreshing every ten minutes keeps "now" honest. */
 export const AIR_REFRESH_MS = 10 * 60_000;
 
+/** The air report as the screen sees it: not asked yet, loading, ready, or failed. */
 export type AirState =
   | { readonly status: 'idle' | 'loading' }
   | { readonly status: 'ready'; readonly report: AirReport }

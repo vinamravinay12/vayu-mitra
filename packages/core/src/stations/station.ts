@@ -1,9 +1,11 @@
+/** A station reading as the adapters return it, and who operates the monitor. */
 import { z } from 'zod';
 import { POLLUTANTS } from '../aqi/pollutants.js';
 
 /** Who operates the monitor a reading came from. */
 export const STATION_SOURCES = ['cpcb', 'waqi', 'fixture'] as const;
 
+/** Who operates the monitor a reading came from. */
 export type StationSource = (typeof STATION_SOURCES)[number];
 
 /** Concentrations above this are sensor faults, not air. */
@@ -24,6 +26,7 @@ export const stationReadingSchema = z.object({
   pollutants: z.partialRecord(z.enum(POLLUTANTS), concentration),
 });
 
+/** One station’s latest reading, as the adapters return it. */
 export type StationReading = z.infer<typeof stationReadingSchema>;
 
 /** Readable names for sources, for the "from" line under the AQI. */

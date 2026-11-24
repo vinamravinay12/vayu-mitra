@@ -1,3 +1,4 @@
+/** Tests of decideAlert, alertMessage and alertSettingsSchema. */
 import { describe, expect, it } from 'vitest';
 import { DADI, makeReport, NOW } from '../test-utils/fixtures.js';
 import { EMPTY_MEMORY } from '../memory/memory-schema.js';

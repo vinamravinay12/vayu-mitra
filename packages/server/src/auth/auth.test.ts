@@ -1,3 +1,4 @@
+/** Tests of passwords, sessions and account store. */
 import { describe, expect, it } from 'vitest';
 import { createMemoryCollection } from '../store/user-store.js';
 import { NOW } from '../test-utils/fake-llm.js';

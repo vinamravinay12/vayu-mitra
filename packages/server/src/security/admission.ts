@@ -1,3 +1,4 @@
+/** Admitting writes only from our own page, and only as JSON. */
 import type { NextFunction, Request, Response } from 'express';
 
 /** Methods that change nothing; every other method is a write and is admitted only by the rules below. */

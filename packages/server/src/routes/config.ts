@@ -1,3 +1,4 @@
+/** GET /api/config: what the browser needs to start. */
 import { Router } from 'express';
 import type { ServerConfig } from '../config.js';
 

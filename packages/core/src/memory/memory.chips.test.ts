@@ -1,3 +1,4 @@
+/** Tests of memoryChips and memory schemas. */
 import { describe, expect, it } from 'vitest';
 import { DADI, PAPA } from '../test-utils/fixtures.js';
 import { formatTime, memoryChips } from './describe-memory.js';

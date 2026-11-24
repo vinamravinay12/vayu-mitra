@@ -1,3 +1,4 @@
+/** axe in jsdom, failing with each violation’s rule and help text. */
 import { expect } from 'vitest';
 import { axe } from 'vitest-axe';
 

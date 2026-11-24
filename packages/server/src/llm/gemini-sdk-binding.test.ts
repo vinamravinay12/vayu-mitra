@@ -1,3 +1,4 @@
+/** Tests of createGeminiClientFromKey. */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const generateContent = vi.fn(() => Promise.resolve({ text: '{"bound":true}' }));

@@ -1,3 +1,5 @@
+/** An announced message: an error that interrupts, or a status that waits. */
+
 interface AlertProps {
   readonly children: React.ReactNode;
   /** `error` interrupts a screen reader; `status` waits politely. */

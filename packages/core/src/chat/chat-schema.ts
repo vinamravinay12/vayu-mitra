@@ -1,8 +1,10 @@
+/** The chat request and response, and their limits. */
 import { z } from 'zod';
 import { activityAdviceSchema } from '../advice/advice-schema.js';
 import { memorySchema } from '../memory/memory-schema.js';
 import { placeSchema } from '../schemas/air-report.js';
 
+/** How much text a turn and a reply may carry, how many earlier turns go with it, and how many one-tap questions are offered. */
 export const CHAT_LIMITS = {
   message: 500,
   reply: 1500,
@@ -32,6 +34,9 @@ export const chatResponseSchema = z.object({
   source: z.enum(['ai', 'engine']),
 });
 
+/** One earlier turn, as the browser sends it back. */
 export type ChatTurn = z.infer<typeof chatTurnSchema>;
+/** What the browser sends for one turn. */
 export type ChatRequest = z.infer<typeof chatRequestSchema>;
+/** What the server answers for one turn. */
 export type ChatResponse = z.infer<typeof chatResponseSchema>;

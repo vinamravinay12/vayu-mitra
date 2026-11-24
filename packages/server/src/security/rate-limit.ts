@@ -1,5 +1,7 @@
+/** Per-client rate limits held in memory. */
 import type { NextFunction, Request, Response } from 'express';
 
+/** A rate limit: its window, its allowance, and how many clients it tracks. */
 export interface RateLimitOptions {
   readonly windowMs: number;
   readonly max: number;

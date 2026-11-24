@@ -1,3 +1,4 @@
+/** Tests of createGeminiClient and sleep. */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createGeminiClient, sleep, type GenerateContent } from './gemini-client.js';
 import { LlmQuotaExceededError, LlmUnavailableError, type LlmRequest } from './llm-client.js';

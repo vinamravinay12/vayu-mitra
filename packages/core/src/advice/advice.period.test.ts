@@ -1,3 +1,4 @@
+/** Tests of advice for a part of the day, a car trip and cleanestWindow. */
 import { describe, expect, it } from 'vitest';
 import { DADI, makeReport } from '../test-utils/fixtures.js';
 import { adviseActivity, cleanestWindow } from './advise-activity.js';

@@ -1,3 +1,4 @@
+/** Tests of memory chips and the family’s data. */
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';

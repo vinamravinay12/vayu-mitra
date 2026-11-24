@@ -1,3 +1,4 @@
+/** Tests of statusCodeOf and withRetry. */
 import { describe, expect, it, vi } from 'vitest';
 import { isQuotaExceeded, isRetryable, statusCodeOf, withRetry } from './retry.js';
 

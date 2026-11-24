@@ -1,3 +1,4 @@
+/** Finding a place: searching by name, or the device’s rounded location. */
 import type { Place } from '@vayu/core';
 import { useState } from 'react';
 import type { Api } from '../../api/api.js';

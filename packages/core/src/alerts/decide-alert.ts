@@ -1,3 +1,4 @@
+/** Deciding whether to alert a family now, and what the notification says. */
 import { categoryRank } from '../aqi/compute-aqi.js';
 import { CATEGORY_LABELS } from '../catalog/aqi-bands.js';
 import { sensitivePeople } from '../advice/advise-activity.js';
@@ -9,6 +10,7 @@ import type { AlertSettings, AlertState } from './alert-settings.js';
 /** A family is not told the same thing twice in this long unless it gets worse. */
 export const ALERT_COOLDOWN_MS = 6 * 60 * 60_000;
 
+/** Not now, with the reason, or send, with the notification; either way the state to keep. */
 export type AlertDecision =
   | {
       readonly send: false;

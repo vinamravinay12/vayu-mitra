@@ -1,3 +1,4 @@
+/** Tests of distanceKm, stationAqi, nearestStation, stationReadingSchema, correctionRatio and nowHour. */
 import { describe, expect, it } from 'vitest';
 import { makeStation, NOW } from '../test-utils/fixtures.js';
 import { correctionRatio } from './anchor-forecast.js';

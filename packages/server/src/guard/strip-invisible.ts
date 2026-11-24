@@ -1,3 +1,5 @@
+/** Removing invisible characters that could hide instructions from people. */
+
 /**
  * Characters that render as nothing or reorder what is shown: zero-width
  * spaces and joiners, bidirectional controls, word joiners, the byte-order

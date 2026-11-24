@@ -1,11 +1,10 @@
-import { expect, test, type Page } from '@playwright/test';
-import { expectNoAxeViolations, freshStart, pickDelhi } from './support.js';
-
 /**
  * What axe cannot judge from the markup alone: the size of every target on a
  * real screen (2.5.5 and 2.5.8), the page under a forced palette such as
  * Windows High Contrast, and text enlarged to 200% (1.4.4, 1.4.10).
  */
+import { expect, test, type Page } from '@playwright/test';
+import { expectNoAxeViolations, freshStart, pickDelhi } from './support.js';
 
 /** Smallest size, in CSS pixels, of anything a finger has to hit. */
 const MIN_TARGET = 44;

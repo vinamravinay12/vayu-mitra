@@ -1,3 +1,4 @@
+/** The next twelve hours as labelled bars, readable without colour. */
 import { CATEGORY_LABELS, labelHour, nowHour, type ReportHour } from '@vayu/core';
 
 /** Hours shown ahead. */

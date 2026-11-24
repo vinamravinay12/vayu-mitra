@@ -1,6 +1,8 @@
+/** Chat-test data: a household with Dadi, Papa and N95 masks. */
 import { type Memory } from '../memory/memory-schema.js';
 import { DADI, PAPA } from '../test-utils/fixtures.js';
 
+/** Dadi, who walks at 6:30, and Papa, in a home with N95 masks. */
 export const memory: Memory = {
   people: [DADI, PAPA],
   routines: [

@@ -1,3 +1,4 @@
+/** Reading what a question asks: which activity, for whom, when, and what it follows up. */
 import type { Activity, Day, Period } from '../catalog/vocabulary.js';
 import type { Memory, PersonFact, RoutineFact } from '../memory/memory-schema.js';
 import { detectActivity, detectDay, detectPeriod, detectTime, mentions } from './detect.js';

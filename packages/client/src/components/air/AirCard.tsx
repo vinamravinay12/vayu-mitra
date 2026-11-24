@@ -1,3 +1,4 @@
+/** The air now on India’s scale, where it was measured, and the hours ahead. */
 import {
   CATEGORY_GUIDANCE,
   CATEGORY_LABELS,

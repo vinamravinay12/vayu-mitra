@@ -1,3 +1,4 @@
+/** Editing a person: their life stage and health conditions. */
 import {
   AGE_GROUPS,
   AGE_LABELS,

@@ -1,3 +1,4 @@
+/** One turn of the conversation, from screening the message to saving what was learnt. */
 import {
   adviseActivity,
   applyChanges,
@@ -18,6 +19,7 @@ import type { UserStore } from '../store/user-store.js';
 import { answer } from './answer.js';
 import { understand, type Understood } from './understand.js';
 
+/** What a chat turn needs: the model, the air, the store and the clock. */
 export interface ChatDependencies {
   readonly llm: LlmClient | null;
   readonly air: AirService;

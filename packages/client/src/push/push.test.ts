@@ -1,3 +1,4 @@
+/** Tests of keyBytes, enablePush and disablePush. */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { disablePush, enablePush, keyBytes } from './push.js';
 import { SERVICE_WORKER_URL } from './worker-script.js';

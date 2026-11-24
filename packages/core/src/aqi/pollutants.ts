@@ -1,3 +1,4 @@
+/** The pollutants NAQI is computed from, and their breakpoints. */
 import {
   CO_BREAKPOINTS,
   NH3_BREAKPOINTS,
@@ -12,6 +13,7 @@ import {
 /** The pollutants NAQI is computed from. */
 export const POLLUTANTS = ['pm25', 'pm10', 'no2', 'o3', 'so2', 'co', 'nh3'] as const;
 
+/** One of the pollutants NAQI is computed from. */
 export type Pollutant = (typeof POLLUTANTS)[number];
 
 /** Concentrations for whichever pollutants a station reported. */

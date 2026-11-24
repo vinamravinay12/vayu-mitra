@@ -1,3 +1,5 @@
+/** The footer: where the numbers come from, and that this is not medical advice. */
+
 /** Where the numbers come from, and the medical caveat every page needs. */
 export function Footer(): React.JSX.Element {
   return (

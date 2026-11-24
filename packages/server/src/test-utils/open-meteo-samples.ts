@@ -1,3 +1,5 @@
+/** Open-Meteo responses as the adapters receive them. */
+
 /** An Open-Meteo air-quality response, with one gap in PM2.5 and one missing PM10. */
 export function airResponse(hours = 24): unknown {
   const time = Array.from({ length: hours }, (_unused, index) => {

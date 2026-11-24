@@ -1,3 +1,4 @@
+/** The alert options: the category alerts start from, and quiet hours. */
 import { ALERT_THRESHOLDS, CATEGORY_LABELS, type AlertSettings } from '@vayu/core';
 import { z } from 'zod';
 

@@ -1,3 +1,4 @@
+/** Tests of describe, other places, suggestQuestions and chat schemas. */
 import { describe, expect, it } from 'vitest';
 import { adviseActivity } from '../advice/advise-activity.js';
 import { EMPTY_MEMORY } from '../memory/memory-schema.js';

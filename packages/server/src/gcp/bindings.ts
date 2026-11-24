@@ -1,3 +1,8 @@
+/**
+ * Thin adapters from Google Cloud and Web Push SDKs to the server's own
+ * interfaces. Each is a direct call that only maps results, so the logic that
+ * matters is tested against fakes of these interfaces.
+ */
 import type { CollectionReference } from '@google-cloud/firestore';
 import type { OAuth2Client } from 'google-auth-library';
 import type webpush from 'web-push';
@@ -7,12 +12,6 @@ import type { Messenger } from '../push/messenger.js';
 import type { PushSettings, SchedulerSettings } from '../settings.js';
 import { AlreadyExistsError, type DocumentCollection } from '../store/user-store.js';
 import { fieldOf } from '../validation/field-of.js';
-
-/**
- * Thin adapters from Google Cloud and Web Push SDKs to the server's own
- * interfaces. Each is a direct call that only maps results, so the logic that
- * matters is tested against fakes of these interfaces.
- */
 
 /** Firestore's status code for "document already exists". */
 const ALREADY_EXISTS = 6;

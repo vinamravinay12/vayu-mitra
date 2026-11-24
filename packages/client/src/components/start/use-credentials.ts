@@ -1,7 +1,9 @@
+/** The account form’s state: what was typed, the mode, the request and its error. */
 import { useState } from 'react';
 import { signIn } from '../../api/config.js';
 import { messageOf } from '../../state/use-startup.js';
 
+/** Whether the account form signs in or creates an account. */
 export type Mode = 'login' | 'register';
 
 /** Said when the two passwords typed to create an account differ. */

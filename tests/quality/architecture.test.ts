@@ -1,13 +1,12 @@
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { basename, dirname, join, relative, resolve } from 'node:path';
-import { describe, expect, it } from 'vitest';
-
 /**
  * The layering in docs/ARCHITECTURE.md, enforced: the engine is pure, the
  * browser and the server meet only through the engine, vendor SDKs sit behind
  * one adapter each, HTTP stays at the edge, and no module imports itself back.
  */
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { basename, dirname, join, relative, resolve } from 'node:path';
+import { describe, expect, it } from 'vitest';
 
 const REPO_ROOT = join(import.meta.dirname, '..', '..');
 

@@ -1,3 +1,4 @@
+/** Tests of fenceUntrusted. */
 import { describe, expect, it } from 'vitest';
 import { FENCE_CLOSE, FENCE_OPEN, fenceUntrusted } from './fence-untrusted.js';
 

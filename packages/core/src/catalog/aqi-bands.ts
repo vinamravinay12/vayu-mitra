@@ -17,6 +17,7 @@ export const AQI_CATEGORIES = [
   'severe',
 ] as const;
 
+/** One NAQI category, Good to Severe. */
 export type AqiCategory = (typeof AQI_CATEGORIES)[number];
 
 /** One band of the index: a concentration range and the index range it maps to. */
@@ -97,6 +98,7 @@ export const O3_BREAKPOINTS: readonly Breakpoint[] = toBreakpoints([
   ['severe', 748, 1000, 400, 500],
 ]);
 
+/** NAQI breakpoints for sulphur dioxide (24-hour µg/m³). */
 export const SO2_BREAKPOINTS: readonly Breakpoint[] = toBreakpoints([
   ['good', 0, 40, 0, 50],
   ['satisfactory', 40, 80, 50, 100],
@@ -116,6 +118,7 @@ export const CO_BREAKPOINTS: readonly Breakpoint[] = toBreakpoints([
   ['severe', 34, 50, 400, 500],
 ]);
 
+/** NAQI breakpoints for ammonia (24-hour µg/m³). */
 export const NH3_BREAKPOINTS: readonly Breakpoint[] = toBreakpoints([
   ['good', 0, 200, 0, 50],
   ['satisfactory', 200, 400, 50, 100],

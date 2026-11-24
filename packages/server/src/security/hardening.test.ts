@@ -1,3 +1,4 @@
+/** Tests of admission of writes and refusalFor. */
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { refusalFor } from './admission.js';

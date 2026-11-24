@@ -1,7 +1,6 @@
+/** Steps and checks the browser journeys share. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
-
-/** Steps and checks the browser journeys share. */
 
 /** WCAG tags axe runs, colour contrast included (jsdom axe cannot check contrast). */
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -29,6 +28,7 @@ export async function scrollsHorizontally(page: Page): Promise<boolean> {
   );
 }
 
+/** The password every browser test account uses. */
 export const PASSWORD = 'correct horse battery';
 
 /** A fresh email for each account. */

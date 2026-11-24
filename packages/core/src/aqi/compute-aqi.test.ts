@@ -1,3 +1,4 @@
+/** Tests of subIndex, computeAqi, computeNaqi, particulateAqi, epaIndexToConcentration and concentrationFor. */
 import { describe, expect, it } from 'vitest';
 import { PM10_BREAKPOINTS, PM25_BREAKPOINTS } from '../catalog/aqi-bands.js';
 import {

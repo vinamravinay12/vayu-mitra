@@ -1,3 +1,10 @@
+/**
+ * CPCB's real-time station data, as published on data.gov.in ("Real time Air
+ * Quality Index from various locations"). One record per station and
+ * pollutant; values are the pollutant's NAQI sub-index over the last 24 hours
+ * (8 for CO and ozone), refreshed hourly. The whole country is one request of
+ * a few thousand rows, fetched once per refresh and shared by every family.
+ */
 import {
   BREAKPOINTS,
   concentrationFor,
@@ -7,14 +14,6 @@ import {
 } from '@vayu/core';
 import { z } from 'zod';
 import { UpstreamError, type FetchJson } from './fetch-json.js';
-
-/**
- * CPCB's real-time station data, as published on data.gov.in ("Real time Air
- * Quality Index from various locations"). One record per station and
- * pollutant; values are the pollutant's NAQI sub-index over the last 24 hours
- * (8 for CO and ozone), refreshed hourly. The whole country is one request of
- * a few thousand rows, fetched once per refresh and shared by every family.
- */
 
 const RESOURCE_URL = 'https://api.data.gov.in/resource/3b01bcb8-0b14-4abf-b6f2-c1bfd384ba69';
 

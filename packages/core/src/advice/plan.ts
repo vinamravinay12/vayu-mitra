@@ -1,11 +1,10 @@
-import { PERIOD_HOURS, type Day, type Period } from '../catalog/vocabulary.js';
-import { nowHour, type AirReport, type ReportHour } from '../schemas/air-report.js';
-import { hourOfTime, localClock, minutesOfDay } from '../time/local-clock.js';
-
 /**
  * When a plan is for: the hour asked about, from a clock time, a day, a part
  * of the day or none of them, and the cleanest window to compare it with.
  */
+import { PERIOD_HOURS, type Day, type Period } from '../catalog/vocabulary.js';
+import { nowHour, type AirReport, type ReportHour } from '../schemas/air-report.js';
+import { hourOfTime, localClock, minutesOfDay } from '../time/local-clock.js';
 
 /** Outdoor plans are only suggested in these local hours. */
 const DAYLIGHT = { first: 6, last: 20 } as const;

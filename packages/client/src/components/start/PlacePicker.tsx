@@ -1,3 +1,4 @@
+/** Choosing a place: search by name, or use the device’s location. */
 import type { Place } from '@vayu/core';
 import { useId, useState } from 'react';
 import type { Api } from '../../api/api.js';

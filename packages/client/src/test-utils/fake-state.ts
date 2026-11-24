@@ -1,3 +1,4 @@
+/** What the fake server holds and records, and its JSON responses. */
 import type { MemoryChange } from '@vayu/core';
 import type { Household } from '../api/api.js';
 import type { ClientConfig } from '../api/config.js';
@@ -5,6 +6,7 @@ import type { ClientConfig } from '../api/config.js';
 /** A failure a route can be told to give: an HTTP status, or a dropped connection. */
 type Failure = number | 'network';
 
+/** What the fake server holds and records, which tests read and set. */
 export interface FakeServer {
   household: Household;
   config: ClientConfig;

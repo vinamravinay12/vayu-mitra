@@ -1,3 +1,4 @@
+/** The guard prompt: an independent judge that labels a message safe or manipulation. */
 import type { LlmRequest } from '../llm/llm-client.js';
 import { guardVerdictSchema, toResponseSchema } from '../validation/model-schemas.js';
 import { fenceUntrusted } from './fence-untrusted.js';

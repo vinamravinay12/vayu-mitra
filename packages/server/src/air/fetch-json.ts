@@ -1,3 +1,5 @@
+/** Fetching JSON from an upstream, with a timeout and readable failures. */
+
 /** Reads JSON from an upstream URL. Injected so tests never touch the network. */
 export type FetchJson = (url: string) => Promise<unknown>;
 

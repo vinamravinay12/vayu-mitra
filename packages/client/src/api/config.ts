@@ -1,3 +1,4 @@
+/** Start-up calls: the client config, who is signed in, signing in and out. Checked by hand to keep Zod out of the first paint. */
 import { ApiError, requestJson } from './http.js';
 
 /** What the browser needs to start. */

@@ -1,3 +1,4 @@
+/** The reply prompt: the engine’s facts, the conversation, and the rules for wording them. */
 import type { ChatTurn } from '@vayu/core';
 import type { LlmRequest } from '../llm/llm-client.js';
 import { formatHistory } from './build-understand-prompt.js';
@@ -36,6 +37,7 @@ const REPLY_INSTRUCTION = [
   DATA_NOT_INSTRUCTIONS,
 ].join('\n');
 
+/** The JSON Schema the reply call’s answer is constrained to. */
 export const REPLY_RESPONSE_SCHEMA = toResponseSchema(replySchema);
 
 /** The reply call for one message, the turns before it, and its facts. */

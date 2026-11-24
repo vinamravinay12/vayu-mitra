@@ -1,3 +1,4 @@
+/** Tests of the family record and accounts. */
 import { EMPTY_MEMORY } from '@vayu/core';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';

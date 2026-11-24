@@ -1,3 +1,4 @@
+/** Tests of slug and applyChanges. */
 import { describe, expect, it } from 'vitest';
 import { DADI } from '../test-utils/fixtures.js';
 import { applyChange, applyChanges, EMPTY_MEMORY, personId, slug } from './apply-changes.js';

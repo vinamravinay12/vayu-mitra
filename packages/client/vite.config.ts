@@ -1,3 +1,4 @@
+/** Vite build for the client: React, Tailwind, and the dev proxy to the API. */
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';

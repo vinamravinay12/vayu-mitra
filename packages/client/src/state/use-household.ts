@@ -1,8 +1,10 @@
+/** The family’s record: loaded once, changed optimistically, saved to the server. */
 import type { AlertSettings, Memory, Place } from '@vayu/core';
 import { useCallback, useEffect, useState } from 'react';
 import type { Api, Household } from '../api/api.js';
 import { messageOf } from './use-startup.js';
 
+/** The family’s record and the ways the screen changes it. */
 export interface HouseholdState {
   readonly household: Household | null;
   readonly error: string | null;

@@ -1,3 +1,4 @@
+/** JSON 404s and the last-resort error handler. */
 import type { NextFunction, Request, Response } from 'express';
 import { describeCause, logEvent } from '../logging/log.js';
 import { fieldOf } from '../validation/field-of.js';

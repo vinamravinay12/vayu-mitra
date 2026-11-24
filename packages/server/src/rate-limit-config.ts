@@ -1,3 +1,5 @@
+/** The per-client rate limits, read from the environment. */
+
 /** AI requests per client per minute unless configured: enough for a family, not for a script. */
 const DEFAULT_AI_REQUESTS_PER_MINUTE = 10;
 

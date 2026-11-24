@@ -1,3 +1,4 @@
+/** Tests of airElsewhere and a question about other places. */
 import { describe, expect, it, vi } from 'vitest';
 import type { AirService } from '../air/air-service.js';
 import { fakeLlm, NOTHING_UNDERSTOOD, SAFE_VERDICT } from '../test-utils/fake-llm.js';

@@ -1,3 +1,4 @@
+/** Builds the app for a test, with fakes and any environment given. */
 import request from 'supertest';
 import type { Express } from 'express';
 import { createApp, type AppDependencies } from '../app.js';

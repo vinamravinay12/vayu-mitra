@@ -1,3 +1,4 @@
+/** Tests of accounts. */
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { AUTH_ENV, signUp, testApp } from './test-utils/app.js';

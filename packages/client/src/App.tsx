@@ -1,3 +1,4 @@
+/** The app shell: start-up, sign-in, theme, and the signed-in screen loaded after first paint. */
 import { lazy, Suspense, useState } from 'react';
 import { signOut } from './api/config.js';
 import { SignInScreen } from './components/start/SignInScreen.js';

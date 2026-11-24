@@ -1,3 +1,4 @@
+/** Tests of adviseActivity. */
 import { describe, expect, it } from 'vitest';
 import { DADI, makeReport } from '../test-utils/fixtures.js';
 import { activityAdviceSchema } from './advice-schema.js';

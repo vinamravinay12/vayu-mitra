@@ -1,3 +1,4 @@
+/** What Vayu Mitra remembers, as chips the family can correct or forget. */
 import { forgetFact, memoryChips, saveFact, type Memory } from '@vayu/core';
 import { useState } from 'react';
 import { Chip } from './Chip.js';

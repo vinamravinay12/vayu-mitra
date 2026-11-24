@@ -1,3 +1,4 @@
+/** Tests of AlertSettings. */
 import { DEFAULT_ALERT_SETTINGS } from '@vayu/core';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

@@ -1,3 +1,4 @@
+/** The Express app: middleware in order, then the routes, static files and errors. */
 import compression from 'compression';
 import express, { type Express } from 'express';
 import type { AirService } from './air/air-service.js';
@@ -24,6 +25,7 @@ import type { UserStore } from './store/user-store.js';
 /** A message, a few turns of history and the memory are a few kilobytes at most. */
 const BODY_LIMIT = '32kb';
 
+/** Everything the app is built from, so tests pass fakes. */
 export interface AppDependencies {
   readonly config: ServerConfig;
   /** Null when there is no Gemini key: the engine answers in its own words. */

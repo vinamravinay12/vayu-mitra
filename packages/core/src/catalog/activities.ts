@@ -1,3 +1,4 @@
+/** What each activity involves: how hard you breathe, where it happens, its words. */
 import type { Activity } from './vocabulary.js';
 
 /** How hard someone breathes doing it: harder breathing takes in more smog. */
@@ -10,6 +11,7 @@ export type Intensity = 'light' | 'moderate' | 'vigorous';
  */
 export type Setting = 'outdoors' | 'in-vehicle' | 'home';
 
+/** What an activity involves, for the advice and the words. */
 export interface ActivityProfile {
   readonly label: string;
   readonly intensity: Intensity;
@@ -21,6 +23,7 @@ export interface ActivityProfile {
   readonly keywords: readonly string[];
 }
 
+/** Every activity the engine advises on, with its profile. */
 export const ACTIVITY_PROFILES: Readonly<Record<Activity, ActivityProfile>> = {
   walk: {
     label: 'walk',

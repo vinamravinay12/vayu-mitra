@@ -1,3 +1,4 @@
+/** Password hashing and checking with scrypt, in constant time. */
 import { randomBytes, scrypt, timingSafeEqual, type ScryptOptions } from 'node:crypto';
 import { promisify } from 'node:util';
 

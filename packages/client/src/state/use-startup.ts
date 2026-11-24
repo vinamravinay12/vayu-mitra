@@ -1,3 +1,4 @@
+/** Start-up: the client config and who is signed in, before the first screen. */
 import { useCallback, useEffect, useState } from 'react';
 import { fetchConfig, fetchSession, type ClientConfig } from '../api/config.js';
 

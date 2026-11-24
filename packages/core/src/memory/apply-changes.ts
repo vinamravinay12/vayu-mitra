@@ -1,3 +1,4 @@
+/** Applying memory changes: remembering, updating and forgetting facts. */
 import { ACTIVITY_PROFILES } from '../catalog/activities.js';
 import type { Activity } from '../catalog/vocabulary.js';
 import {

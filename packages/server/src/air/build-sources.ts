@@ -1,3 +1,4 @@
+/** Choosing the air sources: live feeds that have a key, or fixed data offline. */
 import { createTtlCache } from '../cache/ttl-cache.js';
 import type { AirDataMode } from '../config.js';
 import { cached, type AirSources, type StationSource } from './air-service.js';

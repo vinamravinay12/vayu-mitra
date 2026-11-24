@@ -1,3 +1,4 @@
+/** Tests of accounts, POST /api/chat, POST /api/internal/check-alerts and errors and static files. */
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { UpstreamError } from './air/fetch-json.js';

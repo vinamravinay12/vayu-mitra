@@ -1,3 +1,4 @@
+/** Zod configured for the page’s CSP: schemas are interpreted, never compiled with eval. */
 import { z } from 'zod';
 
 /**

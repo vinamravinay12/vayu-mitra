@@ -1,3 +1,4 @@
+/** Tests of supply chain. */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';

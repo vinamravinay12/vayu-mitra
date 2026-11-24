@@ -1,3 +1,4 @@
+/** Tests of writeReply and runChat. */
 import { describe, expect, it } from 'vitest';
 import { REPLY_RESPONSE_SCHEMA } from '../prompts/build-reply-prompt.js';
 import { DADI_UNDERSTOOD, fakeLlm, SAFE_VERDICT } from '../test-utils/fake-llm.js';

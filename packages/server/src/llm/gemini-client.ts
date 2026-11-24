@@ -1,3 +1,4 @@
+/** The Gemini adapter: schema-constrained calls, retried, falling through the model list. */
 import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import { describeCause, logEvent } from '../logging/log.js';
 import {

@@ -1,3 +1,4 @@
+/** Engine-test data: reports, stations and people. */
 import type { Forecast } from '../stations/anchor-forecast.js';
 import type { StationReading } from '../stations/station.js';
 import { nowHour, type AirReport, type ReportHour } from '../schemas/air-report.js';
@@ -83,6 +84,7 @@ export function makeReport(aqis: readonly number[], overrides: Partial<AirReport
   };
 }
 
+/** Dadi: an older adult with asthma. */
 export const DADI: PersonFact = {
   kind: 'person',
   id: 'person:dadi',
@@ -91,6 +93,7 @@ export const DADI: PersonFact = {
   conditions: ['asthma'],
 };
 
+/** Papa: an adult with no conditions. */
 export const PAPA: PersonFact = {
   kind: 'person',
   id: 'person:papa',

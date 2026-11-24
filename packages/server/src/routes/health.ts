@@ -1,3 +1,4 @@
+/** GET /api/health: liveness and which integrations are on. */
 import { Router } from 'express';
 import type { ServerConfig } from '../config.js';
 

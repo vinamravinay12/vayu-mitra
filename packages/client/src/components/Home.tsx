@@ -1,3 +1,4 @@
+/** The signed-in screen: the conversation beside the air, memory, alerts and privacy. */
 import { nowHour, suggestQuestions, type ChatResponse } from '@vayu/core';
 import { useCallback, useMemo } from 'react';
 import { createApi, type Api, type Household } from '../api/api.js';

@@ -1,5 +1,7 @@
+/** Auth-test data: a session-signing key. */
 import { createHmac } from 'node:crypto';
 
+/** A session-signing key long enough to be accepted. */
 export const SECRET = 'a-session-secret-of-at-least-32-chars';
 
 /** A token signed with the real secret around an arbitrary payload. */

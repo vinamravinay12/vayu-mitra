@@ -1,3 +1,4 @@
+/** Colour maths for the contrast test: tokens from the stylesheet, OKLCH to luminance. */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -8,12 +9,16 @@ import { join } from 'node:path';
  * banner tone) in both themes.
  */
 
+/** The client package’s folder. */
 export const CLIENT = join(import.meta.dirname, '..', '..', 'packages/client');
 
+/** The client’s stylesheet, where the colour tokens are defined. */
 export const CSS = readFileSync(join(CLIENT, 'src/index.css'), 'utf8');
 
+/** Light or dark. */
 export type Theme = 'light' | 'dark';
 
+/** Both themes, to check each. */
 export const THEMES: readonly Theme[] = ['light', 'dark'];
 
 /** Each `--color-*: light-dark(oklch(…), oklch(…))` token, by name and theme. */
@@ -26,6 +31,7 @@ function readTokens(css: string): Map<string, Record<Theme, string>> {
   return tokens;
 }
 
+/** Every colour token, by name and theme. */
 export const TOKENS = readTokens(CSS);
 
 /** Linear-light sRGB channels (0–1, gamut-clipped) of an `oklch(L C H)` colour. */

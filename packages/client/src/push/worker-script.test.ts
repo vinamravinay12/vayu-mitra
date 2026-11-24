@@ -1,3 +1,4 @@
+/** Tests of workerScript. */
 import { describe, expect, it, vi } from 'vitest';
 import { SERVICE_WORKER_URL, WORKER_POLICY, workerScript } from './worker-script.js';
 

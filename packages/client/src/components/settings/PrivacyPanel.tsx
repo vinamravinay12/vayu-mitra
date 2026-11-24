@@ -1,3 +1,4 @@
+/** What is kept about the family, and deleting all of it in two steps. */
 import { useState } from 'react';
 
 /** The second step: delete for good, or keep the data. */

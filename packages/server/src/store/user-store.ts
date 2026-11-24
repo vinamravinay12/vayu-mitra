@@ -1,3 +1,4 @@
+/** Families’ records over a document collection, Firestore or in memory. */
 import { describeCause, logEvent } from '../logging/log.js';
 import { fieldOf } from '../validation/field-of.js';
 import { userRecordSchema, type UserRecord } from './user-record.js';
@@ -14,6 +15,7 @@ export class AlreadyExistsError extends Error {
 /** A document as written: a plain object of fields. */
 type StoredDocument = Readonly<Record<string, unknown>>;
 
+/** The document operations the stores need, which Firestore and memory both provide. */
 export interface DocumentCollection {
   get(id: string): Promise<unknown>;
   set(id: string, data: StoredDocument): Promise<void>;

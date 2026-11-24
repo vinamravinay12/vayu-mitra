@@ -1,3 +1,4 @@
+/** Tests of anchorForecast. */
 import { describe, expect, it } from 'vitest';
 import { definite, makeForecast, makeStation, NOW } from '../test-utils/fixtures.js';
 import { anchorForecast, ANCHOR_FADE_HOURS, OUTLOOK_HOURS } from './anchor-forecast.js';

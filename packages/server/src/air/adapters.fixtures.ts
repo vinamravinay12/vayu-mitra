@@ -1,3 +1,4 @@
+/** Adapter-test helpers: fetches that answer with canned JSON. */
 import { type FetchJson } from './fetch-json.js';
 
 /** A fetcher that records URLs and answers with `body`. */

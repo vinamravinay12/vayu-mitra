@@ -1,3 +1,4 @@
+/** Tests of readStoredPreference and useTheme. */
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readStoredPreference, useTheme } from './use-theme.js';

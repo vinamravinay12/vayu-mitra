@@ -3,6 +3,7 @@
  * no storage, no clock of its own. The server and the browser run the same
  * code, so the advice a family sees and the facts the AI is grounded in agree.
  */
+
 export * from './catalog/vocabulary.js';
 export { CATEGORY_GUIDANCE, CATEGORY_LABELS } from './catalog/aqi-bands.js';
 export { ACTIVITY_PROFILES } from './catalog/activities.js';

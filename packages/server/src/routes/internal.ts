@@ -1,3 +1,4 @@
+/** The scheduler-only route that runs the alert check. */
 import { Router } from 'express';
 import { checkAlerts, type AlertJobDependencies } from '../alerts/check-alerts.js';
 import { bearerToken } from '../auth/require-user.js';

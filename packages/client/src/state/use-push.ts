@@ -1,7 +1,9 @@
+/** Push alerts for the settings panel: whether they are offered, and turning them on or off. */
 import { useCallback } from 'react';
 import type { Api, Household } from '../api/api.js';
 import type { PushOutcome } from '../push/push.js';
 
+/** Push alerts as the settings panel uses them. */
 export interface PushControls {
   /** False when the server has no Web Push key: alerts cannot be offered. */
   readonly available: boolean;

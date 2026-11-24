@@ -1,3 +1,4 @@
+/** Retrying transient upstream failures, and telling quota from outage. */
 import { fieldOf } from '../validation/field-of.js';
 
 /**
@@ -9,6 +10,7 @@ const RETRYABLE_STATUSES: ReadonlySet<number> = new Set([500, 502, 503, 504]);
 /** HTTP status Gemini uses when the quota is spent. */
 const QUOTA_EXCEEDED_STATUS = 429;
 
+/** How often and how patiently to retry. */
 export interface RetryOptions {
   readonly attempts: number;
   readonly baseDelayMs: number;

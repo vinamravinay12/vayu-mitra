@@ -1,3 +1,4 @@
+/** Tests of firestoreCollection, webPushMessenger and oidcSchedulerVerifier. */
 import type { CollectionReference } from '@google-cloud/firestore';
 import type { OAuth2Client } from 'google-auth-library';
 import { describe, expect, it, vi } from 'vitest';

@@ -1,3 +1,4 @@
+/** The places a search found, each a button to pick it. */
 import type { Place } from '@vayu/core';
 import { Alert } from '../ui/Alert.js';
 

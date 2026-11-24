@@ -1,3 +1,4 @@
+/** India’s National Air Quality Index: sub-indices, the overall value and its category. */
 import {
   AQI_CATEGORIES,
   PM10_BREAKPOINTS,

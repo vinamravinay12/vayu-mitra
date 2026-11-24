@@ -1,3 +1,5 @@
+/** Fencing user text so the model treats it as data, not instructions. */
+
 /** Opens the span of user-written text in a prompt. */
 export const FENCE_OPEN = '<<<UNTRUSTED_USER_TEXT>>>';
 /** Closes the span of user-written text in a prompt. */

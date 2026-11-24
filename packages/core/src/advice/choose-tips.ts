@@ -1,3 +1,4 @@
+/** Choosing the precautions for an activity, for who is involved and what the home has. */
 import type { Setting } from '../catalog/activities.js';
 import { RESPIRATORY_CONDITIONS, type Activity, type HomeFeature } from '../catalog/vocabulary.js';
 import type { PersonFact } from '../memory/memory-schema.js';

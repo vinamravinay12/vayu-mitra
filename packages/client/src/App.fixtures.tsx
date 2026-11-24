@@ -1,3 +1,4 @@
+/** App-test helpers: starting the app, picking Delhi, sending a message, a household with Dadi. */
 import type { MemoryChange } from '@vayu/core';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

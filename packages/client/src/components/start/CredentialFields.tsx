@@ -1,3 +1,4 @@
+/** The account form’s inputs: email, password with Show/Hide, and the confirmation on sign-up. */
 import { MISMATCH, type CredentialsState } from './use-credentials.js';
 
 /** The email input. */

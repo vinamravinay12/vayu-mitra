@@ -1,3 +1,4 @@
+/** The air report: a place, the air now and where it was measured, and the hours ahead. */
 import { z } from 'zod';
 import { AQI_CATEGORIES } from '../catalog/aqi-bands.js';
 import { POLLUTANTS } from '../aqi/pollutants.js';
@@ -56,9 +57,13 @@ export const airReportSchema = z.object({
   forecastSource: z.enum(FORECAST_SOURCES),
 });
 
+/** A place the family chose. */
 export type Place = z.infer<typeof placeSchema>;
+/** One hour of the outlook. */
 export type ReportHour = z.infer<typeof reportHourSchema>;
+/** The air for a place: now, where it was measured, and the hours ahead. */
 export type AirReport = z.infer<typeof airReportSchema>;
+/** Which model the hours ahead come from. */
 export type ForecastSource = (typeof FORECAST_SOURCES)[number];
 
 /** The hour the report starts at: now. The schema guarantees there is one. */

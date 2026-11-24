@@ -1,3 +1,4 @@
+/** Tests of requestJson, createApi and config and accounts. */
 import { EMPTY_MEMORY } from '@vayu/core';
 import { describe, expect, it, vi } from 'vitest';
 import { installFakeServer } from '../test-utils/fake-server.js';

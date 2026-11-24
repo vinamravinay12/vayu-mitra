@@ -1,3 +1,4 @@
+/** The colour theme choice: light, system or dark, as three radios. */
 import type { ThemePreference } from '../../state/use-theme.js';
 
 interface ThemeToggleProps {

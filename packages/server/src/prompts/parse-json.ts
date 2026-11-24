@@ -1,3 +1,5 @@
+/** Parsing a model’s JSON answer defensively. */
+
 /**
  * Parses a model response that should be one JSON object.
  *

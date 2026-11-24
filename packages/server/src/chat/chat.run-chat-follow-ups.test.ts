@@ -1,3 +1,4 @@
+/** Tests of runChat. */
 import { EMPTY_MEMORY } from '@vayu/core';
 import { describe, expect, it } from 'vitest';
 import { newUserRecord } from '../store/user-record.js';

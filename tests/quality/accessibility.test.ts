@@ -1,3 +1,4 @@
+/** Tests of colour contrast of the design tokens, forced colours and touch and the page shell. */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';

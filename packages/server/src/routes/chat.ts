@@ -1,3 +1,4 @@
+/** POST /api/chat: one turn of the conversation. */
 import { chatRequestSchema, type ChatRequest } from '@vayu/core';
 import { Router } from 'express';
 import { userOf } from '../auth/require-user.js';

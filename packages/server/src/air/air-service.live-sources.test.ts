@@ -1,3 +1,4 @@
+/** Tests of live sources and fixture data. */
 import type { StationReading } from '@vayu/core';
 import { describe, expect, it } from 'vitest';
 import { NOW } from '../test-utils/fake-llm.js';

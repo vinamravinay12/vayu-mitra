@@ -1,3 +1,9 @@
+/**
+ * The World Air Quality Index project's nearest-station feed. It carries
+ * stations CPCB does not (state boards, embassies, some low-cost networks)
+ * and fills gaps when the CPCB feed is late. Its numbers are US EPA indices,
+ * so they are converted back to concentrations here.
+ */
 import {
   EPA_PM10_BANDS,
   EPA_PM25_BANDS,
@@ -7,13 +13,6 @@ import {
 import { z } from 'zod';
 import { UpstreamError, type FetchJson } from './fetch-json.js';
 import { roundCoordinate } from './open-meteo.js';
-
-/**
- * The World Air Quality Index project's nearest-station feed. It carries
- * stations CPCB does not (state boards, embassies, some low-cost networks)
- * and fills gaps when the CPCB feed is late. Its numbers are US EPA indices,
- * so they are converted back to concentrations here.
- */
 
 const FEED_URL = 'https://api.waqi.info/feed';
 

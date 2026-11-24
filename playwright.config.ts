@@ -1,3 +1,4 @@
+/** Browser-test configuration: the production build, desktop and a 375 px phone. */
 import { defineConfig, devices } from '@playwright/test';
 
 /** Port the production build is served on during e2e runs. */

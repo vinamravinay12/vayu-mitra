@@ -1,10 +1,6 @@
+/** Repository facts the hygiene test reads: files, folders and required docs. */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { extname, join, relative } from 'node:path';
-
-/**
- * Repository standards enforced as tests, so they are evidence rather than intent.
- * Place at `tests/quality/hygiene.test.ts`. Adapt the constants below to the project.
- */
 
 /** Repository root, two levels above this file. */
 export const REPO_ROOT = join(import.meta.dirname, '..', '..');
@@ -22,15 +18,19 @@ const IGNORED_FOLDERS = new Set([
 
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.mjs', '.js']);
 
+/** The longest any file may be, blank lines included. */
 export const MAX_SOURCE_LINES = 250;
 
+/** The client’s source folder. */
 export const CLIENT_SOURCE = 'packages/client/src';
 
+/** The server’s source folder. */
 export const SERVER_SOURCE = 'packages/server/src';
 
 /** The one module allowed to write to the console: the structured logger. */
 export const LOGGER_MODULE = `${SERVER_SOURCE}/logging/log.ts`;
 
+/** Files the repository must have. */
 export const REQUIRED_DOCS = [
   'README.md',
   'LICENSE',
@@ -49,6 +49,7 @@ export const REQUIRED_DOCS = [
   'docs/DEPLOYMENT.md',
 ];
 
+/** What the README must say. */
 export const README_MUST_MENTION = [
   'npm run dev',
   'npm run verify',
@@ -84,10 +85,12 @@ function isTestFile(path: string): boolean {
   return /\.(test|fixtures)\.tsx?$|\.spec\.ts$|\/test-utils\//.test(path);
 }
 
+/** Every authored source file in the packages. */
 export const sourceFiles = listFiles(join(REPO_ROOT, 'packages'))
   .concat(listFiles(join(REPO_ROOT, 'scripts')))
   .filter((path) => SOURCE_EXTENSIONS.has(extname(path)));
 
+/** Source files that are not tests. */
 export const productionFiles = sourceFiles.filter((path) => !isTestFile(path));
 
 /** Production files whose text matches `pattern`, as `path:line` strings. */

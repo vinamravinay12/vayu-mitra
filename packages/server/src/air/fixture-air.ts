@@ -1,10 +1,9 @@
-import { localClock, type Forecast, type Place, type StationReading } from '@vayu/core';
-
 /**
  * A fixed, offline stand-in for the forecast, the stations and the geocoder,
  * for tests, CI end-to-end runs and keyless demos. Production refuses to start
  * in this mode (see config.ts), so a family never sees made-up air.
  */
+import { localClock, type Forecast, type Place, type StationReading } from '@vayu/core';
 
 /** India Standard Time, which every fixture place uses. */
 const IST_OFFSET_SECONDS = 19_800;

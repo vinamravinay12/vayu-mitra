@@ -1,3 +1,4 @@
+/** Tests of fieldOf. */
 import { describe, expect, it } from 'vitest';
 import { fieldOf } from './field-of.js';
 

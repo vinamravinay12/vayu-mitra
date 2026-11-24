@@ -1,3 +1,4 @@
+/** A small in-memory cache that expires entries and evicts the least recently used. */
 import { createHash } from 'node:crypto';
 
 interface Entry<V> {
@@ -5,6 +6,7 @@ interface Entry<V> {
   readonly expiresAt: number;
 }
 
+/** A bounded cache whose entries expire. */
 export interface TtlCache<V> {
   get(key: string): V | undefined;
   set(key: string, value: V): void;

@@ -1,3 +1,4 @@
+/** Test doubles for the app’s dependencies: places, air, store, messenger. */
 import { createAirService } from '../air/air-service.js';
 import { fixtureSources } from '../air/build-sources.js';
 import { createMemoryCollection, createUserStore } from '../store/user-store.js';

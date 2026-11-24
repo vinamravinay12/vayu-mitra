@@ -1,3 +1,4 @@
+/** One-tap questions, from what the family has told Vayu Mitra. */
 import { ACTIVITY_PROFILES } from '../catalog/activities.js';
 import { CHAT_LIMITS } from './chat-schema.js';
 import { formatTime } from '../memory/describe-memory.js';

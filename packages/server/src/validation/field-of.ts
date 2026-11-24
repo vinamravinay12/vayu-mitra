@@ -1,3 +1,5 @@
+/** Reading one property of a value whose shape is unknown, without a cast. */
+
 /**
  * One property of a value whose shape is not known (a thrown error, a parsed
  * body), read without asserting a type; undefined when it is not an object.

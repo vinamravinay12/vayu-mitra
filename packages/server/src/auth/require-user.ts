@@ -1,3 +1,4 @@
+/** Who a request is for: the signed-in account, or the scheduler, or nobody. */
 import type { NextFunction, Request, Response } from 'express';
 import type { AuthMode } from '../config.js';
 import type { AccountSession } from './accounts.js';

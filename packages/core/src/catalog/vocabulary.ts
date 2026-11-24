@@ -36,15 +36,21 @@ export const DAYS = ['today', 'tomorrow'] as const;
 /** What the home already has that changes the advice. */
 export const HOME_FEATURES = ['air-purifier', 'n95-masks', 'car'] as const;
 
+/** A life stage the engine knows. */
 export type AgeGroup = (typeof AGE_GROUPS)[number];
+/** A health condition the engine takes into account. */
 export type HealthCondition = (typeof HEALTH_CONDITIONS)[number];
+/** An activity the engine advises on. */
 export type Activity = (typeof ACTIVITIES)[number];
+/** Something a home may have that changes the advice. */
 export type HomeFeature = (typeof HOME_FEATURES)[number];
+/** Today or tomorrow. */
 export type Day = (typeof DAYS)[number];
 
 /** Parts of the day people plan by, when they give no clock time. */
 export const PERIODS = ['morning', 'afternoon', 'evening', 'night'] as const;
 
+/** A part of the day: morning, afternoon, evening or night. */
 export type Period = (typeof PERIODS)[number];
 
 /** The local hours each part of the day covers, inclusive. */

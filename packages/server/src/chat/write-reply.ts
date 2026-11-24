@@ -1,3 +1,4 @@
+/** The second model call: the engine’s facts worded, or the engine’s own sentence. */
 import type { ChatTurn } from '@vayu/core';
 import { describeCause, logEvent } from '../logging/log.js';
 import type { LlmClient } from '../llm/llm-client.js';

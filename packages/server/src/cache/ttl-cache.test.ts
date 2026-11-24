@@ -1,3 +1,4 @@
+/** Tests of createTtlCache and cacheKey. */
 import { describe, expect, it } from 'vitest';
 import { cacheKey, createTtlCache } from './ttl-cache.js';
 

@@ -1,3 +1,4 @@
+/** GET /api/places and GET /api/air: place search and the air report. */
 import { Router, type Request, type Response } from 'express';
 import type { AirService } from '../air/air-service.js';
 import { UpstreamError } from '../air/fetch-json.js';

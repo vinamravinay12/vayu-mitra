@@ -1,3 +1,4 @@
+/** The engine’s verdict beside a reply: the planned hour, a better one, and the precautions. */
 import {
   ACTIVITY_PROFILES,
   ADVICE_TIPS,

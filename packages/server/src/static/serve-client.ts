@@ -1,3 +1,4 @@
+/** Serving the built web client from the API’s own origin. */
 import { join, resolve } from 'node:path';
 import express, { Router } from 'express';
 

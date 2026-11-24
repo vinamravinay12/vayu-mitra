@@ -1,3 +1,4 @@
+/** Tests of usePush. */
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { createApi } from '../api/api.js';

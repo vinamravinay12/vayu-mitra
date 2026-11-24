@@ -1,3 +1,4 @@
+/** Sign-up, sign-in, sign-out and who is signed in. */
 import { Router, type Request, type Response } from 'express';
 import type { AccountSession, AccountStore } from '../auth/accounts.js';
 import { currentAccount, type SessionResolver } from '../auth/require-user.js';
@@ -5,6 +6,7 @@ import { clearSessionCookie, setSessionCookie, type Sessions } from '../auth/ses
 import type { AuthMode } from '../config.js';
 import { credentialsSchema } from '../validation/request-schemas.js';
 
+/** What the sign-in routes need. */
 export interface AuthDependencies {
   readonly mode: AuthMode;
   readonly resolve: SessionResolver | null;

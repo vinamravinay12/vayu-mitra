@@ -1,3 +1,4 @@
+/** Tests of loadConfig. */
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_MODELS, DEFAULT_PORT, loadConfig } from './config.js';
 import { PRODUCTION } from './config.fixtures.js';

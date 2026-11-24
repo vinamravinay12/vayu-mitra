@@ -1,12 +1,11 @@
-import { MAX_CONCENTRATION, type Forecast, type ForecastHour, type Place } from '@vayu/core';
-import { z } from 'zod';
-import { UpstreamError, type FetchJson } from './fetch-json.js';
-
 /**
  * Adapters for Open-Meteo's free, keyless APIs: the CAMS-based air-quality
  * forecast and the GeoNames-based geocoder. Upstream answers are validated
  * with Zod and normalised before anything else sees them.
  */
+import { MAX_CONCENTRATION, type Forecast, type ForecastHour, type Place } from '@vayu/core';
+import { z } from 'zod';
+import { UpstreamError, type FetchJson } from './fetch-json.js';
 
 const AIR_QUALITY_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 const GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1/search';

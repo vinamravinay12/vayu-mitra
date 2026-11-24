@@ -1,3 +1,4 @@
+/** Reading a message by keyword: the activity, the day, the part of the day and a clock time. */
 import { ACTIVITY_PROFILES } from '../catalog/activities.js';
 import { ACTIVITIES, type Activity, type Day, type Period } from '../catalog/vocabulary.js';
 

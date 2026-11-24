@@ -1,3 +1,4 @@
+/** Signed session tokens and the HttpOnly cookie that carries them. */
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 
@@ -16,6 +17,7 @@ const claimsSchema = z.object({
   exp: z.number(),
 });
 
+/** What a session token says: the account, its generation, and when it expires. */
 export type SessionClaims = z.infer<typeof claimsSchema>;
 
 /**
@@ -50,6 +52,7 @@ export function createSessions(secret: string, now: () => Date) {
   };
 }
 
+/** Issuing and reading session tokens. */
 export type Sessions = ReturnType<typeof createSessions>;
 
 /** The session cookie's value in a Cookie header, or null. */

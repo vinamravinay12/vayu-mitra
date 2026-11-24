@@ -1,3 +1,4 @@
+/** Editing a routine: its usual time and length. */
 import type { RoutineFact } from '@vayu/core';
 import { useState } from 'react';
 import { EditorActions, type EditorProps } from './EditorActions.js';

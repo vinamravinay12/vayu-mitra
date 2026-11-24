@@ -1,3 +1,8 @@
+/**
+ * Real-browser journeys against the production build, served with the
+ * production security headers, email-and-password accounts, no Gemini key
+ * (the engine answers) and fixture air data. Each test creates its own account.
+ */
 import { expect, test } from '@playwright/test';
 import {
   MEMORY,
@@ -10,12 +15,6 @@ import {
   scrollsHorizontally,
   submitCredentials,
 } from './support.js';
-
-/**
- * Real-browser journeys against the production build, served with the
- * production security headers, email-and-password accounts, no Gemini key
- * (the engine answers) and fixture air data. Each test creates its own account.
- */
 
 test.describe.configure({ mode: 'serial' });
 

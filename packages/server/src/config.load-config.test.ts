@@ -1,3 +1,4 @@
+/** Tests of loadConfig, DEFAULT_MODELS, parseModels, loadSessionSecret, loadPush and loadScheduler. */
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_MODELS, DEFAULT_PORT, loadConfig, parseModels } from './config.js';
 import { loadPush, loadScheduler, loadSessionSecret } from './settings.js';

@@ -1,3 +1,4 @@
+/** Tests of understand. */
 import { EMPTY_MEMORY } from '@vayu/core';
 import { describe, expect, it } from 'vitest';
 import { formatHistory, UNDERSTAND_RESPONSE_SCHEMA } from '../prompts/build-understand-prompt.js';

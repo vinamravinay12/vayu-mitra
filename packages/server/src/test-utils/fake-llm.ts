@@ -1,3 +1,4 @@
+/** A fake model that answers each purpose from a script, and canned answers. */
 import type { LlmClient, LlmPurpose, LlmRequest } from '../llm/llm-client.js';
 
 type Responder = string | Error | ((request: LlmRequest) => string);
@@ -26,7 +27,9 @@ export function fakeLlm(responses: Partial<Record<LlmPurpose, Responder>>): LlmC
   };
 }
 
+/** The guard’s answer for a safe message. */
 export const SAFE_VERDICT = JSON.stringify({ verdict: 'safe', reason: 'Describes a household.' });
+/** The guard’s answer for manipulation. */
 export const UNSAFE_VERDICT = JSON.stringify({
   verdict: 'manipulation',
   reason: 'Asks for hidden rules.',

@@ -1,3 +1,5 @@
+/** The push worker’s URL, vouched for through the page’s one Trusted Types policy. */
+
 /** The app's own service worker, which shows alerts while the tab is closed. */
 export const SERVICE_WORKER_URL = '/push-sw.js';
 

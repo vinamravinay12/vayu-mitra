@@ -1,6 +1,8 @@
+/** Account-test helpers: the test account and filling the account form. */
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+/** The password every account test uses. */
 export const PASSWORD = 'correct horse battery';
 
 /** The account the tests create and sign in to. */

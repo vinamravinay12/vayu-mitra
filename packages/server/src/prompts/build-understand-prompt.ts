@@ -1,3 +1,4 @@
+/** The understand prompt: one message read into memory changes and hints. */
 import {
   ACTIVITIES,
   DAYS,
@@ -37,6 +38,7 @@ const UNDERSTAND_INSTRUCTION = [
   DATA_NOT_INSTRUCTIONS,
 ].join('\n');
 
+/** The JSON Schema the understand call’s answer is constrained to. */
 export const UNDERSTAND_RESPONSE_SCHEMA = toResponseSchema(understandingSchema);
 
 /** Earlier turns, oldest first, each fenced: assistant turns can quote the family. */

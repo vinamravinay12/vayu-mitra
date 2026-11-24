@@ -1,5 +1,7 @@
+/** The colour theme: the family’s choice, remembered on this device, applied to the page. */
 import { useCallback, useEffect, useState } from 'react';
 
+/** The colour theme a family can choose; `system` follows the device. */
 export type ThemePreference = 'system' | 'light' | 'dark';
 
 const STORAGE_KEY = 'vayu-theme';
@@ -50,6 +52,7 @@ function apply(preference: ThemePreference): void {
   }
 }
 
+/** The theme choice and changing it. */
 export interface Theme {
   readonly preference: ThemePreference;
   readonly setPreference: (preference: ThemePreference) => void;

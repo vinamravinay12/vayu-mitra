@@ -1,3 +1,4 @@
+/** Email-and-password accounts in two collections, with each email unique. */
 import { createHash, randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { AlreadyExistsError, type DocumentCollection } from '../store/user-store.js';

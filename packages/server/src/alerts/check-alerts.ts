@@ -1,3 +1,4 @@
+/** The background alert run: every subscribed family checked, alerted, and saved. */
 import { decideAlert, type AlertDecision } from '@vayu/core';
 import type { AirService } from '../air/air-service.js';
 import { describeCause, logEvent } from '../logging/log.js';
@@ -5,6 +6,7 @@ import type { Messenger } from '../push/messenger.js';
 import type { UserRecord } from '../store/user-record.js';
 import type { UserStore } from '../store/user-store.js';
 
+/** What the alert run needs: the air, the store, a messenger and the clock. */
 export interface AlertJobDependencies {
   readonly air: AirService;
   readonly store: UserStore;
