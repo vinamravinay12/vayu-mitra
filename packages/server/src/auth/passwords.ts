@@ -12,12 +12,15 @@ export const SCRYPT = { N: 2 ** 15, r: 8, p: 1, keyLength: 32, saltLength: 16 } 
 const MAX_MEMORY = 128 * SCRYPT.N * SCRYPT.r * 2;
 
 /** scrypt as a promise; Node's typings omit the options overload from `promisify`. */
-const scryptAsync = promisify(scrypt) as (
+const scryptAsync = (
   password: string,
   salt: Buffer,
   length: number,
   options: ScryptOptions,
-) => Promise<Buffer>;
+): Promise<Buffer> =>
+  promisify((done: (error: Error | null, key: Buffer) => void) => {
+    scrypt(password, salt, length, options, done);
+  })();
 
 /** The key for a password, normalised so equivalent Unicode spellings match. */
 const derive = (

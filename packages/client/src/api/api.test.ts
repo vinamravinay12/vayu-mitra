@@ -40,6 +40,7 @@ describe('requestJson', () => {
     };
     await expect(answer('not json')).rejects.toThrow('Something went wrong');
     await expect(answer('{"error":7}')).rejects.toThrow('Something went wrong');
+    await expect(answer('null')).rejects.toThrow('Something went wrong');
   });
 
   it('refuses answers of the wrong shape', async () => {

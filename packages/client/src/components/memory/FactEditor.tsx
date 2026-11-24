@@ -7,6 +7,10 @@ import {
   type RoutineFact,
 } from '@vayu/core';
 import { useState } from 'react';
+import { z } from 'zod';
+
+/** The select's value, read back as the option it must be; a value outside the list throws. */
+const AGE_GROUP = z.enum(AGE_GROUPS);
 
 interface EditorProps<F> {
   readonly fact: F;
@@ -56,7 +60,7 @@ function PersonEditor({ fact, onSave, onCancel }: EditorProps<PersonFact>): Reac
         className="field"
         value={draft.ageGroup}
         onChange={(event) => {
-          setDraft({ ...draft, ageGroup: event.target.value as PersonFact['ageGroup'] });
+          setDraft({ ...draft, ageGroup: AGE_GROUP.parse(event.target.value) });
         }}
       >
         {AGE_GROUPS.map((age) => (

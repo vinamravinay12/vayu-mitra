@@ -14,8 +14,10 @@ const FALLBACK = 'Something went wrong. Please try again.';
 /** The server's error text is written for people; anything else gets a safe generic line. */
 async function errorMessage(response: Response): Promise<string> {
   try {
-    const body = (await response.json()) as { error?: unknown };
-    return typeof body.error === 'string' ? body.error : FALLBACK;
+    const body: unknown = await response.json();
+    const error: unknown =
+      typeof body === 'object' && body !== null ? Reflect.get(body, 'error') : null;
+    return typeof error === 'string' ? error : FALLBACK;
   } catch {
     return FALLBACK;
   }
@@ -51,7 +53,9 @@ export async function requestJson(
   if (!response.ok) {
     throw new ApiError(await errorMessage(response), response.status);
   }
-  return response.status === 204 ? null : ((await response.json()) as unknown);
+  if (response.status === 204) return null;
+  const parsed: unknown = await response.json();
+  return parsed;
 }
 
 /** Parses with a schema, or throws a readable error naming what came back incomplete. */

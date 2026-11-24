@@ -35,11 +35,11 @@ const REQUIRED_DOCS = [
   'docs/ARCHITECTURE.md',
   'docs/decisions.md',
   'docs/AI.md',
-  'docs/SECURITY.md',
-  'docs/EFFICIENCY.md',
-  'docs/TESTING.md',
-  'docs/ACCESSIBILITY.md',
-  'docs/CODE_QUALITY.md',
+  'EFFICIENCY.md',
+  'TESTING.md',
+  'ACCESSIBILITY.md',
+  'CODE_QUALITY.md',
+  'PROBLEM_ALIGNMENT.md',
   'docs/DEPLOYMENT.md',
 ];
 const README_MUST_MENTION = [
@@ -162,8 +162,8 @@ describe('repository hygiene', () => {
     expect(findInProduction(/\(\s*a\s*,\s*b\s*\)\s*=>/)).toEqual([]);
   });
 
-  it('gives every lint suppression a reason', () => {
-    expect(findInProduction(/eslint-disable(?!.*\s--\s)/, sourceFiles)).toEqual([]);
+  it('suppresses no lint rule inline: exceptions live, scoped, in eslint.config.js', () => {
+    expect(findInProduction(/eslint-disable/, sourceFiles)).toEqual([]);
   });
 
   it('leaves no TODO, FIXME or placeholder text in code', () => {

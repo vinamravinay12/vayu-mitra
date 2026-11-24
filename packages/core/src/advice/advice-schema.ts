@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { AQI_CATEGORIES } from '../catalog/aqi-bands.js';
 import { ACTIVITIES } from '../catalog/vocabulary.js';
-import { ADVICE_TIP_IDS, type AdviceTip } from './tips.js';
+import { ADVICE_TIP_IDS } from './tips.js';
 
 /**
  * go: fine at the planned time. shift: a cleaner hour later is fine.
@@ -25,7 +25,7 @@ export const activityAdviceSchema = z.object({
   bestWindow: adviceHourSchema.nullable(),
   /** Who makes this a sensitive case, by label. */
   sensitiveFor: z.array(z.string().max(40)).max(8),
-  tips: z.array(z.enum(ADVICE_TIP_IDS as [AdviceTip, ...AdviceTip[]])).max(ADVICE_TIP_IDS.length),
+  tips: z.array(z.enum(ADVICE_TIP_IDS)).max(ADVICE_TIP_IDS.length),
   indoorAlternative: z.string().max(200),
 });
 

@@ -1,7 +1,11 @@
 import { ALERT_THRESHOLDS, CATEGORY_LABELS, type AlertSettings as Settings } from '@vayu/core';
 import { useState } from 'react';
+import { z } from 'zod';
 import type { PushControls } from '../../state/use-push.js';
 import { Alert } from '../ui/Alert.js';
+
+/** The select's value, read back as the option it must be; a value outside the list throws. */
+const THRESHOLD = z.enum(ALERT_THRESHOLDS);
 
 const OUTCOME_MESSAGES = {
   denied:
@@ -45,7 +49,7 @@ function AlertOptions({ settings, onChange }: Omit<AlertSettingsProps, 'push'>):
           className="field"
           value={settings.threshold}
           onChange={(event) => {
-            onChange({ ...settings, threshold: event.target.value as Settings['threshold'] });
+            onChange({ ...settings, threshold: THRESHOLD.parse(event.target.value) });
           }}
         >
           {ALERT_THRESHOLDS.map((threshold) => (

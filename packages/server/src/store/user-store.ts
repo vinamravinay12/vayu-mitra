@@ -1,4 +1,5 @@
 import { describeCause, logEvent } from '../logging/log.js';
+import { fieldOf } from '../validation/field-of.js';
 import { userRecordSchema, type UserRecord } from './user-record.js';
 
 /** A create found the document already there. */
@@ -10,11 +11,14 @@ export class AlreadyExistsError extends Error {
 }
 
 /** The few document operations the stores need, so Firestore and memory are interchangeable. */
+/** A document as written: a plain object of fields. */
+type StoredDocument = Readonly<Record<string, unknown>>;
+
 export interface DocumentCollection {
   get(id: string): Promise<unknown>;
-  set(id: string, data: unknown): Promise<void>;
+  set(id: string, data: StoredDocument): Promise<void>;
   /** Writes only if absent, atomically; otherwise rejects with AlreadyExistsError. */
-  create(id: string, data: unknown): Promise<void>;
+  create(id: string, data: StoredDocument): Promise<void>;
   delete(id: string): Promise<void>;
   /** Documents whose field (a dotted path) equals the value. */
   whereEquals(field: string, value: unknown): Promise<readonly { id: string; data: unknown }[]>;
@@ -67,15 +71,7 @@ export function createUserStore(collection: DocumentCollection): UserStore {
 
 /** Reads a dotted path such as `alerts.enabled`. */
 const readPath = (data: unknown, path: string): unknown =>
-  path
-    .split('.')
-    .reduce<unknown>(
-      (value, key) =>
-        typeof value === 'object' && value !== null
-          ? (value as Record<string, unknown>)[key]
-          : undefined,
-      data,
-    );
+  path.split('.').reduce<unknown>((value, key) => fieldOf(value, key), data);
 
 /** An in-process collection, for development and tests. Data lives only as long as the process. */
 export function createMemoryCollection(): DocumentCollection {

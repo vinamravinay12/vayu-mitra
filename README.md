@@ -23,6 +23,9 @@ front are abandoned. And an assistant that invents numbers cannot be trusted wit
 
 ## 💬 What it does
 
+Each part of the brief, matched to its code and the test that proves it:
+[PROBLEM_ALIGNMENT.md](PROBLEM_ALIGNMENT.md).
+
 - **Conversation, not forms.** The family just talks. Gemini reads each message (English, Hindi
   or Hinglish) into facts: _Dadi, older adult, asthma; walks at 6:30_. Those facts appear as
   **chips** the family can edit or forget. Nothing is remembered silently.
@@ -108,15 +111,15 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for what it creates.
 ## ✅ Quality gates
 
 ```bash
-npm run verify   # format → lint → typecheck → dead code (knip) → 318 tests at 100% coverage → build
+npm run verify   # format → lint → typecheck → dead code (knip) → 326 tests at 100% coverage → build
 npm run e2e      # 18 browser runs: desktop + 375 px, light + dark + forced colours, axe, 44 px targets, 200% text
 npm run profile  # engine and HTTP latency, heap growth, payload sizes
 ```
 
 CI runs all of these plus a dependency audit, gitleaks over the whole history, CodeQL, a check
-that the client bundle carries no key, and a container build. See [docs/TESTING.md](docs/TESTING.md),
-[docs/EFFICIENCY.md](docs/EFFICIENCY.md), [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) and
-[docs/CODE_QUALITY.md](docs/CODE_QUALITY.md).
+that the client bundle carries no key, and a container build. See [TESTING.md](TESTING.md),
+[EFFICIENCY.md](EFFICIENCY.md), [ACCESSIBILITY.md](ACCESSIBILITY.md) and
+[CODE_QUALITY.md](CODE_QUALITY.md).
 
 ## 🔒 Security and privacy
 
@@ -126,8 +129,8 @@ alert route accepts only a Google-signed OIDC token from the scheduler’s own s
 Gemini, data.gov.in and WAQI keys live only on the server. Writes are accepted only as JSON from our own page (no cross-site forms), every body is a strict
 schema, and hidden Unicode is stripped before the model reads it. Strict CSP with no inline
 script, no third-party hosts and Trusted Types; every CI Action is pinned to a commit. Every model answer is
-schema-constrained and re-validated; user text is fenced. Details in [SECURITY.md](SECURITY.md)
-and [docs/SECURITY.md](docs/SECURITY.md).
+schema-constrained and re-validated; user text is fenced. Threats, controls and
+the tests that prove each one: [SECURITY.md](SECURITY.md).
 
 ## ⚠️ Limits
 

@@ -87,6 +87,6 @@ export function toMemoryChange(flat: FlatChange): MemoryChange | null {
 
 /** Zod to JSON Schema, minus the `$schema` marker the Gemini API does not accept. */
 export function toResponseSchema(schema: z.ZodType): Record<string, unknown> {
-  const { $schema: _ignored, ...rest } = z.toJSONSchema(schema) as Record<string, unknown>;
+  const { $schema: _ignored, ...rest } = z.toJSONSchema(schema);
   return rest;
 }

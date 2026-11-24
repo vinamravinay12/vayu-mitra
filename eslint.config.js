@@ -6,6 +6,8 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig([
   globalIgnores(['**/dist/**', '**/dist-tsc/**', '**/coverage/**']),
+  // No inline `eslint-disable`: every exception lives here, scoped and explained.
+  { linterOptions: { noInlineConfig: true, reportUnusedDisableDirectives: 'error' } },
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
@@ -42,14 +44,29 @@ export default defineConfig([
   {
     // Accessibility rules are errors, not warnings: a warning is a rule nobody fixes.
     files: ['packages/client/src/**/*.tsx'],
-    extends: [
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access -- jsx-a11y ships no type declarations
-      jsxA11y.flatConfigs.strict,
-      reactHooks.configs.flat['recommended-latest'],
-    ],
+    extends: [jsxA11y.flatConfigs.strict, reactHooks.configs.flat['recommended-latest']],
     languageOptions: {
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+  },
+  {
+    // Production code proves types instead of asserting them: narrowing, Zod,
+    // or a typed declaration. Only `as const` remains, which asserts nothing.
+    files: ['packages/*/src/**/*.{ts,tsx}'],
+    ignores: ['**/*.test.{ts,tsx}', '**/test-utils/**'],
+    rules: {
+      '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
+    },
+  },
+  {
+    // The structured logger is the one module that writes to stdio.
+    files: ['packages/server/src/logging/log.ts'],
+    rules: { 'no-console': 'off' },
+  },
+  {
+    // jsx-a11y ships no type declarations, so reading its config is untyped.
+    files: ['eslint.config.js'],
+    rules: { '@typescript-eslint/no-unsafe-member-access': 'off' },
   },
   {
     // Catalogue files are declarative data — one list per file — so they get

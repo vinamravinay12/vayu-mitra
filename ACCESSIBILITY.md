@@ -5,18 +5,18 @@ include older adults, people writing in Hindi and people on cheap phones.
 
 ## Enforced, not hoped for
 
-- `eslint-plugin-jsx-a11y` **strict** rules are **errors** ([`eslint.config.js`](../eslint.config.js)).
+- `eslint-plugin-jsx-a11y` **strict** rules are **errors** ([`eslint.config.js`](eslint.config.js)).
 - **axe** runs in jsdom at every step of the client journey tests, and in a **real browser**
   (Playwright + `@axe-core/playwright`) at every step of the place → question → advice journey
   and while editing chips, in **light, dark and a forced (high-contrast) palette**, on desktop and
-  at **375 px**, with WCAG 2.2 AA tags including colour contrast ([`journey.spec.ts`](../e2e/journey.spec.ts),
-  [`accessibility.spec.ts`](../e2e/accessibility.spec.ts)).
+  at **375 px**, with WCAG 2.2 AA tags including colour contrast ([`journey.spec.ts`](e2e/journey.spec.ts),
+  [`accessibility.spec.ts`](e2e/accessibility.spec.ts)).
 - **Contrast is computed from the design tokens** in both themes, so a palette change that fails
   fails before a browser runs, including states axe never sees: hover, and every banner tone
-  ([`tests/quality/accessibility.test.ts`](../tests/quality/accessibility.test.ts)).
+  ([`tests/quality/accessibility.test.ts`](tests/quality/accessibility.test.ts)).
 - **Structure is checked on every screen**: one `h1`, no skipped heading levels, unique ids, every
   `aria-labelledby`/`aria-describedby`/`for` resolves, every control has a name, no positive
-  `tabindex` ([`App.structure.test.tsx`](../packages/client/src/App.structure.test.tsx)).
+  `tabindex` ([`App.structure.test.tsx`](packages/client/src/App.structure.test.tsx)).
 - **Real-browser geometry**: every button, field, disclosure and theme choice measures at least
   44 × 44 px; with root text at 200% the 375 px page does not scroll sideways.
 

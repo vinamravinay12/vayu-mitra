@@ -6,6 +6,7 @@ import { logEvent } from '../logging/log.js';
 import type { Messenger } from '../push/messenger.js';
 import type { PushSettings, SchedulerSettings } from '../settings.js';
 import { AlreadyExistsError, type DocumentCollection } from '../store/user-store.js';
+import { fieldOf } from '../validation/field-of.js';
 
 /**
  * Thin adapters from Google Cloud and Web Push SDKs to the server's own
@@ -24,13 +25,13 @@ export function firestoreCollection(collection: CollectionReference): DocumentCo
       return snapshot.data();
     },
     async set(id, data) {
-      await collection.doc(id).set(data as Record<string, unknown>);
+      await collection.doc(id).set(data);
     },
     async create(id, data) {
       try {
-        await collection.doc(id).create(data as Record<string, unknown>);
+        await collection.doc(id).create(data);
       } catch (cause) {
-        if ((cause as { code?: unknown }).code === ALREADY_EXISTS) throw new AlreadyExistsError(id);
+        if (fieldOf(cause, 'code') === ALREADY_EXISTS) throw new AlreadyExistsError(id);
         throw cause;
       }
     },
@@ -75,7 +76,7 @@ export function webPushMessenger(
       return {
         staleEndpoints: outcomes.flatMap((outcome, index) => {
           if (outcome.status === 'fulfilled') return [];
-          const status = (outcome.reason as { statusCode?: unknown }).statusCode;
+          const status = fieldOf(outcome.reason, 'statusCode');
           logEvent('WARNING', 'push failed for one device', { status: String(status) });
           return GONE_STATUSES.has(Number(status))
             ? subscriptions.slice(index, index + 1).map((s) => s.endpoint)

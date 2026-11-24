@@ -20,6 +20,7 @@ import { admission } from './security/admission.js';
 import { securityHeaders } from './security/security-headers.js';
 import { serveClient } from './static/serve-client.js';
 import type { UserStore } from './store/user-store.js';
+import { fieldOf } from './validation/field-of.js';
 
 /** A message, a few turns of history and the memory are a few kilobytes at most. */
 const BODY_LIMIT = '32kb';
@@ -46,10 +47,7 @@ const KNOWN_ERRORS: Readonly<Record<string, { status: number; message: string }>
 
 /** Errors the framework raises on purpose carry a type or a 404; anything else is a bug. */
 export function describeBodyError(error: unknown): { status: number; message: string } | undefined {
-  if (typeof error !== 'object' || error === null) {
-    return undefined;
-  }
-  const { type, status } = error as { type?: unknown; status?: unknown };
+  const [type, status] = [fieldOf(error, 'type'), fieldOf(error, 'status')];
   const known = typeof type === 'string' ? KNOWN_ERRORS[type] : undefined;
   if (known !== undefined) {
     return known;

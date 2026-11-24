@@ -1,3 +1,5 @@
+import { fieldOf } from '../validation/field-of.js';
+
 /**
  * Upstream statuses that mean "try again". 429 is deliberately absent: the free
  * tier caps requests per day, so retrying a quota rejection only spends more.
@@ -16,10 +18,7 @@ export interface RetryOptions {
 
 /** The SDK reports the upstream status either as a field or as JSON inside the message. */
 export function statusCodeOf(error: unknown): number | undefined {
-  if (typeof error !== 'object' || error === null) {
-    return undefined;
-  }
-  const { status, message } = error as { status?: unknown; message?: unknown };
+  const [status, message] = [fieldOf(error, 'status'), fieldOf(error, 'message')];
   if (typeof status === 'number') {
     return status;
   }

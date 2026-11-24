@@ -1,0 +1,44 @@
+# Problem alignment
+
+**The brief:** a GenAI assistant that helps families get through severe winter smog, with
+lower-exposure daily routines, indoor air habits and safer alternatives, tailored to where they
+live and how they live, and with the direct impact of each choice explained.
+
+Each part of the brief below is matched to what the app does, where the code is, and the test that
+fails if it stops being true. Everything listed is built and deployed. What is deliberately
+left out is at the end.
+
+## Part by part
+
+| The brief asks for                | What Vayu Mitra does                                                                                                                                  | Code                                                                                            | Proved by                                                                                                                                          |
+| :-------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A GenAI assistant**             | A chat. Gemini reads each message into memory changes and an intent, and words the reply. A second Gemini call screens for prompt injection           | `server/src/chat/understand.ts`, `write-reply.ts`, `guard/screen-input.ts`                      | `chat/chat.test.ts` “turns flat changes into strict ones…”, “uses the AI wording when it stays within the facts”                                   |
+| **For families**                  | Remembers who is at home (age group, conditions) and their routines, as chips the family can see, edit and forget                                     | `core/src/memory/`, `client/src/components/memory/`                                             | `memory/memory.test.ts` “remembers a person and links a routine…”, e2e “memory chips can be edited and forgotten…”                                 |
+| **Severe winter smog**            | India’s National AQI from every pollutant the nearest CPCB station reports, up to Severe; WAQI as fallback; the CAMS forecast for the hours ahead     | `core/src/aqi/`, `core/src/stations/`, `server/src/air/`                                        | `aqi/compute-aqi.test.ts` “takes the worst sub-index across every reported pollutant”                                                              |
+| **Lower-exposure daily routines** | A walk, run, ride, school run or commute is checked at its usual time and moved to the cleanest daylight window when that window is good enough       | `core/src/advice/advise-activity.ts`, `plan.ts`                                                 | `advice/advice.test.ts` “shifts to a cleaner window when one is good enough”, “plans tomorrow at its cleanest window…”                             |
+| **Indoor air habits**             | “When should I open the windows?” gets a clean hour or “keep them shut”, plus the purifier when the family has one                                    | `core/src/advice/choose-tips.ts`                                                                | `advice/advice.test.ts` “treats airing the home as never needing care: open in a clean hour or keep shut”                                          |
+| **Safer alternatives**            | When no hour is good enough the verdict is _skip_, with an indoor alternative; car trips get recirculation, stops with an N95 and a rush-hour warning | `core/src/advice/advise-activity.ts`, `catalog/activities.ts`                                   | `advice/advice.test.ts` “shifts with care, or skips, when the air stays bad”, “is fine in poorer air than a walk, with cabin and stop precautions” |
+| **Where they live**               | The nearest fresh official station, named with its distance and time; the forecast anchored to it; other cities compared on request                   | `core/src/stations/nearest-station.ts`, `anchor-forecast.ts`, `server/src/chat/other-places.ts` | `stations/stations.test.ts` “picks the closest fresh station with a reading”, `air/air-service.test.ts` “anchors the forecast…”                    |
+| **How they live**                 | Asthma, age and vigorous activity lower the threshold; precautions depend on what the home has (N95s, inhaler, purifier, car)                         | `core/src/advice/advise-activity.ts`, `choose-tips.ts`                                          | `advice/advice.test.ts` “lowers the bar for sensitive people and vigorous activity”                                                                |
+| **Impact of each choice**         | Every answer says the AQI at the planned hour and at the better one, who it is careful for, and why each precaution helps                             | `core/src/chat/describe.ts`, `advice/tips.ts`                                                   | `chat/chat.test.ts` “describes each verdict with who it is careful for and the tips”                                                               |
+| **Trustworthy numbers**           | A reply with any number the engine did not produce, a link or instruction-like text is replaced with the engine’s own sentence                        | `server/src/chat/check-grounding.ts`                                                            | `chat/check-grounding.test.ts`, `chat/chat.test.ts` “uses the engine sentence for invented numbers…”                                               |
+| **Before it gets bad**            | Opt-in Web Push when the family’s place reaches their chosen category, outside quiet hours, not repeated within six hours unless it gets worse        | `core/src/alerts/decide-alert.ts`, `server/src/alerts/check-alerts.ts`                          | `alerts/alerts.test.ts` “respects quiet hours…”, “waits out the cooldown unless the air gets a category worse”                                     |
+| **Indian families’ language**     | English, Hindi or Hinglish in; the reply in the same language and script; “kal subah” read as tomorrow morning                                        | `core/src/chat/read-request.ts`, `server/src/prompts/`                                          | `chat/chat.test.ts` “reads them in English and Hinglish”, `check-grounding.test.ts` “… Devanagari digits”                                          |
+| **A conversation, not a form**    | Follow-ups keep their context (“and tomorrow?”); suggestions come from what the family has said                                                       | `core/src/chat/read-request.ts`, `suggest-questions.ts`                                         | `chat/chat.test.ts` “carries the day across a follow-up about the same activity…”                                                                  |
+
+Paths are relative to `packages/`. Test names are quoted from the `it(...)` that proves the row.
+
+## Shown end to end
+
+`App.test.tsx` “picks a place, asks, gets advice, and builds memory” and the Playwright journey
+“place, question and advice are accessible” run the whole brief in one go: a family picks a place,
+says _“Dadi has asthma and walks at 6:30. Can she go?”_, and gets a verdict for Dadi at 6:30, the
+cleaner hour, an N95 and the inhaler, while Dadi and her walk appear as chips.
+
+## Deliberately not built
+
+- **Medical advice.** General precautions only; the footer says so and gives 112 for emergencies.
+- **Emission accounting.** The brief’s routines are about the family’s exposure. Vayu Mitra does
+  not estimate a household’s own emissions, so it never claims a number it cannot measure.
+- **Storing the conversation.** Only the chips, place and alert settings are kept (see
+  [SECURITY.md](SECURITY.md)).

@@ -19,11 +19,9 @@ export interface Session {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
-/** The answer, or an ApiError naming what came back incomplete. */
-function check<T>(valid: boolean, value: T, what: string): T {
-  if (!valid) throw new ApiError(`The ${what} came back incomplete. Please try again.`);
-  return value;
-}
+/** The ApiError for an answer that came back without what it should carry. */
+const incomplete = (what: string): ApiError =>
+  new ApiError(`The ${what} came back incomplete. Please try again.`);
 
 /**
  * Checked by hand rather than with a schema library: these run before the
@@ -32,17 +30,21 @@ function check<T>(valid: boolean, value: T, what: string): T {
 export function readConfig(value: unknown): ClientConfig {
   const config = isRecord(value) ? value : {};
   const { auth, vapidKey } = config;
-  const valid =
-    (auth === 'password' || auth === 'none') && (typeof vapidKey === 'string' || vapidKey === null);
-  return check(valid, { auth, vapidKey } as ClientConfig, 'app settings');
+  if (
+    (auth === 'password' || auth === 'none') &&
+    (typeof vapidKey === 'string' || vapidKey === null)
+  )
+    return { auth, vapidKey };
+  throw incomplete('app settings');
 }
 
 /** A session answer, checked by hand for the same reason. */
 export function readSession(value: unknown): Session {
   const session = isRecord(value) ? value : {};
   const { signedIn, email } = session;
-  const valid = typeof signedIn === 'boolean' && (typeof email === 'string' || email === null);
-  return check(valid, { signedIn, email } as Session, 'sign-in status');
+  if (typeof signedIn === 'boolean' && (typeof email === 'string' || email === null))
+    return { signedIn, email };
+  throw incomplete('sign-in status');
 }
 
 /** Reads the start-up config. */
@@ -66,7 +68,8 @@ export async function signIn(
     body: { email, password },
   });
   const signedInEmail = isRecord(answer) ? answer.email : undefined;
-  return check(typeof signedInEmail === 'string', { email: String(signedInEmail) }, 'sign-in');
+  if (typeof signedInEmail === 'string') return { email: signedInEmail };
+  throw incomplete('sign-in');
 }
 
 /** Signs out on this browser. */

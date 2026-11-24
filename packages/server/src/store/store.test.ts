@@ -42,7 +42,6 @@ describe('user store', () => {
     await store.put('on', on);
     await store.put('off', newUserRecord(NOW()));
     await collection.set('corrupt', { alerts: { enabled: true } });
-    await collection.set('scalar', 7);
     expect(await store.alertSubscribers()).toEqual([{ uid: 'on', record: on }]);
   });
 

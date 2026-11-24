@@ -53,4 +53,4 @@ design spends its effort:
   reuse one report.
 
 Latency on the live deployment (Gemini included) is to be measured after this version is deployed;
-see [DEPLOYMENT.md](DEPLOYMENT.md).
+see [DEPLOYMENT.md](docs/DEPLOYMENT.md).

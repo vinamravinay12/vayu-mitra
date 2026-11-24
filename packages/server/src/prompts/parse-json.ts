@@ -11,7 +11,8 @@ export function parseJson(raw: string): unknown {
     return undefined;
   }
   try {
-    return JSON.parse(raw.slice(objectStart, objectEnd + 1)) as unknown;
+    const parsed: unknown = JSON.parse(raw.slice(objectStart, objectEnd + 1));
+    return parsed;
   } catch {
     return undefined;
   }
