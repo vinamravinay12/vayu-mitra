@@ -94,6 +94,14 @@ async function session(context: Context, uid: string, version: number) {
     : null;
 }
 
+/** Bumps the account's session generation, so every token issued before is refused. */
+async function endSessions(context: Context, uid: string): Promise<void> {
+  const found = await readAccount(context, uid);
+  if (found !== null) {
+    await context.accounts.set(uid, { ...found, sessionVersion: found.sessionVersion + 1 });
+  }
+}
+
 /** Removes the account and its email, which ends every session. */
 async function remove(context: Context, uid: string): Promise<void> {
   const found = await readAccount(context, uid);
@@ -117,6 +125,7 @@ export function createAccountStore(
     authenticate: (email: string, password: string) => authenticate(context, email, password),
     session: (uid: string, version: number): Promise<AccountSession | null> =>
       session(context, uid, version),
+    endSessions: (uid: string) => endSessions(context, uid),
     delete: (uid: string) => remove(context, uid),
   };
 }

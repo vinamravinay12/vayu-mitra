@@ -46,7 +46,7 @@ or with fixture air.
    `gcloud scheduler jobs run vayu-alerts --location asia-south1`; the logs show
    `alert run finished`.
 5. Sign out, try a wrong password, sign in again; delete the data and confirm the email can
-   no longer sign in.
+   no longer sign in. Five wrong passwords in a row lock that account for 15 minutes.
 
 ## Configuration reference
 

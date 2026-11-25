@@ -34,3 +34,13 @@ it('account store: passes on storage failures other than a taken email', async (
     'firestore down',
   );
 });
+
+it('account store: ending sessions moves the generation on, and ignores a missing account', async () => {
+  const accounts = store();
+  await accounts.register('asha@example.test', 'correct horse battery');
+  await accounts.endSessions('u1');
+  expect(await accounts.session('u1', 0)).toBeNull();
+  expect(await accounts.session('u1', 1)).toMatchObject({ uid: 'u1' });
+  await accounts.endSessions('missing');
+  expect(await accounts.session('missing', 0)).toBeNull();
+});

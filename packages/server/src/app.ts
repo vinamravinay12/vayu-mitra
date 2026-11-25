@@ -18,6 +18,7 @@ import { internalRouter } from './routes/internal.js';
 import { meRouter } from './routes/me.js';
 import { AI_RATE_LIMIT, rateLimit, type RateLimitOptions } from './security/rate-limit.js';
 import { admission } from './security/admission.js';
+import { createLoginThrottle } from './security/login-throttle.js';
 import { securityHeaders } from './security/security-headers.js';
 import { serveClient } from './static/serve-client.js';
 import type { UserStore } from './store/user-store.js';
@@ -53,7 +54,7 @@ function sessionResolver(deps: AppDependencies, now: () => Date) {
     const claims = sessions.read(token);
     return claims === null ? null : accounts.session(claims.uid, claims.v);
   };
-  return { signIn: { accounts, sessions }, resolve };
+  return { signIn: { accounts, sessions, throttle: createLoginThrottle() }, resolve };
 }
 
 /** Per-client limits: model calls, sign-in attempts, and the cheap data routes. */

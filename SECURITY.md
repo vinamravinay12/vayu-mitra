@@ -16,7 +16,11 @@ Only the deployed `main` branch is supported.
   take the same time. Sessions are HMAC-signed tokens in a `__Host-` cookie that is HttpOnly,
   Secure and SameSite=Strict. Every personal route (`/api/me*`, `/api/chat`) needs one; the user id
   comes only from it, so one family can never read or change another's record. Deleting the
-  account ends its sessions at once. Sign-in attempts are rate limited per client.
+  account ends its sessions at once, and so does signing out: logout moves the account's session
+  generation on, so a copied cookie stops working on the server, not just in this browser.
+  Sign-in attempts are rate limited per client, and wrong passwords are also counted per account:
+  after five in fifteen minutes that account answers 429 before any password is checked, from
+  whichever address the guesses come.
 - **The scheduler route is invisible.** `/api/internal/check-alerts` answers 404 unless the
   request carries a Google-signed OIDC token for this service's audience, issued to the
   scheduler's own service account; it does not exist at all when the scheduler is not configured.
@@ -52,7 +56,8 @@ Only the deployed `main` branch is supported.
 | One family reads another's data         | Signed session cookie on every personal route; the user id comes only from it                                                                                                                  | `app.accounts.test.ts` "keeps each family's record to itself"                                              |
 | Forged, edited or stale sessions        | HMAC-SHA256 over the claims, constant-time comparison, expiry, account generation checked on every request; 401 otherwise                                                                      | `auth/auth.test.ts`, `app.test.ts`                                                                         |
 | Password theft from the database        | scrypt (N = 2¹⁵, r = 8, p = 1), 16-byte salt per account, parameters stored with each hash; a corrupt hash fails closed                                                                        | `auth/auth.test.ts`                                                                                        |
-| Password guessing                       | 10 sign-in attempts per minute per client; passwords of at least 10 characters                                                                                                                 | `app.test.ts`, `security/rate-limit.test.ts`                                                               |
+| Password guessing                       | 10 sign-in attempts per minute per client; 5 wrong passwords per account per 15 minutes, then 429 even from fresh addresses; passwords of at least 10 characters                               | `app.sign-in-guards.test.ts`, `security/login-throttle.test.ts`, `security/rate-limit.test.ts`             |
+| A stolen cookie outlives sign-out       | Signing out bumps the account's session generation, so every earlier token is refused on the server                                                                                            | `app.sign-in-guards.test.ts`, `auth/auth.account-store.test.ts`                                            |
 | Account enumeration                     | One message for a wrong email or password; a decoy hash so both take the same time                                                                                                             | `auth/auth.test.ts`, `app.test.ts`                                                                         |
 | Session theft by script or another site | `__Host-` cookie, HttpOnly, Secure, SameSite=Strict; no token in page JavaScript                                                                                                               | `app.test.ts`, e2e                                                                                         |
 | Anyone triggers the alert run           | Google OIDC token, our audience, the scheduler's account, `email_verified`; otherwise 404; route absent when unconfigured                                                                      | `app.test.ts`, `gcp/bindings.test.ts`                                                                      |
