@@ -42,6 +42,12 @@ Each part of the brief, matched to its code and the test that proves it:
   _OK with care_ or _skip_, finds the cleanest window, and picks precautions (N95, inhaler,
   purifier, recirculation) for who is involved. Gemini only words it, and a reply with any number
   the engine did not produce is rejected and replaced with the engine’s own sentence.
+- **What to change, with its impact.** From the routines and home the family has described, a
+  card lists **low-emission steps** (the metro for a driven commute, a shared school run, engines
+  off while waiting, no burning, clean heating) with the CO₂ and PM2.5 each keeps out of the air,
+  and **indoor air hacks** (the purifier or a clean room where the most sensitive person is,
+  cooking, smoke and cleaning habits). Moving a walk to the cleaner hour says how much less PM2.5
+  is breathed. Every figure is an estimate from sourced factors and is labelled so.
 - **Alerts in the background.** Cloud Scheduler runs a check every 30 minutes; families who opted
   in get a standard Web Push notification when their place reaches their chosen category, never in
   their quiet hours, and not twice in six hours unless it gets worse.
@@ -71,9 +77,9 @@ Each part of the brief, matched to its code and the test that proves it:
 
 | Package           | What it is                                                                                                                                                   |
 | :---------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/core`   | The engine: NAQI from every pollutant, EPA→NAQI, nearest station, forecast anchoring, memory, advice, alerts. Pure functions, no I/O.                        |
+| `packages/core`   | The engine: NAQI from every pollutant, EPA→NAQI, nearest station, forecast anchoring, memory, advice, impact estimates, alerts. Pure functions, no I/O.      |
 | `packages/server` | Express API: station and forecast adapters, the chat pipeline, accounts and sessions, Firestore, Web Push, the scheduler-only alert route, security headers. |
-| `packages/client` | React app: sign-in, air card, chat, memory chips, alert settings, delete-my-data. No third-party SDKs.                                                       |
+| `packages/client` | React app: sign-in, air card, chat, memory chips, low-emission steps and indoor hacks, alert settings, delete-my-data. No third-party SDKs.                  |
 
 Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · AI design: [docs/AI.md](docs/AI.md) ·
 decisions: [docs/decisions.md](docs/decisions.md) · assumptions: [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md)
@@ -86,6 +92,7 @@ packages/core/src/      the engine: pure functions, no I/O, imported by server a
   aqi/  stations/       NAQI from pollutants; nearest station; forecast anchored to it
   memory/  chat/        what the family told us; reading a question; the engine's sentences
   advice/  alerts/      go / later / care / skip with precautions; when to alert
+  impact/               PM2.5 saved by a better hour; low-emission steps; indoor air hacks
 packages/server/src/    the API and its trust boundary
   routes/  security/    HTTP edge: routes, admission, headers, rate limits
   chat/  guard/         one chat turn; injection screening (patterns, then a model judge)

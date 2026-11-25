@@ -28,6 +28,21 @@ function Tips({ tips }: { readonly tips: ActivityAdvice['tips'] }): React.JSX.El
   );
 }
 
+/** What the cleanest hour saves, as a term and its description. */
+function ImpactFact({
+  impact,
+}: {
+  readonly impact: NonNullable<ActivityAdvice['impact']>;
+}): React.JSX.Element {
+  const { percentLess, betterMicrograms, plannedMicrograms, minutes } = impact;
+  return (
+    <>
+      <dt className="text-muted">Impact</dt>
+      <dd>{`About ${String(percentLess)}% less PM2.5 breathed at the cleanest hour: ${String(betterMicrograms)} µg instead of ${String(plannedMicrograms)} µg over ${String(minutes)} min`}</dd>
+    </>
+  );
+}
+
 /** The planned hour, the cleanest one, and who needs extra care, as a definition list. */
 function AdviceFacts({
   advice,
@@ -47,6 +62,7 @@ function AdviceFacts({
           <dd>{`${labelHour(bestWindow.time, today)} · ${describeLevel(bestWindow)}`}</dd>
         </>
       )}
+      {advice.impact !== null && <ImpactFact impact={advice.impact} />}
       {sensitiveFor.length > 0 && (
         <>
           <dt className="text-muted">Extra care</dt>

@@ -28,6 +28,21 @@
 
 The thresholds rank options; they are not a medical judgement, and the app says so.
 
+## Impact estimates
+
+Every figure below is labelled an estimate wherever the app shows it. They compare choices; they
+are not measurements of one family's car or lungs.
+
+| Assumption                                                                                                                                      | Reason                                                                                                                      |
+| :---------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------- |
+| PM2.5 breathed in = hourly PM2.5 × air breathed × minutes; an adult breathes 0.72, 1.56 and 3 m³ an hour at light, moderate and vigorous effort | US EPA Exposure Factors Handbook (2011), chapter 6, adult rates for light, moderate and high activity                       |
+| "Less PM2.5 at the cleaner hour" is shown only when it is at least 5% less                                                                      | Smaller differences are within the forecast's error and would overstate the benefit                                         |
+| A petrol car emits 150 g of CO₂ and 25 mg of PM2.5 (exhaust, brakes, tyres, road dust) per km; the metro 20 g and 1 mg per passenger-km         | Indicative values from ARAI emission factors and TERI city inventories for Indian cities                                    |
+| A trip's distance is its minutes at 22 km/h                                                                                                     | Typical peak-hour car speed in Delhi and other large Indian cities; families tell us how long a trip takes, rarely how far  |
+| Sharing the school run between two families halves each family's driving                                                                        | Two families in one car instead of two                                                                                      |
+| An idling petrol car burns about 0.8 litres an hour, at 2.31 kg of CO₂ a litre                                                                  | Typical small-car idle consumption, and the standard CO₂ content of petrol                                                  |
+| Burning, heating and indoor-air steps carry no number                                                                                           | The app does not know how much a household burns or cooks, so it explains why each step helps instead of inventing a figure |
+
 ## Alerts
 
 | Assumption                                           | Reason                                                              |

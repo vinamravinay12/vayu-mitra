@@ -29,6 +29,7 @@ for every answer and alert; the browser runs parts of it for labels and suggesti
 | `schemas/air-report.ts` | The report the browser shows: now, its source, 36 hours ahead                                                                                                                                        |
 | `memory/`               | What is remembered (people, routines, home features), changes the AI may propose, chip labels                                                                                                        |
 | `advice/`               | Verdict, cleanest window, precautions, from intensity and who is involved                                                                                                                            |
+| `impact/`               | PM2.5 breathed at the planned and better hour; low-emission steps from the car and trips, with estimated savings; indoor air hacks for who is at home                                                |
 | `alerts/`               | Settings, state, and the decision: threshold, quiet hours, six-hour cooldown unless worse                                                                                                            |
 | `chat/`                 | Request and response contracts, intent reading (keywords, times, people, AI hints), engine sentences, suggested questions                                                                            |
 

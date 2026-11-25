@@ -1,10 +1,11 @@
-/** The side column: the place and its air, then what is remembered, alerts and privacy. */
+/** The side column: the place and its air, then what is remembered, what to change, alerts and privacy. */
 import type { Api, Household } from '../api/api.js';
 import type { AirState } from '../state/use-air.js';
 import type { HouseholdState } from '../state/use-household.js';
 import type { PushControls } from '../state/use-push.js';
 import type { Place } from '@vayu/core';
 import { AirCard } from './air/AirCard.js';
+import { CleanerHomeCard } from './impact/CleanerHomeCard.js';
 import { MemoryPanel } from './memory/MemoryPanel.js';
 import { AlertSettings } from './settings/AlertSettings.js';
 import { PrivacyPanel } from './settings/PrivacyPanel.js';
@@ -32,7 +33,7 @@ export function PlaceColumn({ api, air, place, onPick }: PlaceColumnProps): Reac
   );
 }
 
-/** What is remembered, the alert settings and the privacy controls. */
+/** What is remembered, what the household can change, the alert settings and the privacy controls. */
 export function HouseholdPanels({
   state,
   household,
@@ -47,6 +48,7 @@ export function HouseholdPanels({
   return (
     <>
       <MemoryPanel memory={household.memory} onChange={state.setMemory} />
+      <CleanerHomeCard memory={household.memory} />
       <AlertSettings settings={household.alerts} push={push} onChange={state.setAlerts} />
       <PrivacyPanel onDelete={onDelete} />
     </>

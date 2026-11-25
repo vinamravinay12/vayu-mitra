@@ -26,6 +26,10 @@ export * from './advice/advice-schema.js';
 export * from './advice/tips.js';
 export * from './advice/advise-activity.js';
 
+export * from './impact/exposure-impact.js';
+export * from './impact/low-emission-steps.js';
+export * from './impact/indoor-hacks.js';
+
 export * from './alerts/alert-settings.js';
 export * from './alerts/decide-alert.js';
 

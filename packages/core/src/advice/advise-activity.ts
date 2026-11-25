@@ -11,6 +11,7 @@ import {
 import type { PersonFact } from '../memory/memory-schema.js';
 import type { AirReport, ReportHour } from '../schemas/air-report.js';
 import type { ActivityAdvice, AdviceHour, Verdict } from './advice-schema.js';
+import { exposureImpact } from '../impact/exposure-impact.js';
 import { chooseTips } from './choose-tips.js';
 import { planAndWindow } from './plan.js';
 
@@ -65,6 +66,13 @@ function decideVerdict(
   return { verdict: 'skip', chosen: planned };
 }
 
+/** What the better hour saves, for this activity's breathing and length. */
+const impactFor = (
+  profile: ActivityProfile,
+  hours: { readonly planned: ReportHour; readonly better: ReportHour | null },
+  minutes: number | null,
+) => exposureImpact(hours, profile.intensity, minutes ?? profile.defaultMinutes);
+
 /** Inputs for one piece of advice. */
 export interface AdviceInput {
   readonly activity: Activity;
@@ -113,5 +121,6 @@ export function adviseActivity(input: AdviceInput): ActivityAdvice {
       setting: profile.setting,
     }),
     indoorAlternative: profile.indoorAlternative,
+    impact: airing ? null : impactFor(profile, { planned, better }, input.minutes),
   };
 }

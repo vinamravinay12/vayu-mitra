@@ -37,6 +37,13 @@ export function describeAir(report: AirReport): string {
   return `Right now the air is ${now}, ${describeSource(report)}. ${outlook}`;
 }
 
+/** What moving to the better hour saves, in one sentence; empty when there is no real saving. */
+function describeImpact(impact: ActivityAdvice['impact']): string {
+  return impact === null
+    ? ''
+    : ` That means breathing about ${String(impact.percentLess)}% less PM2.5: roughly ${String(impact.betterMicrograms)} µg instead of ${String(impact.plannedMicrograms)} µg over ${String(impact.minutes)} minutes.`;
+}
+
 /** The verdict in words, with the precautions. */
 export function describeAdvice(advice: ActivityAdvice, report: AirReport): string {
   const name = ACTIVITY_PROFILES[advice.activity].label;
@@ -48,7 +55,7 @@ export function describeAdvice(advice: ActivityAdvice, report: AirReport): strin
       : `It looks better ${describeTime(best.time, report)}: ${describeLevel(best)}`;
   const verdicts = {
     go: `${at}, which is fine for the ${name}.`,
-    shift: `${at}. ${shifted}, so move the ${name} to then.`,
+    shift: `${at}. ${shifted}, so move the ${name} to then.${describeImpact(advice.impact)}`,
     care: `${at}. The ${name} is OK if you keep it short and take precautions.`,
     skip: `${at}, and it does not get good enough today. Skip the ${name}; try ${advice.indoorAlternative} instead.`,
   };

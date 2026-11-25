@@ -16,6 +16,17 @@ const adviceHourSchema = z.object({
   category: z.enum(AQI_CATEGORIES),
 });
 
+/**
+ * What moving to the better hour changes for one adult doing the activity:
+ * PM2.5 breathed in at each hour, in micrograms, and the cut as a percentage.
+ */
+const exposureImpactSchema = z.object({
+  percentLess: z.number().int().min(1).max(100),
+  plannedMicrograms: z.number().int().min(0),
+  betterMicrograms: z.number().int().min(0),
+  minutes: z.number().int().min(1).max(240),
+});
+
 /** The engine's answer to "can we do this?", which the AI only puts into words. */
 export const activityAdviceSchema = z.object({
   activity: z.enum(ACTIVITIES),
@@ -28,11 +39,15 @@ export const activityAdviceSchema = z.object({
   sensitiveFor: z.array(z.string().max(40)).max(8),
   tips: z.array(z.enum(ADVICE_TIP_IDS)).max(ADVICE_TIP_IDS.length),
   indoorAlternative: z.string().max(200),
+  /** How much less PM2.5 the better hour means; null with no better hour or no real difference. */
+  impact: exposureImpactSchema.nullable(),
 });
 
 /** Go, shift to a better hour, go with care, or skip. */
 export type Verdict = (typeof VERDICTS)[number];
 /** One hour the advice compares: its time, index and category. */
 export type AdviceHour = z.infer<typeof adviceHourSchema>;
+/** PM2.5 breathed at the planned and better hours, and the cut. */
+export type ExposureImpact = z.infer<typeof exposureImpactSchema>;
 /** One piece of advice, as the engine decides it and the card shows it. */
 export type ActivityAdvice = z.infer<typeof activityAdviceSchema>;
