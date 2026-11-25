@@ -97,6 +97,27 @@ tests/quality/          repository rules as tests: hygiene, layering, contrast, 
 e2e/                    Playwright journeys against the production build
 ```
 
+## 🧩 Prompt design
+
+Gemini **reads** and **words**; the engine **decides**. Three prompts, each in its own builder
+under [`packages/server/src/prompts/`](packages/server/src/prompts), each answering JSON that a
+response schema constrains and Zod checks again:
+
+| Prompt         | Builder                      | Asks the model for                                                                                     | Temperature |
+| :------------- | :--------------------------- | :----------------------------------------------------------------------------------------------------- | :---------- |
+| **guard**      | `build-guard-prompt.ts`      | safe or manipulation, judged independently, in parallel with the others                                | 0           |
+| **understand** | `build-understand-prompt.ts` | memory changes (people, routines, home features) and the question: activity, person, day, time, places | 0           |
+| **reply**      | `build-reply-prompt.ts`      | 2–5 kind sentences in the family's language, from the engine's facts only                              | 0.3         |
+
+- **Facts in, not questions.** The reply prompt gets the air, the verdict and the precautions as
+  sentences the engine wrote, plus what was newly learnt; it may reorder and rephrase, not add.
+- **Untrusted text is fenced.** The message and the last 8 turns are wrapped in markers the model is
+  told are data (`fence-untrusted.ts`); markers smuggled into the text are stripped first.
+- **Every number is checked.** A reply with a number that is not in the facts, a link or
+  instruction-like text is discarded for the engine's own sentence (`chat/check-grounding.ts`).
+- **Small and bounded.** Minimal thinking, token ceilings per call (120 / 900 / 600), a 10 s timeout,
+  and a fallback chain of three models. Full detail: [docs/AI.md](docs/AI.md).
+
 ## 🚀 Run it
 
 Needs Node 22+.
