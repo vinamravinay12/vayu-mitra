@@ -47,7 +47,8 @@ button's hover colour in dark mode left its text at 1.45:1; field borders were 1
 | 2.5.3 Label in name               | Accessible names start with the visible text (“Edit Dadi · older adult, asthma”)                                | `App.test.tsx`, `App.structure.test.tsx`           |
 | 2.5.8 Target size (and 2.5.5 AAA) | Every control at least 44 × 44 px                                                                               | `accessibility.spec.ts`                            |
 | 3.1.1 / 3.1.2 Language            | `lang="en-IN"`; replies follow the family's language and script                                                 | `tests/quality/accessibility.test.ts`              |
-| 3.3.1 / 3.3.3 Errors              | Messages in `role="alert"`, saying what to do (“Enter a valid email and a password of 10 to 128 characters.”)   | `App.accounts.test.tsx`, `App.failures.test.tsx`   |
+| 3.3.1 / 3.3.3 Errors              | Messages in `role="alert"`, saying what to do; an invalid field is described by its error                       | `App.accounts.test.tsx`, `App.failures.test.tsx`   |
+| 3.3.2 Labels or instructions      | Every field has a visible label; limits and rules (password length, message length) sit beside the field        | `App.test.tsx`, `App.accounts.test.tsx`            |
 | 3.3.7 Redundant entry             | Place, people and routines are remembered and shown as chips, never asked again                                 | `App.test.tsx`                                     |
 | 3.3.8 Accessible authentication   | Plain email and password, paste and password managers allowed, a Show button to check what was typed; no puzzle | `App.accounts.test.tsx`                            |
 | 4.1.2 Name, role, value           | Native elements first; every control named; ids unique and every reference resolves                             | `App.structure.test.tsx`, axe                      |
@@ -83,15 +84,20 @@ they keep their colours (`forced-color-adjust: none`) while every boundary turns
   adult, asthma”). The editors use native `select`, checkboxes in a `fieldset`, `time` and
   `number` inputs, each with a label.
 - **The AQI** is never colour alone: the number and category are text, and every bar in the
-  12-hour strip has its value above it and a screen-reader label (“2 pm: Moderate”).
-- Suggested questions are real buttons in a labelled group; the message box has a label.
+  12-hour strip has its value above it and its time below, both at least 12 px; on a phone the
+  strip wraps to two rows of six rather than shrinking the text. A screen reader hears one
+  sentence per hour (“2 pm: 180, Moderate”) instead of three fragments.
+- Suggested questions are real buttons in a labelled group. The message box has a visible label
+  (“Your message”, not a placeholder that vanishes while typing), and its 500-character limit is
+  shown below it and linked with `aria-describedby`, so nobody discovers it by being cut off.
 - **Sign-in** is a plain form: labelled email and password fields with the right `autocomplete`
   (`email`, `current-password` or `new-password`), so password managers fill them; the length rule
   is linked to the password field with `aria-describedby`; errors are announced as alerts.
 - **Seeing the password.** A Show/Hide button beside the password (44 px, named “Show password” or
   “Hide password” to match its word) reveals it, and on sign-up the confirmation too; a status
   line tells screen-reader users which. Creating an account asks for the password twice; if the
-  two differ, nothing is sent, the alert says so and the confirmation is marked `aria-invalid`.
+  two differ, nothing is sent, the alert says so, and the confirmation is marked `aria-invalid`
+  and described by that alert, so focusing the field reads out why it is wrong.
 - The theme choice is three radios (light, system, dark) in a `fieldset`; the first paint follows
   the system with no script, because the CSP forbids inline script.
 

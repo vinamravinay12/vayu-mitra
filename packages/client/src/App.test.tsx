@@ -40,6 +40,9 @@ it('a family’s first conversation: answers about the air when no activity is n
   installFakeServer({ household: emptyHousehold({ place: DELHI, memory: DADI_MEMORY }) });
   const user = userEvent.setup();
   await start();
+  expect(screen.getByLabelText('Your message')).toHaveAccessibleDescription(
+    'Up to 500 characters.',
+  );
   await user.type(screen.getByLabelText('Your message'), 'How is the air?');
   await user.click(screen.getByRole('button', { name: 'Send' }));
   expect(await screen.findByText(/^Right now the air is Poor/)).toBeInTheDocument();

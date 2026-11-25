@@ -1,6 +1,6 @@
 /** The signed-out screen: what the app is, and the sign-in or sign-up form. */
 import { Alert } from '../ui/Alert.js';
-import { CredentialFields } from './CredentialFields.js';
+import { ACCOUNT_ERROR_ID, CredentialFields } from './CredentialFields.js';
 import { useCredentials, type CredentialsState, type Mode } from './use-credentials.js';
 
 const COPY: Readonly<Record<Mode, { heading: string; submit: string; switchTo: string }>> = {
@@ -48,7 +48,7 @@ function CredentialsForm({
         {COPY[form.mode].heading}
       </h2>
       <CredentialFields form={form} />
-      {form.error !== null && <Alert>{form.error}</Alert>}
+      {form.error !== null && <Alert id={ACCOUNT_ERROR_ID}>{form.error}</Alert>}
       <FormButtons form={form} />
     </form>
   );

@@ -16,5 +16,5 @@ it('AirCard: shows the hours ahead across midnight', () => {
   ]);
   const late = { ...report, hours: report.hours.slice(4) };
   render(<AirCard air={{ status: 'ready', report: late }} place={DELHI} />);
-  expect(screen.getByText('tomorrow 12 am: Severe')).toBeInTheDocument();
+  expect(screen.getByText(/^tomorrow 12 am: \d+, Severe$/)).toBeInTheDocument();
 });

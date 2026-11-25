@@ -91,7 +91,10 @@ function PasswordField({ form }: { readonly form: CredentialsState }): React.JSX
   );
 }
 
-/** On sign-up, the password again; marked invalid when the two did not match. */
+/** The id of the form's error message, which an invalid field points at. */
+export const ACCOUNT_ERROR_ID = 'account-error';
+
+/** On sign-up, the password again; marked invalid, and pointed at the reason, when the two differ. */
 function ConfirmField({ form }: { readonly form: CredentialsState }): React.JSX.Element {
   return (
     <div>
@@ -102,6 +105,7 @@ function ConfirmField({ form }: { readonly form: CredentialsState }): React.JSX.
         id="confirm-password"
         {...passwordProps(form)}
         aria-invalid={form.error === MISMATCH}
+        aria-describedby={form.error === MISMATCH ? ACCOUNT_ERROR_ID : undefined}
         value={form.confirm}
         onChange={(event) => {
           form.setConfirm(event.target.value);

@@ -77,7 +77,7 @@ export function AdviceCard({
     >
       <p className="flex flex-wrap items-center gap-2">
         <span className="font-semibold">{name}</span>
-        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${verdict.tone}`}>
+        <span className={`rounded-full px-2 py-0.5 text-sm font-semibold ${verdict.tone}`}>
           {verdict.label}
         </span>
       </p>

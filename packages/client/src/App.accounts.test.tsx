@@ -81,6 +81,7 @@ it('confirming the password: refuses two passwords that differ without asking th
   await user.click(screen.getByRole('button', { name: 'Create account' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('The two passwords do not match');
   expect(confirm).toHaveAttribute('aria-invalid', 'true');
+  expect(confirm).toHaveAccessibleDescription(/The two passwords do not match/);
   expect(server.requests.some((sent) => sent.path === '/api/auth/register')).toBe(false);
   await user.click(screen.getByRole('button', { name: 'Already have an account? Sign in' }));
   await user.click(screen.getByRole('button', { name: 'New here? Create an account' }));

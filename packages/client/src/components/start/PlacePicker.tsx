@@ -6,7 +6,7 @@ import { Alert } from '../ui/Alert.js';
 import { PlaceResults } from './PlaceResults.js';
 import { usePlaceSearch } from './use-place-search.js';
 
-/** The labelled place-name field. */
+/** The place-name field, with a visible label that stays while typing (unlike a placeholder). */
 function QueryField({
   id,
   query,
@@ -18,7 +18,7 @@ function QueryField({
 }): React.JSX.Element {
   return (
     <>
-      <label htmlFor={`${id}-query`} className="sr-only">
+      <label htmlFor={`${id}-query`} className="label mb-0 basis-full">
         Area or city
       </label>
       <input
